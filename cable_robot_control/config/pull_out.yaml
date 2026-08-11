@@ -49,7 +49,7 @@ waypoints:
       4: 220
       5: 900
     gripper_pulse:
-      10: 700
+      10: 500
     pose:
       position:
         x: 0.14814472436836684
@@ -105,6 +105,28 @@ waypoints:
         z: -0.3002656164501888
         w: 0.5987504247804329
     timestamp: 1786453017.8694785
+    duration: 2.0
+    held_after_save: false
+  Pull_out_Finish:
+    joint_pulse:
+      1: 368
+      2: 585
+      3: 310
+      4: 185
+      5: 900
+    gripper_pulse:
+      10: 300
+    pose:
+      position:
+        x: 0.1523197991887979
+        y: -0.09400119023809961
+        z: 0.43460458934578383
+      orientation:
+        x: 0.7289410085618052
+        y: -0.14136298822512594
+        z: -0.2491103984308293
+        w: 0.6217761019777094
+    timestamp: 1786464056.337478
     duration: 2.0
     held_after_save: false
 gripper:

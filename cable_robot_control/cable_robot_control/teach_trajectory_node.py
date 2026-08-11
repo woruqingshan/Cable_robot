@@ -8,9 +8,11 @@ from typing import Dict
 import rclpy
 import yaml
 from ament_index_python.packages import get_package_share_directory
+from rcl_interfaces.msg import ParameterDescriptor
 from rclpy.node import Node
 
 from cable_robot_control.arm_interface import ArmInterface, ServoReadback
+from cable_robot_control.cartesian_motion import CartesianMotionPlanner
 from cable_robot_control.config import limits_from_config, load_yaml
 from cable_robot_control.experiment_logger import ExperimentLogger
 
@@ -47,6 +49,11 @@ class TeachTrajectoryNode(Node):
         self.declare_parameter('log_dir', 'episodes')
         self.declare_parameter('jog_step', 10)
         self.declare_parameter('jog_duration', 0.4)
+        self.declare_parameter(
+            'cartesian_freeze_servo_ids',
+            '5',
+            descriptor=ParameterDescriptor(dynamic_typing=True),
+        )
 
         limits_file = self.get_parameter('limits_file').value
         if not limits_file:
@@ -64,10 +71,17 @@ class TeachTrajectoryNode(Node):
         self.waypoint_file = str(self.get_parameter('waypoint_file').value)
         self.jog_step = int(self.get_parameter('jog_step').value)
         self.jog_duration = float(self.get_parameter('jog_duration').value)
+        self.frozen_cartesian_servo_ids = self._parse_servo_id_list(
+            self.get_parameter('cartesian_freeze_servo_ids').value
+        )
         self.logger = ExperimentLogger(str(self.get_parameter('log_dir').value))
         self.released = False
         self.current_pulse = None
         self.current_pose_xyz = None
+        self.cartesian_planner = CartesianMotionPlanner(
+            self.limits.arm_servo_ids,
+            frozen_servo_ids=self.frozen_cartesian_servo_ids,
+        )
 
         self.arm = ArmInterface(
             self,
@@ -91,8 +105,13 @@ class TeachTrajectoryNode(Node):
         self.get_logger().info(f'readonly={self.readonly}, allow_torque_commands={self.allow_torque_commands}')
         self.get_logger().info(
             'Commands: MOVE name, SYNC name, SET id pulse..., P=internal, CACHE=controller cache, '
-            'O=pose, IK x y z pitch, CART dx dy dz pitch, 1+/1-..5+/5-=jog arm, '
-            'G+/G-=jog gripper, STEP n, DUR n, S=save, R/H=experimental torque, Q=quit'
+            'O=pose, IK x y z pitch, IKCHECK x y z pitch, IKSWEEP x y z start stop step, '
+            'CART dx dy dz pitch, 1+/1-..5+/5-=jog arm, G+/G-=jog gripper, '
+            'STEP n, DUR n, S=save, R/H=experimental torque, Q=quit'
+        )
+        self.get_logger().info(
+            f'Cartesian frozen servo ids={self.frozen_cartesian_servo_ids}; '
+            f'current pulses for these ids are preserved during IK/CART.'
         )
         self.get_logger().warning('Jog and save are disabled until MOVE, SET, or SYNC initializes current_pulse.')
         while rclpy.ok():
@@ -120,6 +139,10 @@ class TeachTrajectoryNode(Node):
                 self.set_absolute_pulses(command)
             elif command.startswith('IK '):
                 self.move_ik_absolute(command)
+            elif command.startswith('IKCHECK '):
+                self.check_ik_absolute(command)
+            elif command.startswith('IKSWEEP '):
+                self.sweep_ik_pitch(command)
             elif command.startswith('CART '):
                 self.move_cartesian_delta(command)
             elif command.startswith('STEP '):
@@ -306,7 +329,67 @@ class TeachTrajectoryNode(Node):
         except RuntimeError as exc:
             self.get_logger().error(str(exc))
             return
-        self._move_to_cartesian_target([x, y, z], pitch, stage='ik_absolute')
+        self._move_to_cartesian_target([x, y, z], pitch, stage='ik_absolute', is_delta=False)
+
+    def check_ik_absolute(self, command: str) -> None:
+        try:
+            x, y, z, pitch = self._parse_four_floats(command, 'IKCHECK x y z pitch')
+        except RuntimeError as exc:
+            self.get_logger().error(str(exc))
+            return
+        if self.current_pulse is None:
+            self.get_logger().error('IKCHECK blocked: run MOVE <waypoint>, SET ..., or SYNC <waypoint> first.')
+            return
+        try:
+            plan = self.cartesian_planner.plan_absolute(self.arm, self.current_pulse, [x, y, z], pitch)
+        except Exception as exc:
+            self.get_logger().error(f'IKCHECK failed: {exc}')
+            return
+        self._log_cartesian_plan(plan, prefix='IKCHECK')
+
+    def sweep_ik_pitch(self, command: str) -> None:
+        try:
+            x, y, z, start, stop, step = self._parse_six_floats(
+                command,
+                'IKSWEEP x y z start_pitch stop_pitch step',
+            )
+        except RuntimeError as exc:
+            self.get_logger().error(str(exc))
+            return
+        if self.current_pulse is None:
+            self.get_logger().error('IKSWEEP blocked: run MOVE <waypoint>, SET ..., or SYNC <waypoint> first.')
+            return
+        if step == 0:
+            self.get_logger().error('IKSWEEP step must not be zero.')
+            return
+        if (stop - start) * step < 0:
+            self.get_logger().error('IKSWEEP step sign points away from stop.')
+            return
+
+        plans = []
+        pitch = float(start)
+        epsilon = abs(float(step)) * 1e-6
+        while (step > 0 and pitch <= stop + epsilon) or (step < 0 and pitch >= stop - epsilon):
+            try:
+                plan = self.cartesian_planner.plan_absolute(self.arm, self.current_pulse, [x, y, z], pitch)
+                plans.append(plan)
+            except Exception as exc:
+                self.get_logger().warning(f'IKSWEEP pitch={pitch:.3f} failed: {exc}')
+            pitch += step
+
+        if not plans:
+            self.get_logger().error('IKSWEEP found no IK responses.')
+            return
+
+        safe_plans = [plan for plan in plans if plan.safe]
+        ranked = sorted(safe_plans or plans, key=lambda plan: plan.total_delta)
+        label = 'SAFE' if safe_plans else 'REJECT'
+        self.get_logger().info(
+            f'IKSWEEP scanned {len(plans)} pitch values; {len(safe_plans)} safe. '
+            f'Showing best {label} candidate(s).'
+        )
+        for index, plan in enumerate(ranked[:5], start=1):
+            self._log_cartesian_plan(plan, prefix=f'IKSWEEP#{index}')
 
     def move_cartesian_delta(self, command: str) -> None:
         try:
@@ -317,52 +400,72 @@ class TeachTrajectoryNode(Node):
         if self.current_pose_xyz is None:
             self.get_logger().error('CART blocked: current_pose_xyz is unknown. Run MOVE <waypoint> with pose, SYNC <waypoint>, O, or IK first.')
             return
-        target = [
-            self.current_pose_xyz[0] + dx,
-            self.current_pose_xyz[1] + dy,
-            self.current_pose_xyz[2] + dz,
-        ]
-        self._move_to_cartesian_target(target, pitch, stage='cartesian_delta')
+        self._move_to_cartesian_target([dx, dy, dz], pitch, stage='cartesian_delta', is_delta=True)
 
-    def _move_to_cartesian_target(self, target_xyz, pitch: float, stage: str) -> None:
+    def _move_to_cartesian_target(self, target_or_delta_xyz, pitch: float, stage: str, is_delta: bool) -> None:
         if self.readonly:
             self.get_logger().error(f'{stage} blocked: readonly:=true. Restart with readonly:=false to move.')
             return
         if self.current_pulse is None:
             self.get_logger().error(f'{stage} blocked: run MOVE <waypoint>, SET ..., or SYNC <waypoint> first.')
             return
+        if is_delta and self.current_pose_xyz is None:
+            self.get_logger().error('CART blocked: current_pose_xyz is unknown. Run MOVE <waypoint> with pose, SYNC <waypoint>, O, or IK first.')
+            return
         try:
-            response = self.arm.solve_ik(target_xyz, pitch)
+            if is_delta:
+                plan = self.cartesian_planner.plan_delta(
+                    self.arm,
+                    self.current_pulse,
+                    self.current_pose_xyz,
+                    target_or_delta_xyz,
+                    pitch,
+                )
+            else:
+                plan = self.cartesian_planner.plan_absolute(
+                    self.arm,
+                    self.current_pulse,
+                    target_or_delta_xyz,
+                    pitch,
+                )
         except Exception as exc:
             self.get_logger().error(f'IK failed; robot was not moved: {exc}')
-            self.logger.record(stage=stage, target_pose={'position': target_xyz, 'pitch': pitch}, success=False, error_reason=str(exc))
+            self.logger.record(stage=stage, target_pose={'position': target_or_delta_xyz, 'pitch': pitch}, success=False, error_reason=str(exc))
             return
-        arm_pulses = {
-            servo_id: int(response.pulse[index])
-            for index, servo_id in enumerate(self.limits.arm_servo_ids)
-        }
+        self._log_cartesian_plan(plan, prefix=stage)
+        if not plan.safe:
+            self.get_logger().error(f'{stage} rejected; robot was not moved: {plan.reason}')
+            self.logger.record(
+                stage=stage,
+                target_pose={'position': plan.target_xyz, 'pitch': pitch},
+                target_joint_pulse=plan.arm_pulses,
+                current_joint_pulse=dict(self.current_pulse),
+                success=False,
+                error_reason=plan.reason,
+            )
+            return
         all_pulses = dict(self.current_pulse)
-        all_pulses.update(arm_pulses)
+        all_pulses.update(plan.arm_pulses)
         if not self._publish_full_pulse_target(all_pulses, self.jog_duration):
             return
         self.get_logger().warning(
-            f'{stage} target published xyz={target_xyz}, pitch={pitch}; '
+            f'{stage} target published xyz={plan.target_xyz}, pitch={pitch}, scale={plan.scale}; '
             f'waiting {self.jog_duration:.2f}s before enabling jog.'
         )
         time.sleep(self.jog_duration)
         previous_pulse = dict(self.current_pulse)
         self.current_pulse = all_pulses
-        self.current_pose_xyz = [float(value) for value in target_xyz]
+        self.current_pose_xyz = [float(value) for value in plan.target_xyz]
         self.logger.record(
             stage=stage,
             target_joint_pulse=self.current_pulse,
             current_joint_pulse=previous_pulse,
-            target_pose={'position': {'x': target_xyz[0], 'y': target_xyz[1], 'z': target_xyz[2]}, 'pitch': pitch},
+            target_pose={'position': {'x': plan.target_xyz[0], 'y': plan.target_xyz[1], 'z': plan.target_xyz[2]}, 'pitch': pitch},
             duration=self.jog_duration,
             success=True,
         )
         self.get_logger().info(
-            f'{stage} complete: arm_pulses={arm_pulses}, gripper={self.current_pulse[self.limits.gripper_servo_id]}, '
+            f'{stage} complete: arm_pulses={plan.arm_pulses}, gripper={self.current_pulse[self.limits.gripper_servo_id]}, '
             f'current_pose_xyz={self.current_pose_xyz}'
         )
 
@@ -517,6 +620,31 @@ class TeachTrajectoryNode(Node):
         except ValueError as exc:
             raise RuntimeError(f'{usage} expects numeric values') from exc
 
+    def _parse_six_floats(self, command: str, usage: str):
+        parts = command.split()[1:]
+        if len(parts) != 6:
+            raise RuntimeError(f'Usage: {usage}')
+        try:
+            return [float(value) for value in parts]
+        except ValueError as exc:
+            raise RuntimeError(f'{usage} expects numeric values') from exc
+
+    def _parse_servo_id_list(self, value):
+        if isinstance(value, str):
+            raw_items = [item.strip() for item in value.split(',') if item.strip()]
+        elif isinstance(value, (list, tuple)):
+            raw_items = value
+        else:
+            raw_items = [value]
+        servo_ids = []
+        for item in raw_items:
+            servo_id = int(item)
+            if servo_id not in self.limits.arm_servo_ids:
+                self.get_logger().warning(f'Ignoring non-arm frozen servo id: {servo_id}')
+                continue
+            servo_ids.append(servo_id)
+        return servo_ids
+
     def _set_current_pose_from_waypoint(self, waypoint: Dict) -> None:
         pose = waypoint.get('pose') or {}
         position = pose.get('position') or {}
@@ -541,6 +669,15 @@ class TeachTrajectoryNode(Node):
             self.get_logger().error(f'Move publish failed; internal current_pulse was not updated: {exc}')
             return False
         return True
+
+    def _log_cartesian_plan(self, plan, prefix: str) -> None:
+        status = 'SAFE' if plan.safe else 'REJECT'
+        self.get_logger().info(
+            f'{prefix} {status}: target_xyz={plan.target_xyz}, pitch={plan.pitch}, scale={plan.scale}, '
+            f'raw_ik_pulses={plan.raw_ik_pulses}, command_arm_pulses={plan.arm_pulses}, '
+            f'frozen_servo_ids={self.frozen_cartesian_servo_ids}, joint_delta={plan.joint_delta}, '
+            f'total_delta={plan.total_delta}, reason={plan.reason}'
+        )
 
     def _pulses_only(self, states: Dict[int, ServoReadback]) -> Dict[int, int]:
         pulses = {
