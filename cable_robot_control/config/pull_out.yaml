@@ -1,0 +1,116 @@
+waypoints:
+  CABLE_HOLD_READY:
+    joint_pulse:
+      1: 500
+      2: 765
+      3: 15
+      4: 220
+      5: 500
+    gripper_pulse:
+      10: 500
+    pose:
+      position:
+        x: 0.1360627299629453
+        y: 0.0
+        z: 0.2776045822614936
+      orientation:
+        x: -0.0
+        y: 0.2588190451025207
+        z: 1.1102230246251565e-16
+        w: 0.9659258262890681
+    duration: 2.0
+  Pull_approach_middle:
+    joint_pulse:
+      1: 300
+      2: 850
+      3: 50
+      4: 250
+      5: 900
+    gripper_pulse:
+      10: 500
+    pose:
+      position:
+        x: 0.06333032339242524
+        y: -0.07033544972780739
+        z: 0.37768850540036947
+      orientation:
+        x: 0.6637224249842928
+        y: -0.33384197650596525
+        z: -0.2362562491874525
+        w: 0.6262627739339427
+    timestamp: 1786443051.091281
+    duration: 2.0
+    held_after_save: false
+  Pull_approach_middle_2:
+    joint_pulse:
+      1: 328
+      2: 560
+      3: 330
+      4: 220
+      5: 900
+    gripper_pulse:
+      10: 700
+    pose:
+      position:
+        x: 0.14814472436836684
+        y: -0.13005672473781746
+        z: 0.4589183704188038
+      orientation:
+        x: 0.7025106365594607
+        y: -0.24215677903405264
+        z: -0.25759330313545625
+        w: 0.6176443880328223
+    timestamp: 1786444676.1985555
+    duration: 2.0
+    held_after_save: false
+  Pull_approach:
+    joint_pulse:
+      1: 328
+      2: 565
+      3: 330
+      4: 185
+      5: 900
+    gripper_pulse:
+      10: 300
+    pose:
+      position:
+        x: 0.14229182472616658
+        y: -0.1249184455251812
+        z: 0.43796906439553346
+      orientation:
+        x: 0.7145555598642809
+        y: -0.2018634198414443
+        z: -0.3002656164501888
+        w: 0.5987504247804329
+    timestamp: 1786452982.9509697
+    duration: 2.0
+    held_after_save: false
+  Catch_plugin:
+    joint_pulse:
+      1: 328
+      2: 565
+      3: 330
+      4: 185
+      5: 900
+    gripper_pulse:
+      10: 700
+    pose:
+      position:
+        x: 0.14229182472616658
+        y: -0.1249184455251812
+        z: 0.43796906439553346
+      orientation:
+        x: 0.7145555598642809
+        y: -0.2018634198414443
+        z: -0.3002656164501888
+        w: 0.5987504247804329
+    timestamp: 1786453017.8694785
+    duration: 2.0
+    held_after_save: false
+gripper:
+  default_duration: 0.5
+  presets:
+    open: null
+    close: null
+sequence:
+- MOVE CABLE_HOLD_READY

@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>cable_robot_control</name>
+  <version>0.1.0</version>
+  <description>JetRover cable VLA fixed trajectory control overlay.</description>
+  <maintainer email="siyuen@example.com">siyuen</maintainer>
+  <license>Proprietary</license>
+
+  <depend>rclpy</depend>
+  <depend>ament_index_python</depend>
+  <depend>launch</depend>
+  <depend>launch_ros</depend>
+  <depend>geometry_msgs</depend>
+  <depend>kinematics_msgs</depend>
+  <depend>ros_robot_controller_msgs</depend>
+  <depend>servo_controller_msgs</depend>
+  <exec_depend>python3-yaml</exec_depend>
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

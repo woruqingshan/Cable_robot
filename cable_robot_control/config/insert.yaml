@@ -1,0 +1,44 @@
+# Fixed trajectory template for inserting a cable into an interface.
+# Do not add fake pulse values. Create real waypoints with teach_trajectory_node.
+
+waypoints:
+  CABLE_HOLD_READY:
+    joint_pulse:
+      1: 500
+      2: 765
+      3: 15
+      4: 220
+      5: 500
+    gripper_pulse:
+      10: 500
+    pose:
+      position:
+        x: 0.1360627299629453
+        y: 0.0
+        z: 0.2776045822614936
+      orientation:
+        x: -0.0
+        y: 0.2588190451025207
+        z: 1.1102230246251565e-16
+        w: 0.9659258262890681
+    duration: 2.0
+
+gripper:
+  default_duration: 0.5
+  presets:
+    open: null
+    close: null
+
+# Suggested order after real waypoints are taught:
+# sequence:
+#   - MOVE CABLE_HOLD_READY
+#   - MOVE PRE_APPROACH
+#   - MOVE ALIGN
+#   - MOVE PRE_INSERT
+#   - MOVE INSERT
+#   - SET_GRIPPER 200
+#   - WAIT 0.5
+#   - MOVE RETREAT
+#   - MOVE CABLE_HOLD_READY
+sequence:
+  - MOVE CABLE_HOLD_READY

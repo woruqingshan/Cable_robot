@@ -1,0 +1,9 @@
+waypoints: {}
+
+gripper:
+  default_duration: 0.5
+  presets:
+    open: null
+    close: null
+
+sequence: []

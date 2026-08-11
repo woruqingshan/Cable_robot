@@ -1,0 +1,28 @@
+arm:
+  servo_ids: [1, 2, 3, 4, 5]
+  pulse_min: 0
+  pulse_max: 1000
+  default_move_duration: 2.0
+  hold_duration: 0.08
+  soft_warning:
+    per_joint_delta: 250
+    total_delta: 900
+
+gripper:
+  servo_id: 10
+  pulse_min: 0
+  pulse_max: 1000
+  default_duration: 0.5
+  presets:
+    open: null
+    close: null
+
+topics:
+  servo_controller: /servo_controller
+  bus_servo_set_state: /ros_robot_controller/bus_servo/set_state
+  servo_states: /controller_manager/servo_states
+
+services:
+  bus_servo_get_state: /ros_robot_controller/bus_servo/get_state
+  get_current_pose: /kinematics/get_current_pose
+  set_pose_target: /kinematics/set_pose_target

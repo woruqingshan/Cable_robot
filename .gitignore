@@ -1,0 +1,17 @@
+.DS_Store
+._*
+__pycache__/
+*.py[cod]
+*.so
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+build/
+install/
+log/
+*.egg-info/
+dist/
+episodes/
+waypoints/*.yaml
+!waypoints/.gitkeep
