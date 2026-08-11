@@ -134,5 +134,38 @@ gripper:
   presets:
     open: null
     close: null
+cartesian:
+  default_duration: 1.2
+  default_pitch: 11.0
+  frozen_servo_ids:
+  - 5
 sequence:
+- MOVE CABLE_HOLD_READY
+- WAIT 0.5
+- MOVE Pull_approach_middle
+- WAIT 0.5
+- MOVE Pull_approach
+- WAIT 0.5
+- MOVE Catch_plugin
+- WAIT 0.5
+- CART 0 -0.002 0 11
+- WAIT 0.2
+- CART 0 0 0.002 11
+- WAIT 0.2
+- CART 0 0.003 0 11
+- WAIT 0.2
+- CART 0 0.003 0 11
+- WAIT 0.2
+- CART 0 0.003 0 11
+- WAIT 0.2
+- CART 0.001 0.003 0 11
+- WAIT 0.2
+- CART -0.001 0.003 0 11
+- WAIT 0.2
+- CART 0 0.01 0.002 11
+- WAIT 0.2
+- CART 0 0.02 0.002 11
+- WAIT 0.2
+- MOVE Pull_out_Finish
+- WAIT 0.5
 - MOVE CABLE_HOLD_READY
