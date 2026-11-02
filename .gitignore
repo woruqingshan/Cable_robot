@@ -1,17 +1,36 @@
+# macOS
 .DS_Store
-._*
+
+# Python
 __pycache__/
-*.py[cod]
-*.so
-.pytest_cache/
-.mypy_cache/
-.coverage
-htmlcov/
+*.pyc
+.venv/
+venv/
+
+# ROS2
 build/
 install/
 log/
-*.egg-info/
-dist/
-episodes/
-waypoints/*.yaml
-!waypoints/.gitkeep
+.ros/
+
+# Runtime logs and dumps
+*.log
+core
+core.*
+*.bag
+*.db3
+*.mcap
+
+# Model weights and generated data
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.npy
+*.npz
+
+# Secrets
+.env
+.env.*
+*.pem
+*.key

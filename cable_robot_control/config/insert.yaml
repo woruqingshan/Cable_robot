@@ -1,6 +1,3 @@
-# Fixed trajectory template for inserting a cable into an interface.
-# Do not add fake pulse values. Create real waypoints with teach_trajectory_node.
-
 waypoints:
   CABLE_HOLD_READY:
     joint_pulse:
@@ -22,23 +19,274 @@ waypoints:
         z: 1.1102230246251565e-16
         w: 0.9659258262890681
     duration: 2.0
-
+  CABLE_PICK_MIDDLE:
+    joint_pulse:
+      1: 300
+      2: 850
+      3: 50
+      4: 250
+      5: 500
+    gripper_pulse:
+      10: 500
+    pose:
+      position:
+        x: 0.06333032339242524
+        y: -0.07033544972780739
+        z: 0.37768850540036947
+      orientation:
+        x: -0.02128695115441691
+        y: -0.04781127509712313
+        z: -0.4061792246424234
+        w: 0.912293475342785
+    timestamp: 1786510389.4485402
+    duration: 2.0
+    held_after_save: false
+  CABLE_PICK_MIDDLE_1:
+    joint_pulse:
+      1: 55
+      2: 750
+      3: 50
+      4: 200
+      5: 500
+    gripper_pulse:
+      10: 500
+    pose:
+      position:
+        x: -0.03843599586222906
+        y: -0.12730616020438357
+        z: 0.2933469788266516
+      orientation:
+        x: 0.20778445232058088
+        y: 0.1543143528049704
+        z: -0.7754621330832808
+        w: 0.575909005005259
+    timestamp: 1786511916.9580638
+    duration: 2.0
+    held_after_save: false
+  CABLE_PICK_READY:
+    joint_pulse:
+      1: 65
+      2: 750
+      3: 125
+      4: 230
+      5: 500
+    gripper_pulse:
+      10: 350
+    pose:
+      position:
+        x: -0.03638945653934578
+        y: -0.14172757585139756
+        z: 0.37071301122950673
+      orientation:
+        x: 0.09081816557011771
+        y: 0.07044579026385189
+        z: -0.7849184698966553
+        w: 0.608845174943248
+    timestamp: 1786511401.672611
+    duration: 2.0
+    held_after_save: false
+  CABLE_PICK_GRASP:
+    joint_pulse:
+      1: 65
+      2: 750
+      3: 125
+      4: 230
+      5: 500
+    gripper_pulse:
+      10: 950
+    pose:
+      position:
+        x: -0.03638945653934578
+        y: -0.14172757585139756
+        z: 0.37071301122950673
+      orientation:
+        x: 0.09081816557011771
+        y: 0.07044579026385189
+        z: -0.7849184698966553
+        w: 0.608845174943248
+    timestamp: 1786512108.0641844
+    duration: 2.0
+    held_after_save: false
+  INSERT_TRANSFER_MIDDLE:
+    joint_pulse:
+      1: 500
+      2: 715
+      3: 125
+      4: 230
+      5: 100
+    gripper_pulse:
+      10: 1000
+    pose:
+      position:
+        x: 0.14632463327800477
+        y: 0.0
+        z: 0.37071301122950673
+      orientation:
+        x: -0.738219830526103
+        y: 0.07690796520245136
+        z: 0.08541494864389049
+        w: 0.6646961209865694
+    timestamp: 1786513895.8951
+    duration: 2.0
+    held_after_save: false
+  INSERT_TRANSFER_MIDDLE_1:
+    joint_pulse:
+      1: 430
+      2: 585
+      3: 310
+      4: 210
+      5: 100
+    gripper_pulse:
+      10: 950
+    pose:
+      position:
+        x: 0.1736900314839197
+        y: -0.052440112251508346
+        z: 0.45244158640137017
+      orientation:
+        x: -0.7304344563460365
+        y: 0.13618530977950738
+        z: -0.06687704946201908
+        w: 0.6659178077195297
+    timestamp: 1786512802.9059525
+    duration: 2.0
+    held_after_save: false
+  INSERT_CONTACT:
+    joint_pulse:
+      1: 377
+      2: 560
+      3: 330
+      4: 217
+      5: 100
+    gripper_pulse:
+      10: 950
+    pose:
+      position:
+        x: 0.17141246713249725
+        y: -0.09705951045995445
+        z: 0.45676212922704135
+      orientation:
+        x: -0.7116863214088905
+        y: 0.21358446492765826
+        z: -0.1432687629112078
+        w: 0.653726485492931
+    timestamp: 1786513307.065347
+    duration: 2.0
+    held_after_save: false
+  INSERT_CONTACT_1:
+    joint_pulse:
+      1: 377
+      2: 560
+      3: 330
+      4: 232
+      5: 100
+    gripper_pulse:
+      10: 950
+    pose:
+      position:
+        x: 0.17182588165193574
+        y: -0.09729359968079697
+        z: 0.46755698091790904
+      orientation:
+        x: -0.7175368485961748
+        y: 0.19339331936878323
+        z: -0.16595631869365235
+        w: 0.6482271170013213
+    timestamp: 1786515568.402612
+    duration: 2.0
+    held_after_save: false
+  Insert_test:
+    joint_pulse:
+      1: 328
+      2: 565
+      3: 330
+      4: 185
+      5: 150
+    gripper_pulse:
+      10: 400
+    pose:
+      position:
+        x: 0.14229182472616658
+        y: -0.1249184455251812
+        z: 0.43796906439553346
+      orientation:
+        x: -0.6701618018971662
+        y: 0.3197212030519442
+        z: -0.16937128744658178
+        w: 0.6480546879590089
+    timestamp: 1786529001.958446
+    duration: 2.0
+    held_after_save: false
+  Insert_catch_test:
+    joint_pulse:
+      1: 328
+      2: 565
+      3: 330
+      4: 185
+      5: 150
+    gripper_pulse:
+      10: 900
+    pose:
+      position:
+        x: 0.14229182472616658
+        y: -0.1249184455251812
+        z: 0.43796906439553346
+      orientation:
+        x: -0.6701618018971662
+        y: 0.3197212030519442
+        z: -0.16937128744658178
+        w: 0.6480546879590089
+    timestamp: 1786529043.5850039
+    duration: 2.0
+    held_after_save: false
+  Insert_test1:
+    joint_pulse:
+      1: 328
+      2: 565
+      3: 330
+      4: 215
+      5: 150
+    gripper_pulse:
+      10: 400
+    pose:
+      position:
+        x: 0.1443262631686967
+        y: -0.12670448550496644
+        z: 0.4593986811452362
+      orientation:
+        x: -0.6176443880328223
+        y: 0.25759330313545625
+        z: -0.24215677903405255
+        w: 0.7025106365594606
+    timestamp: 1786618099.9355452
+    duration: 2.0
+    held_after_save: false
+  Insert_catch_test1:
+    joint_pulse:
+      1: 328
+      2: 565
+      3: 330
+      4: 215
+      5: 150
+    gripper_pulse:
+      10: 900
+    pose:
+      position:
+        x: 0.1443262631686967
+        y: -0.12670448550496644
+        z: 0.4593986811452362
+      orientation:
+        x: -0.6176443880328223
+        y: 0.25759330313545625
+        z: -0.24215677903405255
+        w: 0.7025106365594606
+    timestamp: 1786618194.9457324
+    duration: 2.0
+    held_after_save: false
 gripper:
   default_duration: 0.5
   presets:
     open: null
     close: null
-
-# Suggested order after real waypoints are taught:
-# sequence:
-#   - MOVE CABLE_HOLD_READY
-#   - MOVE PRE_APPROACH
-#   - MOVE ALIGN
-#   - MOVE PRE_INSERT
-#   - MOVE INSERT
-#   - SET_GRIPPER 200
-#   - WAIT 0.5
-#   - MOVE RETREAT
-#   - MOVE CABLE_HOLD_READY
 sequence:
-  - MOVE CABLE_HOLD_READY
+- MOVE CABLE_HOLD_READY
