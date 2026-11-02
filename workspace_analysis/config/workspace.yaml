@@ -1,0 +1,15 @@
+# G1-A only. Joint geometry and limits always come from the loaded URDF.
+model:
+  description_package: jetrover_description
+  xacro_relative_path: urdf/jetrover.xacro
+  # Optional .urdf/.xacro override; relative paths resolve against this YAML.
+  path: null
+  base_frame: base_link
+  ee_frame: end_effector_link
+  joint_order: [joint1, joint2, joint3, joint4, joint5]
+xacro:
+  MACHINE_TYPE: JetRover_Mecanum
+  LIDAR_TYPE: A1
+# Independent joints outside the selected chain; mimic states are derived.
+auxiliary_positions:
+  r_joint: 0.0
