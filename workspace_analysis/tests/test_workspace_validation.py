@@ -11,11 +11,11 @@ import sys
 import numpy as np
 import pytest
 
-from workspace_analysis.model import load_model
-from workspace_analysis.results import file_sha256, save_results
-from workspace_analysis.sampling import sample_workspace
-from workspace_analysis import validation as validation
-from workspace_analysis import validation_report as reporting
+from workspace_analysis.robot.model import load_model
+from workspace_analysis.workspace.results import file_sha256, save_results
+from workspace_analysis.workspace.sampling import sample_workspace
+from workspace_analysis.experiments import workspace_validation as validation
+from workspace_analysis.experiments import reporting as reporting
 
 
 ROOT = Path(__file__).resolve().parents[1]

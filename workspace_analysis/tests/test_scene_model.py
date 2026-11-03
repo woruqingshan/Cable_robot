@@ -12,8 +12,9 @@ import numpy as np
 import pytest
 import yaml
 
-from workspace_analysis.scene_model import SceneError, load_scene, parse_scene
-from workspace_analysis.transforms import resolve_transform, transform_direction
+from workspace_analysis.scene.schema import SceneError, load_scene, parse_scene
+from workspace_analysis.scene.frames import resolve_transform
+from workspace_analysis.geometry.se3 import transform_direction
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -284,8 +285,8 @@ def test_missing_fields_bad_utf8_size_depth_and_missing_file(document, tmp_path)
 def test_scene_only_import_and_loading_without_ros_or_backend():
     source = str(ROOT / 'src')
     code = (f'import sys; sys.path.insert(0,{source!r}); '
-            'from workspace_analysis.scene_model import load_scene; '
+            'from workspace_analysis.scene.schema import load_scene; '
             f's = load_scene({str(SCENE)!r}); assert len(s.frames)==3; '
-            "assert not any(n in sys.modules for n in ['workspace_analysis.model','rclpy','PyKDL','fcl','moveit','plotly'])")
+            "assert not any(n in sys.modules for n in ['workspace_analysis.robot.model','rclpy','PyKDL','fcl','moveit','plotly'])")
     result = subprocess.run([sys.executable, '-I', '-B', '-c', code], capture_output=True, text=True, timeout=30)
     assert result.returncode == 0, result.stderr

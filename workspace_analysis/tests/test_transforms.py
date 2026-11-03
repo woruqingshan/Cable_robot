@@ -8,7 +8,8 @@ import sys
 import numpy as np
 import pytest
 
-from workspace_analysis import transforms as t
+from workspace_analysis.geometry import se3 as t
+from workspace_analysis.scene import frames as frame_graph
 
 
 QZ90 = [0, 0, np.sqrt(.5), np.sqrt(.5)]
@@ -38,13 +39,13 @@ def test_composition_is_noncommutative_and_inverse_is_rigid():
 
 def test_parent_chain_matches_hand_calculated_point_and_reverse_direction():
     frames = (
-        t.Frame('cabinet', 'base_link', t.Pose((1, 0, 0), tuple(QZ90))),
-        t.Frame('panel', 'cabinet', t.Pose((2, 0, 0), (0, 0, 0, 1))),
-        t.Frame('port', 'panel', t.Pose((0, 3, 0), (0, 0, 0, 1))),
+        frame_graph.Frame('cabinet', 'base_link', t.Pose((1, 0, 0), tuple(QZ90))),
+        frame_graph.Frame('panel', 'cabinet', t.Pose((2, 0, 0), (0, 0, 0, 1))),
+        frame_graph.Frame('port', 'panel', t.Pose((0, 3, 0), (0, 0, 0, 1))),
     )
-    graph = t.FrameGraph(frames[::-1])  # Input order cannot be mistaken for parent order.
+    graph = frame_graph.FrameGraph(frames[::-1])  # Input order cannot be mistaken for parent order.
     # cabinet-origin + Rz90*(2,3,0) = (1,0,0)+(-3,2,0)=(-2,2,0).
-    transform = t.resolve_transform(graph, 'base_link', 'port')
+    transform = frame_graph.resolve_transform(graph, 'base_link', 'port')
     np.testing.assert_allclose(transform[:3, 3], [-2, 2, 0], atol=1e-12)
     np.testing.assert_allclose(t.transform_point(transform, [1, 0, 0]), [-2, 3, 0], atol=1e-12)
     np.testing.assert_allclose(t.transform_point(graph.resolve('port', 'base_link'), [-2, 3, 0]),
@@ -108,7 +109,7 @@ def test_inputs_and_immutable_records_are_not_mutated():
     t.transform_point(matrix, p0)
     t.compose_transforms(matrix, np.eye(4))
     np.testing.assert_array_equal(before, matrix)
-    graph = t.FrameGraph([t.Frame('cabinet', 'base_link', pose)])
+    graph = frame_graph.FrameGraph([frame_graph.Frame('cabinet', 'base_link', pose)])
     exposed = graph.resolve('base_link', 'cabinet')
     exposed[:] = 0
     np.testing.assert_allclose(graph.resolve('base_link', 'cabinet'), before, atol=1e-12)
@@ -119,27 +120,27 @@ def test_inputs_and_immutable_records_are_not_mutated():
 @pytest.mark.parametrize('case', ['duplicate', 'missing', 'self_cycle', 'cycle', 'root_redefined', 'wrong_root'])
 def test_invalid_frame_graphs_rejected(case):
     pose = t.Pose((0, 0, 0), (0, 0, 0, 1))
-    frames = [t.Frame('a', 'base_link', pose)]
-    if case == 'duplicate': frames += [t.Frame('a', 'base_link', pose)]
-    elif case == 'missing': frames = [t.Frame('a', 'unknown', pose)]
-    elif case == 'self_cycle': frames = [t.Frame('a', 'a', pose)]
-    elif case == 'cycle': frames = [t.Frame('a', 'b', pose), t.Frame('b', 'a', pose)]
-    elif case == 'root_redefined': frames = [t.Frame('base_link', 'a', pose)]
+    frames = [frame_graph.Frame('a', 'base_link', pose)]
+    if case == 'duplicate': frames += [frame_graph.Frame('a', 'base_link', pose)]
+    elif case == 'missing': frames = [frame_graph.Frame('a', 'unknown', pose)]
+    elif case == 'self_cycle': frames = [frame_graph.Frame('a', 'a', pose)]
+    elif case == 'cycle': frames = [frame_graph.Frame('a', 'b', pose), frame_graph.Frame('b', 'a', pose)]
+    elif case == 'root_redefined': frames = [frame_graph.Frame('base_link', 'a', pose)]
     with pytest.raises(t.TransformError):
-        t.FrameGraph(frames, root='other' if case == 'wrong_root' else 'base_link')
+        frame_graph.FrameGraph(frames, root='other' if case == 'wrong_root' else 'base_link')
 
 
 def test_scene_transform_import_is_independent_of_ros_environment():
     source = str(Path(__file__).resolve().parents[1] / 'src')
-    code = f"import sys; sys.path.insert(0,{source!r}); import workspace_analysis.transforms; " \
-           "assert not any(n in sys.modules for n in ['workspace_analysis.model','rclpy','PyKDL','urdf_parser_py'])"
+    code = f"import sys; sys.path.insert(0,{source!r}); import workspace_analysis.geometry.se3; import workspace_analysis.scene.frames; " \
+           "assert not any(n in sys.modules for n in ['workspace_analysis.robot.model','rclpy','PyKDL','urdf_parser_py'])"
     result = subprocess.run([sys.executable, '-I', '-B', '-c', code], capture_output=True, text=True, timeout=30)
     assert result.returncode == 0, result.stderr
 
 
 def test_lazy_g1_exports_preserve_identity():
     import workspace_analysis
-    from workspace_analysis import model
+    from workspace_analysis.robot import model as model
     assert workspace_analysis.__all__ == ['KinematicModel', 'ModelError', 'load_model', 'model_from_xml']
     for name in workspace_analysis.__all__:
         assert getattr(workspace_analysis, name) is getattr(model, name)

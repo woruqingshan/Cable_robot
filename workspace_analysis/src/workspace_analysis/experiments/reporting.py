@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 import tempfile
 
-from .validation import ROW_FIELDS, ValidationError, aggregate_seeds
+from .statistics import ROW_FIELDS, ValidationError, aggregate_seeds
 
 
 AGGREGATE_FIELDS = ("samples", "metric", "seed_count", "mean", "std", "std_ddof")
@@ -207,7 +207,7 @@ def write_bundle(output_dir, report, markdown_path):
 
 def load_validation_bundle(output_dir):
     """Accept only completed bundles, verifying CSV/JSON/Markdown file hashes."""
-    from .results import file_sha256
+    from ..workspace.artifacts import file_sha256
     output = Path(output_dir).expanduser().resolve()
     if (output / '.g4_incomplete').exists() or (output / 'failure.json').exists():
         raise ValidationError("Incomplete/failed G4 run")

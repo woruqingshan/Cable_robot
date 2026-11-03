@@ -8,7 +8,6 @@ import time
 import numpy as np
 from scipy.spatial.transform import Rotation
 
-from .fk import ForwardKinematics
 
 
 ALGORITHM = "independent_uniform_joint_space"
@@ -114,6 +113,8 @@ def evaluate_joint_samples(model, q, *, fk=None, progress=None):
             or values.dtype.kind not in "iuf"):
         raise SamplingError("q must be a nonempty real (N, J) array in model joint order")
     values = values.astype(np.float64, copy=True)
+    from ..robot.fk import ForwardKinematics
+
     solver = ForwardKinematics(model) if fk is None else fk
     count = len(values)
     position = np.empty((count, 3), dtype=np.float64)
@@ -159,6 +160,8 @@ def recheck_fk(model, arrays):
     """Recompute up to three recorded rows using the existing G1-A solver."""
     validate_arrays(arrays, model.limits)
     indices = sorted({0, len(arrays["q"]) // 2, len(arrays["q"]) - 1})
+    from ..robot.fk import ForwardKinematics
+
     fk = ForwardKinematics(model)
     positions, angles = [], []
     for index in indices:

@@ -28,7 +28,7 @@ def main():
                         help='Inventory existing G3 HTML; does not regenerate or revalidate visualization')
     args = parser.parse_args()
     try:
-        from workspace_analysis.validation import VoxelGrid, run_validation
+        from workspace_analysis.experiments.workspace_validation import VoxelGrid, run_validation
         report, paths = run_validation(
             args.config, args.output_dir, reuse_prefixes=args.reuse_prefix, sample_counts=args.sample_counts,
             seeds=args.seeds, repro_samples=args.repro_samples, repro_seed=args.repro_seed,

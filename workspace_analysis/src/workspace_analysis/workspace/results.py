@@ -5,7 +5,6 @@ Ubuntu. Two filenames cannot be committed in one filesystem operation. Normal
 failures roll back only owned files; interrupted transactions fail closed.
 """
 
-from hashlib import sha256
 from datetime import datetime
 import importlib.metadata
 import json
@@ -17,20 +16,13 @@ import tempfile
 
 import numpy as np
 
+from .artifacts import file_sha256
 from .sampling import (ALGORITHM, SCOPE_LIMITATIONS,
                        checked_limits, recheck_fk, validate_arrays, validate_integer)
 
 
 class ResultsError(ValueError):
     """A failed transaction, malformed dataset or inconsistent metadata."""
-
-
-def file_sha256(path):
-    digest = sha256()
-    with Path(path).open("rb") as stream:
-        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 def result_paths(prefix):

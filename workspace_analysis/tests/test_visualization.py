@@ -17,8 +17,8 @@ import numpy as np
 import pytest
 import yaml
 
-from workspace_analysis.results import ResultsError
-from workspace_analysis import visualization as viz
+from workspace_analysis.workspace.results import ResultsError
+from workspace_analysis.viz import workspace as viz
 
 
 ROOT = Path(__file__).resolve().parents[1]

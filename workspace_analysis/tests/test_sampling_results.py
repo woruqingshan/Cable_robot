@@ -13,11 +13,11 @@ import numpy as np
 import pytest
 from scipy.spatial.transform import Rotation
 
-from workspace_analysis.fk import ForwardKinematics
-from workspace_analysis.model import load_model
-from workspace_analysis.sampling import (SamplingError, evaluate_joint_samples, recheck_fk,
+from workspace_analysis.robot.fk import ForwardKinematics
+from workspace_analysis.robot.model import load_model
+from workspace_analysis.workspace.sampling import (SamplingError, evaluate_joint_samples, recheck_fk,
                                          sample_joint_positions, sample_workspace, validate_arrays)
-from workspace_analysis.results import (ResultsError, file_sha256, load_results, result_paths,
+from workspace_analysis.workspace.results import (ResultsError, file_sha256, load_results, result_paths,
                                         save_results, workspace_statistics)
 from reference_fk import pose_errors, reference_fk
 
@@ -203,7 +203,7 @@ def test_second_commit_failure_rolls_back_npz_and_temporaries(model, run, tmp_pa
 
 
 def test_both_staging_paths_checked_before_any_publication(model, run, tmp_path, monkeypatch):
-    import workspace_analysis.results as results
+    import workspace_analysis.workspace.results as results
     original = results.tempfile.mkstemp
     calls = [0]
     def second_path_denied(*args, **kwargs):

@@ -6,39 +6,23 @@ G3 load_workspace and build_3d_figure, preserving G2 validation and customdata.
 
 from html import escape
 from html.parser import HTMLParser
-import math
-import numbers
 import os
 from pathlib import Path
 import tempfile
 from typing import TYPE_CHECKING
 
 import numpy as np
-from numpy.typing import ArrayLike, NDArray
+from numpy.typing import NDArray
 
-from .scene_model import SceneSnapshot, load_scene
-from .transforms import resolve_transform, transform_point, transform_direction
+from ..scene.model import SceneSnapshot
+from ..scene.schema import load_scene
+from .meshes import SceneVisualizationError, _positive, _segments, _wire_edges, box_mesh, cylinder_mesh
+from ..scene.frames import resolve_transform
+from ..geometry.se3 import transform_point, transform_direction
 
 if TYPE_CHECKING:
     from plotly.graph_objects import Figure
-    from .visualization import WorkspaceView
-
-
-class SceneVisualizationError(ValueError):
-    """Invalid display input, unavailable Plotly, or failed HTML export."""
-
-
-def _positive(value: float, label: str) -> float:
-    if (isinstance(value, (bool, np.bool_)) or not isinstance(value, numbers.Real)
-            or not math.isfinite(float(value)) or value <= 0):
-        raise SceneVisualizationError(f'{label}: expected a finite positive number')
-    return float(value)
-
-
-def _segments(value: int) -> int:
-    if isinstance(value, (bool, np.bool_)) or not isinstance(value, numbers.Integral) or not 8 <= value <= 256:
-        raise SceneVisualizationError('cylinder_segments: expected integer in [8,256]')
-    return int(value)
+    from .workspace import WorkspaceView
 
 
 def _plotly():
@@ -48,34 +32,6 @@ def _plotly():
         return go, pio
     except ImportError as exc:
         raise SceneVisualizationError('Plotly is unavailable; no dependencies were installed') from exc
-
-
-def box_mesh(size_m: ArrayLike) -> tuple[NDArray[np.float64], NDArray[np.int64]]:
-    """Return 8 centered local vertices and 12 explicit triangles for a box."""
-    raw = np.asarray(size_m, dtype=object)
-    if raw.shape != (3,):
-        raise SceneVisualizationError('size_m: expected three positive full edge lengths')
-    size = np.array([_positive(v, 'size_m') for v in raw], dtype=np.float64)
-    vertices = np.array([[-1,-1,-1], [1,-1,-1], [1,1,-1], [-1,1,-1],
-                         [-1,-1,1], [1,-1,1], [1,1,1], [-1,1,1]], dtype=np.float64) * (size / 2)
-    faces = np.array([[0,2,1], [0,3,2], [4,5,6], [4,6,7], [0,1,5], [0,5,4],
-                      [1,2,6], [1,6,5], [2,3,7], [2,7,6], [3,0,4], [3,4,7]], dtype=np.int64)
-    return vertices, faces
-
-
-def cylinder_mesh(radius_m: float, length_m: float, segments: int = 48
-                  ) -> tuple[NDArray[np.float64], NDArray[np.int64]]:
-    """Return centered +Z cylinder mesh: two rings, two centers, sides and caps."""
-    radius, length, n = _positive(radius_m, 'radius_m'), _positive(length_m, 'length_m'), _segments(segments)
-    angles = np.arange(n) * (2 * np.pi / n)
-    ring = np.column_stack((radius * np.cos(angles), radius * np.sin(angles)))
-    vertices = np.vstack((np.column_stack((ring, np.full(n, -length / 2))),
-                          np.column_stack((ring, np.full(n, length / 2))), [[0,0,-length/2], [0,0,length/2]]))
-    faces = []
-    for i in range(n):
-        j = (i + 1) % n
-        faces.extend([(i,j,j+n), (i,j+n,i+n), (2*n,j,i), (2*n+1,i+n,j+n)])
-    return vertices, np.asarray(faces, dtype=np.int64)
 
 
 def object_mesh(scene: SceneSnapshot, object_id: str, cylinder_segments: int = 48
@@ -111,13 +67,6 @@ def port_directions(scene: SceneSnapshot, port_id: str) -> tuple[NDArray[np.floa
                 name: transform_direction(transform, port[name + '_axis_local'])
                 for name in ('outward', 'insertion', 'key')}
     raise SceneVisualizationError(f'Unknown semantic port: {port_id!r}')
-
-
-def _wire_edges(obj: object, n: int) -> list[tuple[int, int]]:
-    if obj['type'] == 'box':
-        return [(0,1),(1,2),(2,3),(3,0),(4,5),(5,6),(6,7),(7,4),(0,4),(1,5),(2,6),(3,7)]
-    return ([(i, (i+1) % n) for i in range(n)] + [(i+n, (i+1) % n+n) for i in range(n)]
-            + [(i, i+n) for i in (0, n//4, n//2, 3*n//4)])
 
 
 def _add_geometry(figure: 'Figure', scene: SceneSnapshot, segments: int) -> None:
@@ -208,7 +157,7 @@ def build_scene_figure(scene: SceneSnapshot, workspace: 'WorkspaceView | None' =
                           hovertemplate='Base origin (0,0,0) m<extra></extra>', meta={'role': 'base_origin'}))
         workspace_meta = None
     else:
-        from .visualization import build_3d_figure
+        from .workspace import build_3d_figure
         figure = build_3d_figure(workspace)
         figure.data[0].update(meta={'role': 'workspace_samples'}, legendgroup='workspace_samples')
         figure.data[1].update(meta={'role': 'base_origin'})
@@ -251,8 +200,8 @@ def load_scene_figure(scene_path: str | Path, *, input_prefix: str | Path | None
     scene = load_scene(scene_path)
     workspace = None
     if input_prefix is not None:
-        from .visualization import load_workspace
-        config = config_path or Path(__file__).resolve().parents[2] / 'config/workspace.yaml'
+        from .workspace import load_workspace
+        config = config_path or Path(__file__).resolve().parents[3] / 'config/workspace.yaml'
         workspace = load_workspace(input_prefix, config, max_points=max_points)
     elif max_points is not None:
         raise SceneVisualizationError('max_points requires input_prefix; Scene Only has no workspace rows')

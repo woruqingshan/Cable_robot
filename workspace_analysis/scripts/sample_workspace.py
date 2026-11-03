@@ -17,9 +17,9 @@ def main():
     parser.add_argument("--output-prefix", type=Path)
     args = parser.parse_args()
     try:
-        from workspace_analysis.model import JOINT_ORDER, load_model
-        from workspace_analysis.sampling import sample_workspace, validate_integer
-        from workspace_analysis.results import (check_output_available, file_sha256, load_results, save_results)
+        from workspace_analysis.robot.model import JOINT_ORDER, load_model
+        from workspace_analysis.workspace.sampling import sample_workspace, validate_integer
+        from workspace_analysis.workspace.results import (check_output_available, file_sha256, load_results, save_results)
         import numpy as np
 
         validate_integer(args.samples, "samples", minimum=1)

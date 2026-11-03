@@ -21,7 +21,7 @@ def main() -> int:
     parser.add_argument('--cylinder-segments', type=int, default=48)
     args = parser.parse_args()
     try:
-        from workspace_analysis.scene_visualization import check_html_available, load_scene_figure, export_scene_html
+        from workspace_analysis.viz.scene import check_html_available, load_scene_figure, export_scene_html
         check_html_available(args.output)
         figure = load_scene_figure(args.scene, input_prefix=args.input_prefix, config_path=args.config,
                                   max_points=args.max_points, axis_length=args.axis_length,

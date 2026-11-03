@@ -14,8 +14,9 @@ import sys
 import numpy as np
 import pytest
 
-from workspace_analysis.scene_model import load_scene, parse_scene
-from workspace_analysis import scene_visualization as viz
+from workspace_analysis.scene.schema import load_scene, parse_scene
+from workspace_analysis.viz import scene as viz
+from workspace_analysis.viz import meshes
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -44,7 +45,7 @@ def traces(figure, role):
 
 
 def test_box_eight_vertices_full_dimensions_and_closed_twelve_triangle_surface():
-    vertices, faces = viz.box_mesh([2, 4, 6])
+    vertices, faces = meshes.box_mesh([2, 4, 6])
     assert vertices.shape == (8, 3) and faces.shape == (12, 3)
     assert len(np.unique(vertices, axis=0)) == 8
     np.testing.assert_array_equal(vertices.min(axis=0), [-1, -2, -3])
@@ -65,7 +66,7 @@ def test_rotated_box_and_parent_frame_rotation_have_analytic_world_vertices(scen
 
 def test_cylinder_radius_length_caps_and_rotated_world_axis(scene):
     n = 16
-    vertices, faces = viz.cylinder_mesh(.015, .08, n)
+    vertices, faces = meshes.cylinder_mesh(.015, .08, n)
     assert vertices.shape == (2*n+2, 3) and faces.shape == (4*n, 3)
     np.testing.assert_allclose(np.linalg.norm(vertices[:2*n, :2], axis=1), .015, atol=1e-12)
     np.testing.assert_array_equal(vertices[-2:, 2], [-.04, .04])
@@ -123,8 +124,8 @@ def test_scene_figure_has_exactly_nine_solids_semantic_colors_and_frame_groups(s
 
 
 def test_workspace_uses_g3_loader_without_resampling_and_preserves_all_rows(copied_pair, monkeypatch):
-    from workspace_analysis import visualization as g3
-    from workspace_analysis import sampling
+    from workspace_analysis.viz import workspace as g3
+    from workspace_analysis.workspace import sampling as sampling
     actual, observed = g3.load_workspace, []
     def checked(prefix, config, max_points=None):
         view = actual(prefix, config, max_points=max_points)
@@ -162,7 +163,7 @@ def test_display_limit_keeps_deterministic_original_indices(copied_pair):
 def test_reference_frame_mismatch_is_rejected(scene, copied_pair):
     with pytest.raises(viz.SceneVisualizationError, match='reference frame'):
         viz.build_scene_figure(replace(scene, reference_frame='other'))
-    from workspace_analysis.visualization import load_workspace
+    from workspace_analysis.viz.workspace import load_workspace
     view = load_workspace(copied_pair, CONFIG)
     view.metadata['robot_model']['base_frame'] = 'base_footprint'
     with pytest.raises(viz.SceneVisualizationError, match='Base Frames'):
@@ -213,10 +214,10 @@ def test_scene_only_cli_works_in_isolated_python_without_ros_or_g2(tmp_path):
     output = tmp_path / 'isolated.html'
     source = str(ROOT / 'src')
     code = (f'import sys; sys.path.insert(0,{source!r}); '
-            'from workspace_analysis.scene_visualization import load_scene_figure, export_scene_html; '
+            'from workspace_analysis.viz.scene import load_scene_figure, export_scene_html; '
             f'fig=load_scene_figure({str(SCENE)!r},config_path="missing_unused.yaml",cylinder_segments=8); '
             f'export_scene_html(fig,{str(output)!r}); '
-            "assert not any(n in sys.modules for n in ['rclpy','PyKDL','workspace_analysis.model','workspace_analysis.visualization'])")
+            "assert not any(n in sys.modules for n in ['rclpy','PyKDL','workspace_analysis.robot.model','workspace_analysis.viz.workspace'])")
     result = subprocess.run([sys.executable,'-I','-B','-c',code],cwd=tmp_path,text=True,capture_output=True,timeout=30)
     assert result.returncode == 0, result.stderr
     assert output.stat().st_size>10000

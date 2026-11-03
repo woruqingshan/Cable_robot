@@ -13,9 +13,8 @@ import tempfile
 
 import numpy as np
 
-from .model import load_model
-from .results import load_results
-from .sampling import validate_arrays, validate_integer
+from ..workspace.results import load_results
+from ..workspace.sampling import validate_arrays, validate_integer
 
 
 class VisualizationError(ValueError):
@@ -92,6 +91,8 @@ def load_workspace(input_prefix, config_path, *, max_points=None):
 
     This reuses the existing validation API, not a new sampling/FK pipeline.
     """
+    from ..robot.model import load_model
+
     model = load_model(config_path)
     arrays, metadata = load_results(input_prefix, model=model)
     return prepare_view(arrays, metadata, source_prefix=str(Path(input_prefix).expanduser().absolute()),
