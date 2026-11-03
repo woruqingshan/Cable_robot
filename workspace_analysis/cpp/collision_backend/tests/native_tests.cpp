@@ -131,6 +131,50 @@ int main() {
     check(scoped["task_scope"]["zero_clearance_candidate"].get<bool>() && scoped["task_scope"]["gripper_internal_collision"].get<bool>(),"independent task candidate with internal collision");
     check(scoped["task_scope"]["candidate_computed_from_fresh_boolean_queries"].get<bool>(),"no inference from capped contacts");
     auto after_scope=assembly.query(state);check(before_scope["colliding_pairs"]==after_scope["colliding_pairs"] && before_scope["clearance"]==after_scope["clearance"],"scope does not pollute next query");
+    // C3: SRDF is initialized by MoveIt, Raw always uses its own empty ACM.
+    auto semantic_input=[](J input,const std::string& srdf_xml,J pairs) {
+      const auto model_sha=input.at("model").at("urdf_sha256");J reviews=J::array();
+      for(const auto& p:pairs)reviews.push_back({{"links",p},{"decision","disabled_model_only"},{"evidence","analytic native fixture only"}});
+      J review={{"urdf_sha256",model_sha},{"srdf_sha256",cable::hash(srdf_xml)},{"disabled_pairs",pairs},{"status","model_only_partial"},{"pair_reviews",reviews}};
+      input["semantic"]={{"srdf_xml",srdf_xml},{"srdf_sha256",cable::hash(srdf_xml)},{"urdf_sha256",model_sha},{"disabled_pairs",pairs},{"review_canonical_json",review.dump()},{"review_sha256",cable::hash(review.dump())}};
+      return input;
+    };
+    const std::string fixture_srdf=R"(<robot name="fixture"><group name="arm"><joint name="j"/></group><group_state name="reference" group="arm"><joint name="j" value="0"/></group_state><disable_collisions link1="base_link" link2="tip" reason="synthetic reviewed overlap"/></robot>)";
+    auto si=semantic_input(initialization(true,0),fixture_srdf,J::array({{"base_link","tip"}}));
+    cable::Engine semantics;auto sr=semantics.initialize(si);auto sq=semantics.query(q);
+    check(sr["audit"]["semantic"]["actual_disabled_pairs"]==si["semantic"]["disabled_pairs"],"actual SRDF ACM readback");
+    check(sq["raw_self_collision"].get<bool>() && !sq["semantic_self_collision"].get<bool>() && sq["environment_collision"].get<bool>(),"raw empty vs independent semantic and unchanged environment");
+    check(sq["effective_self_collision"].get<bool>(),"legacy effective field is not silently renamed semantic");
+    check(!sq["semantic_clearance"]["self"]["available"].get<bool>(),"semantic distance uses semantic ACM");
+    bool overlay_rejected=false;try{semantics.set_policy({});}catch(...){overlay_rejected=true;}check(overlay_rejected,"no implicit legacy ACM union");
+    // Separate real FCL positive fixtures: gripper/base (nonadjacent), gripper/arm, gripper/environment.
+    for(const auto& kind:{std::string("gripper_base"),std::string("gripper_arm"),std::string("gripper_environment")}) {
+      auto fixture=initialization(false,kind=="gripper_environment"?2.5:10.);
+      auto ux=fixture["model"]["urdf_xml"].get<std::string>();
+      const std::string x=kind=="gripper_base"?"-2.025":kind=="gripper_arm"?"0.025":"0.5";
+      ux.insert(ux.find("</robot>"),"<link name=\"gripper\"><collision><geometry><box size=\"0.1 0.1 0.1\"/></geometry></collision></link><joint name=\"mount\" type=\"fixed\"><parent link=\"tip\"/><child link=\"gripper\"/><origin xyz=\""+x+" 0 0\"/></joint>");
+      fixture["model"]["urdf_xml"]=ux;fixture["model"]["urdf_sha256"]=cable::hash(ux);
+      cable::Engine positive;positive.initialize(semantic_input(fixture,fixture_srdf,J::array({{"base_link","tip"}})));
+      auto answer=positive.query({{"joint_positions",{{"j",0},{"mount",0}}}});
+      check(answer[kind=="gripper_environment"?"environment_collision":"semantic_self_collision"].get<bool>(),"gripper external FCL positive must survive SRDF");
+      bool identified=false;
+      if(kind=="gripper_environment")for(const auto& p:answer["colliding_pairs"])identified|=p["kind"]=="environment" && (p["first"]=="gripper" || p["second"]=="gripper");
+      else for(const auto& p:answer["semantic_blocking_pairs"])identified|=(p[0]=="gripper" || p[1]=="gripper") && (p[0]==(kind=="gripper_base"?"base_link":"tip") || p[1]==(kind=="gripper_base"?"base_link":"tip"));
+      check(identified,"positive contact pair identity");
+    }
+    for(int bad_case=0;bad_case<5;++bad_case) {
+      auto bad=si;
+      if(bad_case==0)bad["semantic"]["srdf_sha256"]="wrong";
+      if(bad_case==1)bad["semantic"]["urdf_sha256"]="wrong";
+      if(bad_case==2)bad=semantic_input(initialization(true),"<robot name=\"other\"/>",J::array());
+      if(bad_case==3)bad=semantic_input(initialization(true),"<robot name=\"fixture\"><disable_collisions link1=\"missing\" link2=\"tip\" reason=\"x\"/></robot>",J::array({{"missing","tip"}}));
+      if(bad_case==4)bad=semantic_input(initialization(true),"<robot name=\"fixture\"><group name=\"a\"><group name=\"a\"/></group></robot>",J::array());
+      bool failed=false;try{cable::Engine e;e.initialize(bad);}catch(...){failed=true;}check(failed,"invalid semantic initialization rejected");
+    }
+    // INIT restoration and q sequence must not retain old semantic/default ACM.
+    semantics.initialize(initialization(true));check(semantics.query(q)["raw_self_collision"].get<bool>(),"restore legacy raw");
+    check(!semantics.query(q).contains("semantic_self_collision"),"semantic mode does not leak across INIT");
+    std::cout << "SEMANTIC_NATIVE_VALIDATION=PASS: actual ACM, independent FCL, gripper/base arm environment, invalid identities, restoration\n";
     std::cout << "TASK_SCOPE_NATIVE_VALIDATION=" << scoped["task_scope"].dump() << '\n';
     std::cout << "CLEARANCE_VALIDATION=" << clearance_cases.dump() << '\n';
     std::cout << "PASS: real MoveIt/FCL, collision regressions, analytic clearance and explicit solver order\n";

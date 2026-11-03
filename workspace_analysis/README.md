@@ -1200,3 +1200,9 @@ with Evaluator(model, scene, policy, backend_path, task_scope=scope, gripper=0.3
 # rows[i]["task_scope_candidate"] 独立于原 model_scope_collision_free / final_decision。
 # 内部诊断仍 UNVERIFIED，Task Candidate 不代表完整机器人或硬件安全。
 ```
+
+## C3 reviewed SRDF collision semantics
+
+See [C3 semantics](docs/c3_collision_semantics.md) and [validation commands](docs/c3_semantic_validation.md).
+The optional SRDF channel keeps Raw, historical ACM and Semantic FCL queries separate.
+Current model review is PARTIAL; normal-reference validation is PENDING. No10,000 rerun is enabled.

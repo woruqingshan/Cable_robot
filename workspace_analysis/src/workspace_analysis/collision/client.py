@@ -59,10 +59,13 @@ class CollisionClient:
                 if isinstance(exc,(KeyboardInterrupt,SystemExit)):raise
                 raise CollisionError(str(exc)) from exc
 
-    def initialize(self, model, scene, *, geometry_profile=None):
+    def initialize(self, model, scene, *, geometry_profile=None, semantic=None):
         """INIT once; READY is accepted only after independent identity checks."""
         try:
             init=make_init(model,scene)
+            if semantic is not None:
+                if geometry_profile is not None:raise CollisionError('semantic mode requires official geometry without profile override')
+                init.update(semantic.wire())
             if geometry_profile is not None:init.update(geometry_profile.wire())
             reply=self._exchange({'op':'INIT',**init})
             self.identity=check_ready(reply,init,self.executable)
@@ -73,8 +76,25 @@ class CollisionClient:
         except BaseException:
             self._broken=True;self.close();raise
 
+    def candidates(self, *, trials=0):
+        """Run standard MoveIt candidate generation on an isolated native scene.
+
+        Zero selects a bounded thread-aware count. Recommendations never install ACM.
+        Use a separate client session for this diagnostic operation.
+        """
+        if self.identity is None:raise CollisionError('initialize first')
+        if type(trials) is not int or not 0<=trials<=100000:raise CollisionError('invalid candidate trial count')
+        reply=self._exchange({'op':'CANDIDATES','trials':trials})
+        if reply.get('backend_status')!='CANDIDATES' or reply.get('semantic_acm_modified') is not False or reply.get('finite_sampling_is_safety_proof') is not False:raise CollisionError('invalid candidate acknowledgement')
+        names={v['name'] for v in self.ready['audit']['links']};seen=set()
+        for p in reply['candidate_pairs']:
+            pair=p.get('links',[])
+            if len(pair)!=2 or pair[0]>=pair[1] or not set(pair)<=names or tuple(pair) in seen or p.get('applied') is not False or p.get('review_status')!='UNREVIEWED':raise CollisionError('invalid candidate pair')
+            seen.add(tuple(pair))
+        return reply
+
     def set_policy(self, canonical, digest):
-        """Explicit additive protocol-v1 operation; lock the acknowledged new policy identity."""
+        """Explicit protocol-v1 policy replacement; semantic sessions reject overlays."""
         previous=self.identity
         if previous is None:raise CollisionError('initialize first')
         self.identity=None
@@ -96,6 +116,9 @@ class CollisionClient:
         if task_scope is not None:payload.update(task_scope_canonical_json=task_scope[0],task_scope_sha256=task_scope[1],task_scope_context=self.identity)
         try:
             reply=check_query(self._exchange(payload))
+            if self.ready and 'semantic' in self.ready.get('audit',{}):
+                from .semantic import check_semantic_query
+                check_semantic_query(reply,self.ready['audit']['semantic']['actual_disabled_pairs'])
             if task_scope is not None:
                 from .scope import check_scope_result
                 check_scope_result(reply,task_scope,self.identity)

@@ -2,12 +2,14 @@
 #include <moveit/collision_detection_fcl/collision_detector_allocator_fcl.h>
 #include <moveit/robot_model/robot_model.h>
 #include <srdfdom/model.h>
+#include <tinyxml2.h>
 #include <urdf_parser/urdf_parser.h>
 #include <resource_retriever/retriever.hpp>
 #include <openssl/sha.h>
 #include <chrono>
 #include <cmath>
 #include <fstream>
+#include <functional>
 #include <iomanip>
 #include <map>
 #include <set>
@@ -63,7 +65,8 @@ static bool selected(const std::set<std::pair<std::string,std::string>>& pairs,c
   return pairs.count(pair_key(a,b));
 }
 J Engine::initialize(const J& in) {
-  scene_.reset(); identity_=J();
+  scene_.reset(); identity_=J(); semantic_enabled_=false; semantic_audit_=J();
+  policy_acm_.clear();raw_acm_.clear();policy_=J();refined_.reset();profile_=J();profile_pairs_.clear();distance_only_pairs_.clear();
   const auto& m=in.at("model");const std::string xml=m.at("urdf_xml");
   need(hash(xml)==m.at("urdf_sha256"),"URDF identity mismatch");
   urdf_=urdf::parseURDF(xml);need(bool(urdf_),"invalid URDF");
@@ -133,12 +136,93 @@ J Engine::initialize(const J& in) {
     joints.push_back(row);
   }
   auto srdf=std::make_shared<srdf::Model>();
-  const auto srdf_xml="<robot name=\""+urdf_->getName()+"\"></robot>";
+  std::string srdf_xml="<robot name=\""+urdf_->getName()+"\"></robot>";
+  std::set<std::pair<std::string,std::string>> declared_pairs;
+  if(in.contains("semantic")) {
+    need(!in.contains("geometry_profile_canonical_json"),"semantic mode requires unmodified official geometry");
+    const auto& sem=in.at("semantic");srdf_xml=sem.at("srdf_xml");
+    need(hash(srdf_xml)==sem.at("srdf_sha256") && sem.at("urdf_sha256")==hash(xml),"semantic SRDF/model hash mismatch");
+    const std::string review=sem.at("review_canonical_json");
+    need(hash(review)==sem.at("review_sha256"),"semantic review hash mismatch");
+    auto reviewed=J::parse(review);need(reviewed.at("urdf_sha256")==hash(xml) && reviewed.at("srdf_sha256")==hash(srdf_xml),"semantic review binding mismatch");
+    need(reviewed.at("status")=="model_only_partial","unsupported semantic review claim");
+    need(srdf_xml.find("<!DOCTYPE")==std::string::npos && srdf_xml.find("<!ENTITY")==std::string::npos,"SRDF DTD/entities forbidden");
+    tinyxml2::XMLDocument doc;need(doc.Parse(srdf_xml.c_str())==tinyxml2::XML_SUCCESS,"invalid SRDF XML");
+    const auto* root=doc.RootElement();
+    need(root && std::string(root->Name())=="robot" && root->Attribute("name") && urdf_->getName()==root->Attribute("name"),"SRDF robot name mismatch");
+    auto attr=[](const tinyxml2::XMLElement* e,const char* k)->std::string {const char* v=e->Attribute(k);need(v && *v,std::string("missing SRDF attribute ")+k);return v;};
+    std::set<std::string> groups;std::set<std::pair<std::string,std::string>> states;
+    for(auto e=root->FirstChildElement();e;e=e->NextSiblingElement())if(std::string(e->Name())=="group")need(groups.insert(attr(e,"name")).second,"duplicate SRDF group");
+    for(auto e=root->FirstChildElement();e;e=e->NextSiblingElement()) {
+      const std::string tag=e->Name();
+      if(tag=="disable_collisions") {
+        auto a=attr(e,"link1"),b=attr(e,"link2");attr(e,"reason");
+        need(a!=b && urdf_->getLink(a) && urdf_->getLink(b) && declared_pairs.insert(pair_key(a,b)).second,"invalid/duplicate SRDF disabled pair");
+        need(!e->FirstChildElement(),"invalid disabled pair child");
+      } else if(tag=="group") {
+        need(e->FirstChildElement(),"empty SRDF group");
+        for(auto c=e->FirstChildElement();c;c=c->NextSiblingElement()) {
+          const std::string kind=c->Name();
+          if(kind=="joint")need(bool(urdf_->getJoint(attr(c,"name"))),"unknown SRDF joint");
+          else if(kind=="link")need(bool(urdf_->getLink(attr(c,"name"))),"unknown SRDF link");
+          else if(kind=="chain") {
+            auto b=attr(c,"base_link"),v=attr(c,"tip_link");auto link=urdf_->getLink(v);need(bool(link) && bool(urdf_->getLink(b)),"unknown SRDF chain link");
+            while(link->name!=b && link->parent_joint)link=urdf_->getLink(link->parent_joint->parent_link_name);
+            need(link->name==b && b!=v,"invalid SRDF chain");
+          } else if(kind=="group")need(groups.count(attr(c,"name")),"unknown SRDF subgroup");
+          else need(false,"unsupported SRDF group element");
+        }
+      } else if(tag=="group_state") {
+        const auto g=attr(e,"group");need(groups.count(g) && states.insert({g,attr(e,"name")}).second,"invalid SRDF group state");
+        std::set<std::string> names;
+        for(auto c=e->FirstChildElement();c;c=c->NextSiblingElement()) {
+          need(std::string(c->Name())=="joint","invalid state element");auto j=urdf_->getJoint(attr(c,"name"));
+          need(bool(j) && j->type==urdf::Joint::REVOLUTE && !j->mimic && names.insert(j->name).second,"invalid state joint");
+          std::istringstream v(attr(c,"value"));double value;std::string extra;need(bool(v>>value) && !(v>>extra) && std::isfinite(value) && value>=j->limits->lower && value<=j->limits->upper,"invalid named state value");
+        }
+      } else need(false,"unsupported SRDF element (explicit support required)");
+    }
+    std::map<std::string,std::set<std::string>> edges;
+    for(auto e=root->FirstChildElement("group");e;e=e->NextSiblingElement("group"))
+      for(auto c=e->FirstChildElement("group");c;c=c->NextSiblingElement("group"))edges[attr(e,"name")].insert(attr(c,"name"));
+    std::set<std::string> visiting,done;
+    std::function<void(const std::string&)> visit=[&](const std::string& n){
+      need(!visiting.count(n),"cyclic SRDF subgroup");if(done.count(n))return;
+      visiting.insert(n);for(const auto& child:edges[n])visit(child);visiting.erase(n);done.insert(n);
+    };for(const auto& n:groups)visit(n);
+    J expected=J::array();for(const auto& p:declared_pairs)expected.push_back({p.first,p.second});
+    need(expected==sem.at("disabled_pairs") && expected==reviewed.at("disabled_pairs"),"reviewed SRDF disabled pairs mismatch");
+    std::set<std::pair<std::string,std::string>> reviewed_pairs;
+    for(const auto& row:reviewed.at("pair_reviews")) {
+      auto names=row.at("links");need(names.is_array() && names.size()==2 && row.at("decision")=="disabled_model_only" && row.at("evidence").is_string() && !row.at("evidence").get<std::string>().empty(),"missing semantic pair review evidence");
+      need(reviewed_pairs.insert(pair_key(names[0],names[1])).second,"duplicate semantic review pair");
+    }
+    need(reviewed_pairs==declared_pairs,"unreviewed disabled SRDF pair");
+    semantic_enabled_=true;
+    semantic_audit_={{"disabled_pairs",expected},{"review_sha256",hash(review)},{"review_status",reviewed.at("status")},{"raw_acm_size",0},{"overlay_applied",false}};
+  }
   need(srdf->initString(*urdf_,srdf_xml),"SRDF initialization failed");
   auto robot=std::make_shared<moveit::core::RobotModel>(urdf_,srdf);
+  if(semantic_enabled_) {
+    need(robot->getJointModelGroupNames().size()==srdf->getGroups().size(),"MoveIt lost invalid SRDF group");
+    for(const auto& st:srdf->getGroupStates()) {
+      const auto* group=robot->getJointModelGroup(st.group_);need(group,"unknown named state group");
+      for(const auto& [n,v]:st.joint_values_)need(group->hasJointModel(n),"named state joint outside group");
+    }
+  }
   scene_=std::make_shared<planning_scene::PlanningScene>(robot);
   scene_->allocateCollisionDetector(collision_detection::CollisionDetectorAllocatorFCL::create());
-  scene_->getAllowedCollisionMatrixNonConst().clear(); // No adjacent/fixed/random exemptions.
+  if(!semantic_enabled_)scene_->getAllowedCollisionMatrixNonConst().clear();
+  if(semantic_enabled_) {
+    const auto& acm=scene_->getAllowedCollisionMatrix();J actual=J::array();
+    for(const auto& [a,la]:urdf_->links_)for(const auto& [b,lb]:urdf_->links_)if(a<b) {
+      collision_detection::AllowedCollision::Type kind;
+      if(acm.getAllowedCollision(a,b,kind) && kind==collision_detection::AllowedCollision::ALWAYS)actual.push_back({a,b});
+    }
+    need(actual==semantic_audit_.at("disabled_pairs"),"MoveIt initialized ACM differs from reviewed SRDF");
+    semantic_audit_["actual_disabled_pairs"]=actual;semantic_audit_["acm_sha256"]=hash(actual.dump());
+    semantic_audit_["initialization_verified"]=true;
+  }
   J moveit_bounds=J::object();
   for(const auto& name:robot->getVariableNames()) {
     const auto& b=robot->getVariableBounds(name);
@@ -225,6 +309,11 @@ J Engine::initialize(const J& in) {
           {"policy",policy},{"missing_visual_collision_links",missing},{"objects_base",objects_},
           {"coverage_verified",false},{"acm_reviewed",false},{"tool_modeled",false},{"clearance_implemented",true}};
   need(audit_["detector"]=="FCL","FCL not active");
+  if(semantic_enabled_) {
+    audit_["semantic"]=semantic_audit_;
+    identity_["semantic_acm_sha256"]=semantic_audit_.at("acm_sha256");
+    identity_["semantic_review_sha256"]=semantic_audit_.at("review_sha256");
+  }
   J reply={{"audit",audit_},{"backend_status","READY"}};
   if(in.contains("geometry_profile_canonical_json")) {
     const auto text=in.at("geometry_profile_canonical_json").get<std::string>();
@@ -276,6 +365,7 @@ J Engine::initialize(const J& in) {
   reply["identity"]=identity_;return reply;
 }
 J Engine::set_policy(const J& in) {
+  need(!semantic_enabled_,"semantic mode forbids implicit historical policy overlay");
   need(bool(scene_),"not initialized");
   const auto text=in.at("policy_canonical_json").get<std::string>();
   need(hash(text)==in.at("policy_sha256"),"policy hash mismatch");
@@ -305,6 +395,7 @@ J Engine::set_policy(const J& in) {
 }
 J Engine::query(const J& in) {
   need(bool(scene_) && !identity_.is_null(),"backend not initialized");
+  if(semantic_enabled_)need(!in.contains("task_scope_canonical_json") && !in.contains("task_scope_sha256") && !in.contains("task_scope_context"),"semantic mode forbids task scope overlay");
   if(refined_ && (in.contains("task_scope_canonical_json") || in.contains("task_scope_sha256") || in.contains("task_scope_context")))throw std::runtime_error("task scope v0 requires official full geometry; diagnostic refinement unsupported");
   const auto start=std::chrono::steady_clock::now();const auto positions=in.at("joint_positions");
   need(positions.is_object() && positions.size()==urdf_->joints_.size(),"full URDF joint state required");
@@ -333,8 +424,8 @@ J Engine::query(const J& in) {
     need(req.max_contacts_per_pair>=1 && req.max_contacts_per_pair<=512 && req.max_contacts>=req.max_contacts_per_pair && req.max_contacts<=50000,"geometry audit limits outside bounds");
   }
   collision_detection::CollisionResult self,env;self.clear();env.clear();
-  scene_->getCollisionEnvUnpadded()->checkSelfCollision(req,self,state,scene_->getAllowedCollisionMatrix());
-  scene_->getCollisionEnvUnpadded()->checkRobotCollision(req,env,state,scene_->getAllowedCollisionMatrix());
+  scene_->getCollisionEnvUnpadded()->checkSelfCollision(req,self,state,raw_acm_);
+  scene_->getCollisionEnvUnpadded()->checkRobotCollision(req,env,state,raw_acm_);
   J pairs=J::array(), contacts=J::array();
   for(auto item : {std::make_pair("self",&self),std::make_pair("environment",&env)})
     for(const auto& contact:item.second->contacts)pairs.push_back({{"kind",item.first},{"first",contact.first.first},{"second",contact.first.second}});
@@ -428,6 +519,21 @@ J Engine::query(const J& in) {
           {"joint_positions_used",used},{"link_transforms_base",transforms},
           {"T_base_to_ee",transforms.at(ee_)},{"object_count",objects_.size()},
           {"query_elapsed_s",std::chrono::duration<double>(std::chrono::steady_clock::now()-start).count()}};
+  if(semantic_enabled_) {
+    collision_detection::CollisionResult sem,sem_bool;collision_detection::CollisionRequest bool_req;bool_req.contacts=false;
+    const auto& acm=scene_->getAllowedCollisionMatrix();
+    scene_->getCollisionEnvUnpadded()->checkSelfCollision(req,sem,state,acm);
+    scene_->getCollisionEnvUnpadded()->checkSelfCollision(bool_req,sem_bool,state,acm);
+    J blocking=J::array();for(const auto& c:sem.contacts)blocking.push_back({c.first.first,c.first.second});
+    need(sem.collision==sem_bool.collision,"semantic contact/boolean disagreement");
+    response["semantic_self_collision"]=sem_bool.collision;
+    response["semantic_blocking_pairs"]=blocking;
+    response["disabled_collision_pairs"]=semantic_audit_.at("actual_disabled_pairs");
+    response["semantic_clearance"]={{"self",distance_json(true,sem_bool.collision,sem,0,&acm)},{"environment",response.at("clearance").at("environment")}};
+    response["semantic_pair_list_may_be_truncated"]=sem.contact_count>=req.max_contacts;
+    response["semantic_query_method"]="independent_MoveIt_FCL_contacts_and_boolean";
+    response["hardware_validated"]=false;
+  }
   if(in.contains("geometry_audit")) {
     J truncated=J::array();for(auto item:{std::make_pair("self",&self),std::make_pair("environment",&env),std::make_pair("effective_self",&effective)})
       for(const auto& p:item.second->contacts)if(p.second.size()>=req.max_contacts_per_pair)truncated.push_back({{"kind",item.first},{"links",{p.first.first,p.first.second}}});
@@ -530,7 +636,7 @@ J Engine::query(const J& in) {
     // Authoritative complete searches: never infer candidate by editing a capped contact list.
     scene_->getCollisionEnvUnpadded()->checkSelfCollision(boolean_req,blocking_bool,state,scoped_acm);
     scene_->getCollisionEnvUnpadded()->checkSelfCollision(boolean_req,internal_bool,state,internal_acm);
-    scene_->getCollisionEnvUnpadded()->checkRobotCollision(boolean_req,environment_bool,state,scene_->getAllowedCollisionMatrix());
+    scene_->getCollisionEnvUnpadded()->checkRobotCollision(boolean_req,environment_bool,state,raw_acm_);
     need(environment_bool.collision==env.collision,"task/official environment disagreement");
     auto list_pairs=[](const collision_detection::CollisionResult& r){J result=J::array();for(const auto& p:r.contacts)result.push_back({p.first.first,p.first.second});return result;};
     J internal_contacts=J::array();for(const auto& c:contacts)if(c.at("kind")=="self" && selected(internal_pairs,c.at("first"),c.at("second")))internal_contacts.push_back(c);

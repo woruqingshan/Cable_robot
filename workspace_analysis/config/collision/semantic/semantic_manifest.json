@@ -1,0 +1,78 @@
+{
+  "id": "jetrover_semantic_v0",
+  "status": "model_only_partial",
+  "source": "project-reviewed fixed assembly evidence only; vendor rosmentor rejected as incompatible",
+  "urdf_sha256": "5ff0007d08a798ebe31bc4e243d457e0f463aa7b896c088a889c919571ccd72d",
+  "srdf_sha256": "5bf9ddcf8167da5f5e448b9f8f84ca7cd1353b161a45d96eece87e014fac5df7",
+  "disabled_pairs": [
+    [
+      "back_shell_black_link",
+      "back_shell_green_link"
+    ],
+    [
+      "back_shell_green_link",
+      "base_link"
+    ],
+    [
+      "gripper_link",
+      "link5"
+    ],
+    [
+      "link1",
+      "servo_link1"
+    ],
+    [
+      "link4",
+      "servo_link2"
+    ]
+  ],
+  "pair_reviews": [
+    {
+      "links": [
+        "back_shell_black_link",
+        "back_shell_green_link"
+      ],
+      "decision": "disabled_model_only",
+      "evidence": "docs/c2_collision_pair_audit.md; URDF fixed connecting path + C1 hashed mesh records",
+      "rationale": "Explicit fixed relative transform and coincident collision meshes: model-only assembly candidate, not hardware approval"
+    },
+    {
+      "links": [
+        "back_shell_green_link",
+        "base_link"
+      ],
+      "decision": "disabled_model_only",
+      "evidence": "docs/c25_collision_visualization.md and docs/c26_collision_refinement.md; fixed URDF paths and Native contact regions",
+      "rationale": "Internal collision of a single fixed rigid assembly; relative transform invariant, source Mesh overlap verified in C2.5. Model-only scope excludes internal assembly interference; not hardware certification."
+    },
+    {
+      "links": [
+        "gripper_link",
+        "link5"
+      ],
+      "decision": "disabled_model_only",
+      "evidence": "docs/c2_collision_pair_audit.md; URDF fixed connecting path + C1 hashed mesh records",
+      "rationale": "Explicit fixed relative transform and coincident collision meshes: model-only assembly candidate, not hardware approval"
+    },
+    {
+      "links": [
+        "link1",
+        "servo_link1"
+      ],
+      "decision": "disabled_model_only",
+      "evidence": "docs/c2_collision_pair_audit.md; URDF fixed connecting path + C1 hashed mesh records",
+      "rationale": "Explicit fixed relative transform and coincident collision meshes: model-only assembly candidate, not hardware approval"
+    },
+    {
+      "links": [
+        "link4",
+        "servo_link2"
+      ],
+      "decision": "disabled_model_only",
+      "evidence": "docs/c25_collision_visualization.md and docs/c26_collision_refinement.md; fixed URDF paths and Native contact regions",
+      "rationale": "Internal collision of a single fixed rigid assembly; relative transform invariant, source Mesh overlap verified in C2.5. Model-only scope excludes internal assembly interference; not hardware certification."
+    }
+  ],
+  "normal_reference_status": "PENDING",
+  "hardware_validated": false
+}

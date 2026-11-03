@@ -10,7 +10,7 @@ from .protocol import CollisionError
 
 class Evaluator:
     """Model/scene/policy/gripper/thresholds are explicit and immutable per session."""
-    def __init__(self,model,scene,policy,backend,*,gripper=.3,clearance=None,timeout=30,geometry_profile=None,task_scope=None):
+    def __init__(self,model,scene,policy,backend,*,gripper=.3,clearance=None,timeout=30,geometry_profile=None,task_scope=None,semantic=None):
         self.model=model;self.scene=scene;self.policy=policy;self.gripper=gripper
         self.clearance=dict(clearance) if clearance is not None else {'environment_m':0.,'self_m':0.}
         if set(self.clearance)!={'environment_m','self_m'} or any(type(x) not in (int,float) or not math.isfinite(x) or x<0 for x in self.clearance.values()):
@@ -19,9 +19,15 @@ class Evaluator:
         if task_scope is not None:
             from .scope import canonical_scope
             if canonical_scope(json.loads(task_scope[0]),model,policy)!=task_scope:raise CollisionError('invalid task scope canonical identity')
+        if semantic is not None and (policy is not None or task_scope is not None or geometry_profile is not None):raise CollisionError('semantic configuration is independent; no implicit policy/scope/geometry union')
+        self.semantic=semantic
         self.client=CollisionClient(backend,timeout=timeout)
         try:
-            self.ready=self.client.initialize(model,scene,**({'geometry_profile':geometry_profile} if geometry_profile is not None else {}));self.client.set_policy(*policy)
+            options={}
+            if geometry_profile is not None:options['geometry_profile']=geometry_profile
+            if semantic is not None:options['semantic']=semantic
+            self.ready=self.client.initialize(model,scene,**options)
+            if semantic is None:self.client.set_policy(*policy)
         except BaseException:self.client.close();raise
         self.identity={**self.client.identity,'gripper_state_rad':gripper,'clearance_settings':self.clearance,
                        'contact_mode':'FCL_raw_boolean','hardware_validated':False,'scope':'bare_gripper_official_URDF_24_mesh'}
@@ -31,6 +37,9 @@ class Evaluator:
         if geometry_profile is not None:
             self.identity['scope']='pair-local diagnostic self geometry; official full environment' if geometry_profile.effective_xml is not None else 'official full geometry'
             self.identity['missing_coverage']=['lidar_collision','RJ45_tool_TCP','cable','hardware_calibration']+(['unvalidated_internal_joint_exclusions'] if geometry_profile.effective_xml is not None else [])
+            self.identity['evaluation_sha256']=sha256(json.dumps(self.identity,sort_keys=True).encode()).hexdigest()
+        if semantic is not None:
+            self.identity['evaluation_mode']='official_geometry_reviewed_SRDF_model_only_partial'
             self.identity['evaluation_sha256']=sha256(json.dumps(self.identity,sort_keys=True).encode()).hexdigest()
         if task_scope is not None:
             self.identity['task_scope_sha256']=task_scope[1]
@@ -51,6 +60,7 @@ class Evaluator:
                      'model_scope_collision_free':None,'verification_status':'ERROR','final_decision':'ERROR',
                      'allowed_pairs':[],'remaining_collision_pairs':[],'clearance':None,
                      'ee_position':None,'ee_orientation':None}
+                if self.semantic is not None:row.update(semantic_self_collision=None,model_configuration_valid=None,semantic_decision='ERROR',hardware_validated=False,semantic_blocking_pairs=[],disabled_collision_pairs=[])
                 if self.task_scope is not None:row.update(task_scope_candidate=None,task_scope_status='ERROR',task_scope_blocking_self_collision=None,gripper_internal_collision=None,task_scope_blocking_pairs=[],gripper_internal_pairs=[],gripper_internal_verification='UNVERIFIED_MECHANISM',hardware_safe=None)
                 started=time.perf_counter()
                 try:
@@ -69,6 +79,14 @@ class Evaluator:
                         clearance={'native':native['clearance'],'required':self.clearance,'threshold_met':threshold_met},
                         ee_position=np.array(native['T_base_to_ee'])[:3,3].tolist(),
                         ee_orientation=np.array(native['T_base_to_ee'])[:3,:3].tolist(),native_query_time=native['query_elapsed_s'],pairs_may_be_truncated=native['pairs_may_be_truncated'])
+                    if self.semantic is not None:
+                        met={}
+                        for kind,key in [('self','self_m'),('environment','environment_m')]:
+                            d=native['semantic_clearance'][kind]
+                            met[kind]=True if self.clearance[key]==0 else (d['separation_m']>=self.clearance[key] if d['available'] and d['separation_m'] is not None else None)
+                        blocked=native['semantic_self_collision'] or native['environment_collision']
+                        valid=False if blocked else None if any(v is None for v in met.values()) else all(met.values())
+                        row.update(semantic_decision='VALID_MODEL_ONLY' if valid is True else 'REJECTED' if valid is False else 'UNVERIFIED',semantic_self_collision=native['semantic_self_collision'],raw_collision_pairs=native['colliding_pairs'],semantic_blocking_pairs=native['semantic_blocking_pairs'],disabled_collision_pairs=native['disabled_collision_pairs'],model_configuration_valid=valid,verification_status='MODEL_ONLY_PARTIAL' if valid is not None else 'CLEARANCE_UNSUPPORTED',hardware_validated=False,semantic_clearance={'native':native['semantic_clearance'],'required':self.clearance,'threshold_met':met})
                     if 'geometry_profile' in self.identity:
                         row['geometry_profile']=self.identity['geometry_profile'];row['missing_coverage']=self.identity['missing_coverage']
                         row['source_urdf_identity']=self.identity['source_urdf_sha256'];row['effective_collision_geometry_identity']=self.identity['robot_geometry_sha256']

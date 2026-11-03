@@ -14,8 +14,7 @@ VERSION = 1
 STATES = {'CLEAR', 'COLLIDING', 'UNVERIFIED', 'ERROR'}
 
 
-class CollisionError(RuntimeError):
-    """Runtime, identity or protocol failure; never interpreted as CLEAR."""
+from .errors import CollisionError
 
 
 def strict_json(text):
@@ -106,7 +105,11 @@ def check_ready(reply, init, executable):
     if sorted(meshes)!=sorted(expected_meshes):raise CollisionError('robot collision resource mismatch')
     if audit['moveit_shape_count']!=sum(len(l.findall('collision')) for l in xml.findall('link')):
         raise CollisionError('lost collision geometry')
-    if audit['detector']!='FCL' or audit['acm_size']!=0:raise CollisionError('unexpected collision policy/backend')
+    if audit['detector']!='FCL':raise CollisionError('unexpected collision backend')
+    if 'semantic' in init:
+        from .semantic import check_semantic_ready
+        check_semantic_ready(reply,init)
+    elif audit['acm_size']!=0:raise CollisionError('unexpected collision policy/backend')
     if audit['objects_base']!=init['objects']:raise CollisionError('scene object audit mismatch')
     if 'geometry_profile_canonical_json' in init:
         text=init['geometry_profile_canonical_json'];profile=strict_json(text)

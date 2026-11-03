@@ -64,6 +64,9 @@ def build_collision_figure(scene,surfaces,row):
     if 'task_scope' in row:
         scoped=row['task_scope'];figure.update_layout(title=f'Task scope {"CANDIDATE (not full safe)" if scoped["zero_clearance_candidate"] else "REJECTED"} — official full {row["effective_decision"]} — {row["sample_index"]}',meta={**dict(figure.layout.meta),'task_scope':scoped})
         figure.add_annotation(text='Purple: internal mechanism diagnostics UNVERIFIED. Red: blocking self. Orange: environment. Task candidate never means full robot/hardware safe.',xref='paper',yref='paper',x=0,y=1.03,showarrow=False)
+    if 'semantic_self_collision' in row:
+        blocked=row['semantic_self_collision'] or row['environment_collision']
+        figure.update_layout(title=f'SRDF semantic {"REJECTED" if blocked else "MODEL ONLY"} — sample {row["sample_index"]}',meta={**dict(figure.layout.meta),'semantic_self_collision':row['semantic_self_collision'],'semantic_blocking_pairs':row['semantic_blocking_pairs'],'disabled_collision_pairs':row['disabled_collision_pairs'],'semantic_clearance':row['semantic_clearance']})
     return figure
 
 
@@ -78,6 +81,14 @@ def export_collision_viewer(figure,row,output):
         names=tuple(sorted([pair['first'],pair['second']]))
         mode='environment' if pair['kind']=='environment' else 'filtered' if names in filtered else 'effective'
         pairs.append({**pair,'mode':mode,'effective':pair['kind']=='environment' or names in effective})
+    if 'semantic_self_collision' in row:
+        disabled={tuple(sorted(p)) for p in row['disabled_collision_pairs']}
+        blocking={tuple(sorted(p)) for p in row['semantic_blocking_pairs']}
+        for p in pairs:
+            names=tuple(sorted([p['first'],p['second']]))
+            if p['kind']=='self':p['mode']='filtered' if names in disabled else 'effective';p['effective']=names in blocking
+        seen={tuple(sorted([p['first'],p['second']])) for p in pairs if p['kind']=='self'}
+        for a,b in sorted((disabled|blocking)-seen):pairs.append({'kind':'self','first':a,'second':b,'mode':'filtered' if (a,b) in disabled else 'effective','effective':(a,b) in blocking,'contact_observed_in_raw':False})
     scoped=row.get('task_scope')
     if scoped:
         internals={tuple(sorted(p)) for p in scoped['gripper_internal_pairs']};blockers={tuple(sorted(p)) for p in scoped['task_scope_blocking_pairs']}
@@ -88,7 +99,7 @@ def export_collision_viewer(figure,row,output):
             if p['kind']=='self' and key in internals:p['mode']='internal'
             elif p['kind']=='self' and key in blockers:p['mode']='blocking'
     payload=json.dumps({'pairs':pairs,'q':row['q'],'index':row['sample_index'],'decision':row['effective_decision'],
-                         'policy':row.get('applied_policy'),'identity':row['identity'],'task_scope':scoped},allow_nan=False).replace('<','\\u003c')
+                         'policy':row.get('applied_policy'),'identity':row['identity'],'task_scope':scoped,'semantic':{k:row[k] for k in ['raw_self_collision','semantic_self_collision','semantic_blocking_pairs','disabled_collision_pairs','semantic_clearance'] if k in row} if 'semantic_self_collision' in row else None},allow_nan=False).replace('<','\\u003c')
     script=r'''
 const root=document.getElementById('{plot_id}');
 const model=PAYLOAD;
@@ -102,6 +113,7 @@ for(const [key,label] of Object.entries({robot:'Robot Mesh (all 24)',scene:'Scen
 const detail=document.createElement('pre');detail.style='white-space:pre-wrap';panel.append(detail);
 const select=panel.querySelector('#pair-select'),filter=panel.querySelector('#pair-filter');
 if(model.task_scope){filter.add(new Option('Task Blocking Self','blocking'));filter.add(new Option('Internal Diagnostic (UNVERIFIED)','internal'));const note=document.createElement('b');note.textContent=' Task zero-clearance candidate: '+model.task_scope.zero_clearance_candidate+'; official full decision: '+model.decision+'; internal mechanics UNVERIFIED';panel.prepend(note);}
+if(model.semantic){filter.options[1].text='Semantic blocking';filter.options[2].text='SRDF disabled (contact not guaranteed)';const note=document.createElement('b');note.textContent=' Independent FCL semantic self: '+model.semantic.semantic_self_collision+'; hardware unvalidated. Legacy decision below is Raw.';panel.prepend(note);}
 function choices(){select.replaceChildren();let first=new Option('All objects; no pair selection','-1');select.add(first);
 model.pairs.forEach((p,i)=>{if(filter.value==='raw'||(filter.value==='effective'&&p.effective)||filter.value===p.mode)select.add(new Option(p.kind+' / '+p.mode+': '+p.first+' ↔ '+p.second,''+i));}); select.value=select.options.length>1?select.options[1].value:'-1';render();}
 const defaults=root.data.map(t=>({color:t.color,opacity:t.opacity,visible:t.visible!==false}));
@@ -126,7 +138,7 @@ function render(){const pair=model.pairs[+select.value];const selected=pair?[pai
  const meshes=root.data.map((t,i)=>t.type==='mesh3d'?i:-1).filter(i=>i>=0);
  Plotly.restyle(root,{visible:updates.visible});
  Plotly.restyle(root,{color:meshes.map(i=>updates.color[i]),opacity:meshes.map(i=>updates.opacity[i])},meshes);
- detail.textContent=JSON.stringify({sample_index:model.index,q:model.q,decision:model.decision,task_scope:model.task_scope,selected_pair:pair||null,policy:model.policy,identity:model.identity},null,2);
+ detail.textContent=JSON.stringify({sample_index:model.index,q:model.q,decision:model.decision,task_scope:model.task_scope,semantic:model.semantic,selected_pair:pair||null,policy:model.policy,identity:model.identity},null,2);
  root.dataset.selectedPair=pair?pair.first+'|'+pair.second:'none';
 }
 select.onchange=render;filter.onchange=choices;choices();
