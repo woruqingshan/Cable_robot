@@ -1,4 +1,4 @@
-# JetRover Workspace Analysis — G1-A / G1-B / G2
+# JetRover Workspace Analysis — G1-A / G1-B / G2 / G3
 
 G1-A 已由用户运行并验收：三组 PyKDL/独立参考一致，pytest 为
 `48 passed, 1 warning`；本机 `results/g1a_fk.json` 的最大位置误差约
@@ -7,10 +7,12 @@ G1-A 已由用户运行并验收：三组 PyKDL/独立参考一致，pytest 为
 G1-B v3 也已由用户执行并验收：Zero、Nonzero、Near-limit 均 PASS，严格端点
 身份检查通过，三个 RSP 均正常退出（退出码 0），见 results/g1b_tf_v3.json。
 
-本轮新增 G2 几何工作空间采样与数据读写，**等待用户运行采样与结果验收**。
-G1-A/G2 不启动 ROS 节点；G1-B 只启动自己的 Robot State Publisher。
+G2 已由用户运行并验收：100 / 10,000 行实验 PASS，两组 NPZ 哈希与 JSON
+一致，G2 完整回归为 `152 passed, 1 warning`。既有数据保存在 results/。
+本轮新增 G3 交互式可视化，**等待用户运行可视化与结果验收**。
+G1-A/G2/G3 不启动 ROS 节点；G1-B 只启动自己的 Robot State Publisher。
 所有入口均不启动机器人驱动或控制器，不调用实体机器人服务。
-不含 G3 三维可视化或碰撞/规划算法。
+不含碰撞/规划算法或 G4。
 
 ## 模型和坐标约定
 
@@ -456,6 +458,170 @@ G2 测试覆盖合法性、动态关节数量、seed 复现、独立 FK 参考�
 
 G2 仅研究模型关节限位约束下的原始几何 FK 点集。自碰撞、环境碰撞、真实
 电机有效范围、动力学、RJ45 姿态/接近方向/接触约束均未检查。有限样本不能
-证明严格边界，模型 EE 不等于标定后的 RJ45 TCP。本轮不开发 G3 或规划算法。
+证明严格边界，模型 EE 不等于标定后的 RJ45 TCP。G2 不包含可视化或规划算法。
 
-**G2 代码实现完成，等待用户运行采样与结果验收。**
+**G2 已由用户验收；以下 G3 仅消费既有 G2 数据。**
+
+## G3 — 交互式工作空间可视化
+
+新增文件：src/workspace_analysis/visualization.py、scripts/plot_workspace.py、
+tests/test_visualization.py。本轮只另外更新本 README，不改 G1/G2 核心、配置、
+官方模型、原始 NPZ/JSON。没有新增采样、批量 FK、碰撞/IK/规划或 G4。
+
+### 数据与绘图接口
+
+`load_workspace(input_prefix, config_path, max_points=None)` 先加载现有模型，
+**复用 `results.load_results(prefix, model=model)`** 校验 NPZ 哈希、完整数组、
+JSON 元数据、统计和模型身份。该 G2 接口内部仍会重算首/中/末至多三行 FK；
+这属于既有读取验证，不是重新采样或执行整批 FK。缺失或损坏输入直接报错。
+
+返回 WorkspaceView，包含 position、q、sample_indices、total_samples、
+metadata 和全量 sampled min/max。默认保留全部原始行，包含负 Z。
+`build_3d_figure(view)` / `build_projections_figure(view)` 返回 Plotly Figure，
+`export_workspace(view, output_prefix)` 返回两份 HTML 的绝对 Path。
+`prepare_view` 供已验证数组使用，继续调用 G2 数组验证器；文件输入必须走
+load_workspace，不得用它绕过 load_results 的文件/模型身份检查。
+
+3D 使用 Scatter3d、Viridis 高度着色与 Z [m] Colorbar；XYZ 单位 m，
+scene.aspectmode=data。橙色菱形单独标出 Base 原点，图例与样本分开。
+可以旋转、缩放和平移，工具栏可切换视角操作；脚本不会自动打开浏览器。
+三个 2D 视图是同一批行的 XY、XZ、YZ，用 Scattergl 显示，共享 Z 色标。
+各图设置相同的初始米范围跨度，yaxis.scaleanchor 指向对应 x 轴且
+scaleratio=1，避免长宽拉伸；原点始终显示。子图等宽，初始每米像素尺度一致。
+浏览器缩放后的布局仍需用户目视确认。
+
+customdata 列为 `[原始 NPZ 行号, X, Y, Z, q1, ..., q5]`。悬停显示全部
+位置和关节角 rad；Sample Index 从 0 开始。默认不排序、不筛掉负 Z。
+可选 `--max-points M` 仅用确定性的 linspace 整数行号减少显示数量，同时
+用相同行号索引 position/q，不重新随机采样。标题显示 shown/total，HTML
+meta 记录选择方法；色标和初始 2D 范围仍取全量数据，CLI 范围也是全量极值。
+
+### 当前依赖状态与可选安装方案
+
+本轮实测 `/usr/bin/python3` 为 3.10.12，**Plotly 和 tenacity 缺失**；
+packaging=21.3 可用。没有执行任何安装或升级，也没有安装 Kaleido。
+缺少 Plotly 时，数据验证仍可执行，绘图/导出明确报 MissingPlotlyError，
+CLI 返回 1，不生成 HTML，不打印 PASS。
+
+用户可先检查自己的运行解释器：
+
+```bash
+source /opt/ros/humble/setup.bash
+source /home/siyuen/Desktop/jetrover_sim_ws/install/setup.bash
+/usr/bin/python3 -c 'import plotly; print(plotly.__version__, plotly.__file__)'
+```
+
+若决定补齐依赖，建议另建带系统包只读可见性的虚拟环境，复用既有
+NumPy/SciPy/PyKDL/ROS 包，仅向虚拟环境安装固定版本的 Plotly 与 tenacity。
+下列是**供用户决定并手动执行的方案，本轮未执行**；不是 G3 当前依赖已就绪
+的声明。venv 可用性与 pip/ensurepip 已只读检查，venv 创建和实际安装未验证。
+
+```bash
+cd /home/siyuen/Desktop/code/cable_robot/cable_vla_robot/workspace_analysis
+/usr/bin/python3 -m venv --system-site-packages .venv
+.venv/bin/python -m pip install --no-deps 'plotly==5.24.1' 'tenacity==8.5.0'
+.venv/bin/python -c 'import plotly, PyKDL, numpy, scipy; print(plotly.__version__)'
+```
+
+参考版本支持 Python 3.10，且现有 packaging 满足 Plotly 依赖要求，见
+[Plotly 5.24.1 元数据](https://pypi.org/pypi/plotly/5.24.1/json) 与
+[tenacity 8.5.0 元数据](https://pypi.org/pypi/tenacity/8.5.0/json)。
+`--no-deps` 禁止自动解析/升级其他依赖。不要用 sudo pip 或升级系统科学计算栈。
+如果采用此方案，下面命令的 `/usr/bin/python3` 要替换成
+`/home/siyuen/Desktop/code/cable_robot/cable_vla_robot/workspace_analysis/.venv/bin/python`；
+仍先 source ROS 和 overlay。创建此 venv 不会让 `/usr/bin/python3` 自动获得 Plotly。
+如果用其他方式补齐依赖，应先确认所用解释器能同时导入 Plotly 和 PyKDL。
+
+### 用户运行：先 100 点，再 10,000 点
+
+依赖就绪后，在同一终端执行（不需要 need_compile、RSP、RViz 或 Gazebo）：
+
+```bash
+source /opt/ros/humble/setup.bash
+source /home/siyuen/Desktop/jetrover_sim_ws/install/setup.bash
+cd /home/siyuen/Desktop/code/cable_robot/cable_vla_robot/workspace_analysis
+
+# 100 点快速验证；在当前缺少 Plotly 的 /usr/bin/python3 下会明确失败。
+/usr/bin/python3 scripts/plot_workspace.py \
+  --config config/workspace.yaml \
+  --input-prefix results/workspace_n100_seed42 \
+  --output-prefix results/workspace_n100_seed42
+
+# 100 点输出与交互效果确认后，再执行正式 10,000 点可视化。
+/usr/bin/python3 scripts/plot_workspace.py \
+  --config config/workspace.yaml \
+  --input-prefix results/workspace_n10000_seed42 \
+  --output-prefix results/workspace_n10000_seed42
+```
+
+入口按自身路径导入 src 和解析默认配置，支持任意 CWD；显式相对路径相对
+调用者 CWD。输入前缀是既有 NPZ/JSON 共同前缀，不带扩展名。未给输出前缀
+时使用输入前缀。可将输出前缀改成新的目录/文件名前缀；正式结果建议仍放
+被现有 .gitignore 忽略的 results/。不要把导出数据目录提交到 Git。
+
+每次生成：
+
+```text
+results/workspace_n100_seed42_3d.html
+results/workspace_n100_seed42_projections.html
+results/workspace_n10000_seed42_3d.html
+results/workspace_n10000_seed42_projections.html
+```
+
+正常输出有输入来源、模型/Base/EE、displayed/total、seed、全量 XYZ 采样
+极值和两份绝对 HTML 路径，最终 `status: PASS` 及
+`stage_acceptance: pending_user_review`。PASS 只表示程序完成导出，用户仍需
+打开 HTML 检查交互效果。默认每份 HTML 内嵌 Plotly.js、无外部 script src，
+可离线打开，文件通常为数 MB；无需 CDN、浏览器扩展或静态导出工具。
+[Plotly 独立 HTML 导出说明](https://plotly.com/python/interactive-html-export/)。
+
+默认拒绝覆盖任一已有 HTML 或同前缀 `_visualization.lock`（含悬空符号链接）。
+重新导出时选新前缀；不会改动源 NPZ/JSON。两图均完成内存渲染和完整性检查
+后才创建独占锁，用同目录临时文件和 hard-link NO-REPLACE 发布两份 HTML。
+正常异常或 Ctrl+C 清理本次文件；中途失败不打印 PASS，错误退出码为 1，
+Ctrl+C 为 130。不支持 hard-link 的输出文件系统会明确失败。
+强制 SIGKILL/掉电仍可能留下锁/临时文件/部分 HTML，不能提供双文件同时
+提交的保证；应保留现场检查并换新前缀，不自动删除残留或覆盖旧结果。
+
+### 离线单元测试与人工检查
+
+```bash
+# 同样先 source ROS 和 overlay；若用 venv，替换解释器。
+/usr/bin/python3 -m pytest -q -rs \
+  /home/siyuen/Desktop/code/cable_robot/cable_vla_robot/workspace_analysis/tests/test_visualization.py
+/usr/bin/python3 -m pytest -q -rs \
+  /home/siyuen/Desktop/code/cable_robot/cable_vla_robot/workspace_analysis/tests
+```
+
+文件测试复制已有 100 点数据到 pytest 临时目录，不重采样缺失输入；如需
+使用其他位置，设置 G3_TEST_INPUT_PREFIX 为现有 100 点文件前缀。
+绘图结构测试使用 5 个合成点，正向 CLI 使用复制的 100 点数据。
+既有 G2 回归包含 7 点 CLI 采样测试，本轮保留；不执行 10,000 点采样/渲染，
+所有单测均不启动 ROS 节点或机器人程序。
+
+本轮在临时测试副本中运行全部原有测试和 G3 测试：
+**176 passed, 5 skipped, 1 warning**。其中 G3 为 24 passed、5 skipped；
+warning 是既有 URDF 解析依赖的 Python 3.11 提示。
+通过项覆盖读取复用、原行号/关节配对、负 Z 保留、非法数组/元数据、损坏
+文件/哈希/模型不匹配、显示数量限制、源文件不变、拒绝覆盖、错误 CLI、
+渲染失败与写入失败回滚。5 个跳过项分别是实际 3D Figure、子集悬停 Figure、
+2D Figure、离线 HTML 正向导出、100 点正向 CLI，均因 Plotly 缺失。
+**这些 SKIP 不表示绘图或 HTML 已通过；补齐依赖后应重跑且无此类 SKIP。**
+
+100 点应显示全部 100 行，10,000 点默认显示全部 10,000 行；悬停 q 与 NPZ
+相同行对应，原点为独立菱形，Z 色标存在。人工检查三个投影方向、等比例坐标、
+旋转/缩放/平移、说明文字的完整可见性，以及断网打开 HTML。
+10,000 点全量采样极值应约为 X [-0.364976, 0.410507]、
+Y [-0.391087, 0.390261]、Z [-0.208603, 0.503449] m；不是严格边界。
+浏览器需支持 WebGL；GPU/窗口大小/高 DPI 下的观感与性能尚待用户实际验证。
+
+### 研究边界
+
+图表说明与本节共同标明：这是 **Joint-limit-constrained geometric reachable
+workspace samples**。不等于 collision-free、physically valid、task-feasible
+或 RJ45 insertion workspace。负 Z 原样保留，可能涉及碰撞或不实用姿态，
+但本阶段不作判断。base_link 原点不等于地面，end_effector_link 不是标定
+后的网线插头 TCP。点云密度取决于关节空间采样分布，不是空间均匀密度或
+可操作性指标；点云极值/投影外形不是严格边界，也不从凸包推断真实可达体积。
+
+**G3 代码开发完成，等待用户运行可视化与结果验收。**
