@@ -33,10 +33,10 @@ def summarize(rows):
             'scope':'configuration-level current URDF/ACM/gripper/clearance; not physical safety or RJ45 success probability'}
 
 
-def run_pilot(root,backend,prefix,output,*,gripper=.3,policies=('baseline','assembly_policy_v0','assembly_policy_v1'),batch_size=64,clearance=None):
+def run_pilot(root,backend,prefix,output,*,gripper=.3,policies=('baseline','assembly_policy_v0','assembly_policy_v1'),batch_size=64,clearance=None,geometry_profile=None,scene_snapshot=None):
     root=Path(root);out=Path(output)
     if os.path.lexists(out):raise ValueError('refusing existing output directory')
-    model=load_model(root/'config/workspace.yaml');scene=load_scene(root/'config/scenes/idc_prototype_v0.yaml')
+    model=load_model(root/'config/workspace.yaml');scene=scene_snapshot if scene_snapshot is not None else load_scene(root/'config/scenes/idc_prototype_v0.yaml')
     arrays,metadata=load_results(prefix,model=model)
     source_hashes={suffix:file_sha256(str(prefix)+suffix) for suffix in ['.npz','.json']}
     out.parent.mkdir(parents=True,exist_ok=True);out.mkdir();(out/'.incomplete').write_text('D0 in progress')
@@ -44,7 +44,7 @@ def run_pilot(root,backend,prefix,output,*,gripper=.3,policies=('baseline','asse
     git_head=subprocess.check_output(['git','rev-parse','HEAD'],cwd=root,text=True).strip()
     for label in policies:
         policy=load_policy(root/f'config/collision/{label}.yaml',model)
-        with Evaluator(model,scene,policy,backend,gripper=gripper,clearance=clearance) as evaluator:
+        with Evaluator(model,scene,policy,backend,gripper=gripper,clearance=clearance,**({'geometry_profile':geometry_profile} if geometry_profile is not None else {})) as evaluator:
             rows=evaluator.evaluate(arrays['q'],batch_size=batch_size);ids[label]=evaluator.identity
         for i,row in enumerate(rows):
             if row['ee_position'] is not None and not np.allclose(row['ee_position'],arrays['position'][i],atol=1e-5,rtol=0):raise ValueError('G2 EE correspondence failure')

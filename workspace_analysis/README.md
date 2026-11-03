@@ -1160,3 +1160,23 @@ with Evaluator(model, scene_snapshot, policy, backend_path,
     rows = evaluator.evaluate(q, batch_size=64)
 # rows[i]["model_scope_collision_free"] 不是实物安全结论；Final 不自动变成 CLEAR。
 ```
+
+
+## C2.7 / D1：局部碰撞几何与可行性恢复对照
+
+新增显式 Official / Refined Geometry Profile，局部三角面仅用于声明的 Self Pair，环境与其余 Pair 保留官方完整几何。
+Refined Profile 仍为 diagnostic_only；100 / 1,000 / 10,000 对照均已运行，整体模型可行率仍为 0，正式几何审核 PARTIAL。
+
+- [局部几何、逐对 Contact/Distance 与正反例](docs/c27_collision_geometry_refinement.md)
+- [D1 数据、API、完整复跑与 Viewer 命令](docs/d1_workspace_validation.md)
+
+```python
+from workspace_analysis.collision.geometry_profile import load_geometry_profile
+from workspace_analysis.collision.evaluator import Evaluator
+
+profile = load_geometry_profile(profile_yaml, model, asset_dir=new_asset_directory)
+with Evaluator(model, scene, policy, backend_path, geometry_profile=profile,
+               gripper=0.3, clearance={"self_m": 0.0, "environment_m": 0.0}) as evaluator:
+    rows = evaluator.evaluate(q)
+# Geometry Profile 与 ACM Policy 独立；诊断候选不能作为实物安全结论。
+```

@@ -55,6 +55,13 @@ static J urdf_pose(const urdf::Pose& p) {
   return {{"position_m",{p.position.x,p.position.y,p.position.z}},
           {"quaternion_xyzw",{p.rotation.x,p.rotation.y,p.rotation.z,p.rotation.w}}};
 }
+static std::pair<std::string,std::string> pair_key(std::string a,std::string b) {
+  if(b<a)std::swap(a,b);
+  return {a,b};
+}
+static bool selected(const std::set<std::pair<std::string,std::string>>& pairs,const std::string& a,const std::string& b) {
+  return pairs.count(pair_key(a,b));
+}
 J Engine::initialize(const J& in) {
   scene_.reset(); identity_=J();
   const auto& m=in.at("model");const std::string xml=m.at("urdf_xml");
@@ -216,9 +223,57 @@ J Engine::initialize(const J& in) {
           {"root_frame",robot->getModelFrame()},{"root_to_base",matrix_json(root_to_base)},
           {"detector",scene_->getCollisionDetectorName()},{"acm_size",scene_->getAllowedCollisionMatrix().getSize()},
           {"policy",policy},{"missing_visual_collision_links",missing},{"objects_base",objects_},
-          {"coverage_verified",false},{"acm_reviewed",false},{"tool_modeled",false},{"clearance_implemented",false}};
+          {"coverage_verified",false},{"acm_reviewed",false},{"tool_modeled",false},{"clearance_implemented",true}};
   need(audit_["detector"]=="FCL","FCL not active");
-  return {{"identity",identity_},{"audit",audit_},{"backend_status","READY"}};
+  J reply={{"audit",audit_},{"backend_status","READY"}};
+  if(in.contains("geometry_profile_canonical_json")) {
+    const auto text=in.at("geometry_profile_canonical_json").get<std::string>();
+    need(hash(text)==in.at("geometry_profile_sha256"),"geometry profile hash mismatch");profile_=J::parse(text);
+    need(profile_.at("version")==1 && profile_.at("source_urdf_sha256")==hash(xml),"geometry profile source mismatch");
+    need(profile_.at("method")=="official_full" || profile_.at("method")=="pair_local_triangle_exclusion","unsupported geometry profile");
+    identity_["source_urdf_sha256"]=hash(xml);identity_["source_geometry_sha256"]=identity_["robot_geometry_sha256"];
+    identity_["effective_urdf_sha256"]=hash(xml);identity_["effective_geometry_sha256"]=identity_["robot_geometry_sha256"];
+    identity_["geometry_profile_sha256"]=hash(text);identity_["geometry_profile"]=profile_.at("id");
+    identity_["geometry_review_status"]=profile_.at("review_status");
+    if(profile_.at("method")=="pair_local_triangle_exclusion") {
+      need(profile_.at("review_status")=="diagnostic_only","refined geometry cannot claim physical validation");
+      const auto& em=in.at("effective_model");const std::string derived=em.at("urdf_xml");
+      need(hash(derived)==em.at("urdf_sha256"),"effective URDF hash mismatch");auto eu=urdf::parseURDF(derived);need(bool(eu),"invalid effective URDF");
+      need(eu->links_.size()==urdf_->links_.size() && eu->joints_.size()==urdf_->joints_.size() && eu->getRoot()->name==urdf_->getRoot()->name,"effective tree changed");
+      for(const auto& [name,j]:urdf_->joints_) {
+        auto k=eu->getJoint(name);need(bool(k),"effective joint missing");
+        need(k->type==j->type && k->parent_link_name==j->parent_link_name && k->child_link_name==j->child_link_name && urdf_pose(k->parent_to_joint_origin_transform)==urdf_pose(j->parent_to_joint_origin_transform),"effective kinematics changed");
+        need(k->axis.x==j->axis.x && k->axis.y==j->axis.y && k->axis.z==j->axis.z,"effective axis changed");
+        need(bool(k->limits)==bool(j->limits) && bool(k->mimic)==bool(j->mimic),"effective joint semantics changed");
+        if(j->limits)need(k->limits->lower==j->limits->lower && k->limits->upper==j->limits->upper && k->limits->effort==j->limits->effort && k->limits->velocity==j->limits->velocity,"effective limits changed");
+        if(j->mimic)need(k->mimic->joint_name==j->mimic->joint_name && k->mimic->multiplier==j->mimic->multiplier && k->mimic->offset==j->mimic->offset,"effective mimic changed");
+      }
+      for(const auto& pair:profile_.at("target_pairs")) {
+        const std::string a=pair.at(0),b=pair.at(1);need(a!=b && bool(urdf_->getLink(a)) && bool(urdf_->getLink(b)),"invalid profile pair");
+        need(profile_pairs_.insert(pair_key(a,b)).second,"duplicate profile pair");
+      }
+      need(!profile_pairs_.empty(),"empty refinement scope");
+      J nested=in;for(const auto* key:{"geometry_profile_canonical_json","geometry_profile_sha256","effective_model"})nested.erase(key);
+      nested["model"]["urdf_xml"]=derived;nested["model"]["urdf_sha256"]=hash(derived);
+      refined_=std::make_unique<Engine>();effective_ready_=refined_->initialize(nested);refined_->distance_only_pairs_=profile_pairs_;
+      std::map<std::string,J> edits;for(const auto& edit:profile_.at("edits"))need(edits.emplace(edit.at("link"),edit).second,"duplicate geometry edit");
+      const auto& dg=effective_ready_.at("audit").at("geometry");need(dg.size()==geometry.size(),"profile changed collision count");
+      for(size_t i=0;i<geometry.size();++i) {
+        const auto& a=geometry[i];const auto& b=dg[i];const std::string name=a.at("link");
+        if(!edits.count(name))need(a==b,"undeclared geometry modification");
+        else {
+          const auto& edit=edits.at(name);need(a.at("link")==b.at("link") && a.at("origin")==b.at("origin") && a.at("scale")==b.at("scale"),"geometry origin/scale changed");
+          need(a.at("resource_sha256")==edit.at("source_sha256") && b.at("resource_sha256")==edit.at("effective_sha256"),"profile mesh hash mismatch");
+          need(a.at("uri")==edit.at("source_uri") && b.at("uri")==edit.at("effective_uri"),"profile mesh URI mismatch");
+        }
+      }
+      identity_["effective_urdf_sha256"]=hash(derived);identity_["effective_geometry_sha256"]=effective_ready_.at("identity").at("robot_geometry_sha256");
+      identity_["robot_geometry_sha256"]=hash(identity_["source_geometry_sha256"].get<std::string>()+":"+identity_["effective_geometry_sha256"].get<std::string>()+":"+hash(text));
+      reply["effective_ready"]=effective_ready_;
+    } else need(!in.contains("effective_model") && profile_.at("edits").empty(),"official profile must not replace geometry");
+    reply["geometry_profile"]=profile_;
+  }
+  reply["identity"]=identity_;return reply;
 }
 J Engine::set_policy(const J& in) {
   need(bool(scene_),"not initialized");
@@ -242,6 +297,10 @@ J Engine::set_policy(const J& in) {
     need(!pairs.count({names[0],names[1]}),"unresolved pair allowed");
   }
   policy_acm_=acm;policy_=p;identity_["policy_sha256"]=hash(text);
+  if(refined_) {
+    J nested=p;nested["model_sha256"]=refined_->identity().at("urdf_sha256");const auto text=nested.dump();
+    refined_->set_policy({{"policy_canonical_json",text},{"policy_sha256",hash(text)}});
+  }
   return {{"identity",identity_},{"backend_status","POLICY_SET"},{"policy",policy_}};
 }
 J Engine::query(const J& in) {
@@ -266,6 +325,12 @@ J Engine::query(const J& in) {
   auto root_to_base=state.getGlobalLinkTransform(base_);
   for(const auto* l:scene_->getRobotModel()->getLinkModels())transforms[l->getName()]=matrix_json(root_to_base.inverse()*state.getGlobalLinkTransform(l));
   collision_detection::CollisionRequest req;req.contacts=true;req.max_contacts=10000;req.max_contacts_per_pair=1;
+  if(in.contains("geometry_audit")) {
+    const auto& a=in.at("geometry_audit");
+    need(a.is_object() && (a.size()==2 || (a.size()==3 && a.contains("distance_pairs"))) && a.at("max_contacts_per_pair").is_number_integer() && a.at("max_contacts").is_number_integer(),"invalid geometry audit limits");
+    req.max_contacts_per_pair=a.at("max_contacts_per_pair").get<size_t>();req.max_contacts=a.at("max_contacts").get<size_t>();
+    need(req.max_contacts_per_pair>=1 && req.max_contacts_per_pair<=512 && req.max_contacts>=req.max_contacts_per_pair && req.max_contacts<=50000,"geometry audit limits outside bounds");
+  }
   collision_detection::CollisionResult self,env;self.clear();env.clear();
   scene_->getCollisionEnvUnpadded()->checkSelfCollision(req,self,state,scene_->getAllowedCollisionMatrix());
   scene_->getCollisionEnvUnpadded()->checkRobotCollision(req,env,state,scene_->getAllowedCollisionMatrix());
@@ -286,10 +351,17 @@ J Engine::query(const J& in) {
       const Eigen::Vector3d base_position=root_to_base.inverse()*contact.pos;
       const Eigen::Vector3d base_normal=root_to_base.linear().transpose()*contact.normal;
       need(base_position.allFinite() && base_normal.allFinite() && std::isfinite(contact.depth),"invalid FCL contact");
-      contacts.push_back({{"kind",item.first},{"first",pair.first.first},{"second",pair.first.second},
+      J record={{"kind",item.first},{"first",pair.first.first},{"second",pair.first.second},
         {"position_base_m",{base_position.x(),base_position.y(),base_position.z()}},
         {"normal_base",{base_normal.x(),base_normal.y(),base_normal.z()}},{"depth_m",contact.depth},
-        {"source","MoveIt/FCL CollisionResult"}});
+        {"source","MoveIt/FCL CollisionResult"}};
+      if(in.contains("geometry_audit"))for(const auto* side:{"first","second"}) {
+        const std::string name=record.at(side);if(transforms.contains(name)) {
+          Eigen::Vector3d local=matrix(transforms.at(name)).inverse()*base_position;
+          record[std::string("position_")+side+"_link_m"]={local.x(),local.y(),local.z()};
+        }
+      }
+      contacts.push_back(record);
     }
   // Installed MoveIt distanceCallback uses the default LIBCCD solver, which
   // fails the reversed-box analytic fixture on this FCL 0.7 installation.
@@ -308,15 +380,25 @@ J Engine::query(const J& in) {
       world_objects.emplace_back(id,std::make_shared<fcl::CollisionObjectd>(g->collision_geometry_,object->global_shape_poses_[i]));
     }
   }
-  auto distance_json=[&](bool self_query,bool colliding,const collision_detection::CollisionResult& collisions) {
+  auto distance_json=[&](bool self_query,bool colliding,const collision_detection::CollisionResult& collisions,int exclude_targets=0) {
     double best=std::numeric_limits<double>::infinity();J nearest=J::array();
+    if(self_query && (exclude_targets || !distance_only_pairs_.empty())) {
+      colliding=false;for(const auto& pair:collisions.contacts) {
+        const bool target=selected(exclude_targets?profile_pairs_:distance_only_pairs_,pair.first.first,pair.first.second);
+        if(target!=bool(exclude_targets))colliding=true;
+      }
+    }
     if(colliding) {
       best=0;
-      if(!collisions.contacts.empty())nearest={collisions.contacts.begin()->first.first,collisions.contacts.begin()->first.second};
+      for(const auto& p:collisions.contacts) {
+        if(self_query && ((exclude_targets && selected(profile_pairs_,p.first.first,p.first.second)) || (!distance_only_pairs_.empty() && !selected(distance_only_pairs_,p.first.first,p.first.second))))continue;
+        nearest={p.first.first,p.first.second};break;
+      }
     } else for(size_t i=0;i<robot_objects.size();++i) {
       const auto& first=robot_objects[i];const auto& others=self_query?robot_objects:world_objects;
       for(size_t j=self_query?i+1:0;j<others.size();++j) {
         const auto& second=others[j];
+        if(self_query && ((exclude_targets && selected(profile_pairs_,first.first,second.first)) || (!distance_only_pairs_.empty() && !selected(distance_only_pairs_,first.first,second.first))))continue;
         collision_detection::AllowedCollision::Type type;
         if(self_query && (first.first==second.first || (policy_acm_.getAllowedCollision(first.first,second.first,type) && type==collision_detection::AllowedCollision::ALWAYS)))continue;
         if(first.second->getAABB().distance(second.second->getAABB())>best)continue;
@@ -331,7 +413,7 @@ J Engine::query(const J& in) {
        {"solver","FCL/GST_INDEP"},{"meaning","unsigned set separation; overlap maps to zero; not penetration depth"}};
   };
   const bool collision=self.collision || env.collision;
-  return {{"identity",identity_},{"backend_status","OK"},{"collision_detected",collision},
+  J response={{"identity",identity_},{"backend_status","OK"},{"collision_detected",collision},
           {"clearance",{{"self",distance_json(true,effective.collision,effective)},{"environment",distance_json(false,env.collision,env)},
             {"self_acm_applied",true},{"signed_penetration_distance",false}}},
           {"raw_self_collision",self.collision},{"effective_self_collision",effective.collision},
@@ -344,5 +426,66 @@ J Engine::query(const J& in) {
           {"joint_positions_used",used},{"link_transforms_base",transforms},
           {"T_base_to_ee",transforms.at(ee_)},{"object_count",objects_.size()},
           {"query_elapsed_s",std::chrono::duration<double>(std::chrono::steady_clock::now()-start).count()}};
+  if(in.contains("geometry_audit")) {
+    J truncated=J::array();for(auto item:{std::make_pair("self",&self),std::make_pair("environment",&env),std::make_pair("effective_self",&effective)})
+      for(const auto& p:item.second->contacts)if(p.second.size()>=req.max_contacts_per_pair)truncated.push_back({{"kind",item.first},{"links",{p.first.first,p.first.second}}});
+    response["contact_collection"]={{"max_contacts_per_pair",req.max_contacts_per_pair},{"max_contacts",req.max_contacts},{"global_limit_reached",self.contact_count>=req.max_contacts || env.contact_count>=req.max_contacts || effective.contact_count>=req.max_contacts},{"pairs_at_limit",truncated},{"complete_contact_surface",false}};
+    if(in.at("geometry_audit").contains("distance_pairs")) {
+      const auto& requested=in.at("geometry_audit").at("distance_pairs");
+      need(requested.is_array() && requested.size()<=32,"distance pair audit limit");J values=J::array();std::set<std::pair<std::string,std::string>> unique;
+      for(const auto& pair:requested) {
+        need(pair.is_array() && pair.size()==2,"invalid audit distance pair");const std::string a=pair.at(0),b=pair.at(1);
+        need(a!=b && scene_->getRobotModel()->hasLinkModel(a) && scene_->getRobotModel()->hasLinkModel(b) && unique.insert(pair_key(a,b)).second,"invalid/duplicate audit distance pair");
+        double best=std::numeric_limits<double>::infinity();bool overlap=false;
+        for(const auto& first:robot_objects)if(first.first==a)for(const auto& second:robot_objects)if(second.first==b) {
+          fcl::CollisionRequestd check;fcl::CollisionResultd checked;fcl::collide(first.second.get(),second.second.get(),check,checked);
+          if(checked.isCollision()) {overlap=true;best=0;}
+          else if(!overlap) {
+            fcl::DistanceRequestd request(false);request.gjk_solver_type=fcl::GST_INDEP;fcl::DistanceResultd answer;
+            double distance=fcl::distance(first.second.get(),second.second.get(),request,answer);need(std::isfinite(distance),"nonfinite pair distance");best=std::min(best,std::max(0.,distance));
+          }
+        }
+        values.push_back({{"links",{a,b}},{"collision",overlap},{"available",std::isfinite(best)},{"separation_m",std::isfinite(best)?J(best):J(nullptr)},{"acm_applied",false},{"geometry","official_full_for_this_engine"},{"solver","FCL/GST_INDEP unsigned; collision uses FCL boolean"}});
+      }
+      response["pair_geometry_distances"]=values;
+    }
+  }
+  if(refined_) {
+    need(self.contact_count<req.max_contacts && effective.contact_count<req.max_contacts,"profile composition needs nontruncated pair coverage");
+    auto derived=refined_->query(in);
+    need(!derived.at("pairs_may_be_truncated").get<bool>(),"derived global contact limit reached");
+    for(auto it=transforms.begin();it!=transforms.end();++it)need((matrix(it.value()).matrix()-matrix(derived.at("link_transforms_base").at(it.key())).matrix()).norm()<1e-11,"profile FK disagreement");
+    response["official_raw_self_collision"]=self.collision;response["official_contacts_base"]=contacts;
+    response["official_colliding_pairs"]=pairs;response["official_clearance"]=response["clearance"];
+    auto merge=[&](const J& a,const J& b,bool named) {
+      J result=J::array();for(const auto* data:{&a,&b})for(const auto& p:*data) {
+        const bool environment=named && p.at("kind")=="environment";
+        const std::string first=named?p.at("first").get<std::string>():p.at(0).get<std::string>(),second=named?p.at("second").get<std::string>():p.at(1).get<std::string>();
+        const bool target=selected(profile_pairs_,first,second);
+        if((data==&a && (environment || !target)) || (data==&b && !environment && target))result.push_back(p);
+      }return result;
+    };
+    response["colliding_pairs"]=merge(pairs,derived.at("colliding_pairs"),true);
+    response["contacts_base"]=merge(contacts,derived.at("contacts_base"),true);
+    response["filtered_pairs"]=merge(filtered,derived.at("filtered_pairs"),false);
+    response["effective_self_pairs"]=merge(effective_pairs,derived.at("effective_self_pairs"),false);
+    bool raw=false;for(const auto& p:response["colliding_pairs"])if(p.at("kind")=="self")raw=true;
+    const bool eff=!response["effective_self_pairs"].empty();response["raw_self_collision"]=raw;response["self_collision"]=raw;
+    response["effective_self_collision"]=eff;response["collision_detected"]=raw || env.collision;
+    response["decision"]=raw || env.collision?"COLLIDING":"UNVERIFIED";response["effective_decision"]=eff || env.collision?"COLLIDING":"UNVERIFIED";
+    auto unchanged=distance_json(true,effective.collision,effective,1);auto changed=derived.at("clearance").at("self");
+    J best=unchanged;if(!best.at("available").get<bool>() || (changed.at("available").get<bool>() && number(changed.at("separation_m"))<number(best.at("separation_m"))))best=changed;
+    response["clearance"]["self"]=best;response["clearance"]["self"]["scope"]="pair-local refined target meshes; official meshes for all other pairs";
+    response["geometry_profile"]=profile_;response["profile_target_pairs"]=profile_.at("target_pairs");
+    if(response.contains("pair_geometry_distances")) {
+      response["official_pair_geometry_distances"]=response["pair_geometry_distances"];
+      auto& distances=response["pair_geometry_distances"];
+      for(size_t i=0;i<distances.size();++i)if(selected(profile_pairs_,distances[i].at("links").at(0),distances[i].at("links").at(1))) {
+        distances[i]=derived.at("pair_geometry_distances").at(i);distances[i]["geometry"]="derived_target_pair";
+      }
+    }
+    if(in.contains("geometry_audit"))response["derived_contact_collection"]=derived.at("contact_collection");
+  }
+  response["query_elapsed_s"]=std::chrono::duration<double>(std::chrono::steady_clock::now()-start).count();return response;
 }
 }

@@ -59,13 +59,16 @@ class CollisionClient:
                 if isinstance(exc,(KeyboardInterrupt,SystemExit)):raise
                 raise CollisionError(str(exc)) from exc
 
-    def initialize(self, model, scene):
+    def initialize(self, model, scene, *, geometry_profile=None):
         """INIT once; READY is accepted only after independent identity checks."""
         try:
-            init=make_init(model,scene);reply=self._exchange({'op':'INIT',**init})
+            init=make_init(model,scene)
+            if geometry_profile is not None:init.update(geometry_profile.wire())
+            reply=self._exchange({'op':'INIT',**init})
             self.identity=check_ready(reply,init,self.executable)
             if reply.get('backend_status')!='READY':raise CollisionError('not READY')
             self.ready=reply
+            if geometry_profile is not None:reply['effective_model_xml']=geometry_profile.effective_xml
             return reply
         except BaseException:
             self._broken=True;self.close();raise
@@ -85,16 +88,18 @@ class CollisionClient:
         except BaseException:
             self.identity=previous;self._broken=True;raise
 
-    def query_positions(self, positions):
+    def query_positions(self, positions, *, geometry_audit=None):
         """Send full URDF state including fixed/mimic joints; never infer CLEAR."""
         if self.identity is None:raise CollisionError('initialize first')
-        try:return check_query(self._exchange({'op':'QUERY','joint_positions':positions}))
+        payload={'op':'QUERY','joint_positions':positions}
+        if geometry_audit is not None:payload['geometry_audit']=geometry_audit
+        try:return check_query(self._exchange(payload))
         except BaseException:
             self._broken=True;raise
 
-    def query(self, model, q, *, auxiliary_positions=None):
+    def query(self, model, q, *, auxiliary_positions=None, geometry_audit=None):
         """Reuse G1 joint-state/mimic semantics before submitting a full state."""
-        return self.query_positions(model.joint_positions(q,auxiliary_positions))
+        return self.query_positions(model.joint_positions(q,auxiliary_positions),geometry_audit=geometry_audit)
 
     def close(self):
         """Return resource release and exit-code evidence separately."""

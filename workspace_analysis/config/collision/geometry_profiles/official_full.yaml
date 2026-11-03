@@ -1,0 +1,7 @@
+version: 1
+id: official_full
+method: official_full
+review_status: official_unvalidated
+scope: official complete collision surfaces, hardware coverage unvalidated
+edits: []
+target_pairs: []

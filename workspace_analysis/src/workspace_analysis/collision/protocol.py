@@ -108,6 +108,19 @@ def check_ready(reply, init, executable):
         raise CollisionError('lost collision geometry')
     if audit['detector']!='FCL' or audit['acm_size']!=0:raise CollisionError('unexpected collision policy/backend')
     if audit['objects_base']!=init['objects']:raise CollisionError('scene object audit mismatch')
+    if 'geometry_profile_canonical_json' in init:
+        text=init['geometry_profile_canonical_json'];profile=strict_json(text)
+        if sha256(text.encode()).hexdigest()!=init['geometry_profile_sha256'] or reply.get('geometry_profile')!=profile:raise CollisionError('geometry profile acknowledgement mismatch')
+        if identity.get('source_urdf_sha256')!=init['model']['urdf_sha256'] or identity.get('geometry_profile_sha256')!=init['geometry_profile_sha256'] or identity.get('geometry_profile')!=profile['id'] or identity.get('geometry_review_status')!=profile['review_status']:raise CollisionError('geometry profile identity mismatch')
+        if 'effective_model' in init:
+            child=reply.get('effective_ready',{})
+            nested={k:v for k,v in init.items() if k not in ['geometry_profile_canonical_json','geometry_profile_sha256','effective_model']}
+            nested['model']={**init['model'],**init['effective_model']}
+            child_identity=check_ready(child,nested,executable)
+            if identity.get('effective_urdf_sha256')!=init['effective_model']['urdf_sha256'] or identity.get('effective_geometry_sha256')!=child_identity['robot_geometry_sha256']:raise CollisionError('effective model identity mismatch')
+            expected_geometry=sha256((identity['source_geometry_sha256']+':'+identity['effective_geometry_sha256']+':'+init['geometry_profile_sha256']).encode()).hexdigest()
+            if identity['robot_geometry_sha256']!=expected_geometry:raise CollisionError('composite geometry identity mismatch')
+        elif identity.get('source_geometry_sha256')!=identity['robot_geometry_sha256'] or identity.get('effective_geometry_sha256')!=identity['robot_geometry_sha256']:raise CollisionError('official geometry identity mismatch')
     loaded={o['id']:o for o in audit['loaded_objects_base']}
     if set(loaded)!={o['id'] for o in init['objects']}:raise CollisionError('loaded object IDs mismatch')
     for o in init['objects']:

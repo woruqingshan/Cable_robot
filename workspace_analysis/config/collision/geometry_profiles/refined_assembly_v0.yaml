@@ -1,0 +1,46 @@
+version: 1
+id: refined_assembly_v0
+method: pair_local_triangle_exclusion
+review_status: diagnostic_only
+scope: >-
+  Pair-local internal joint surface diagnostic only. Official full surfaces are
+  retained for every environment and non-target self query. Excluded surfaces
+  are not physically certified normal assembly; candidates remain provisional.
+edits:
+- link: link1
+  joint: joint1
+  radius_m: 0.024
+  axial_m: [-0.002, 0.003]
+  reason: Bottom flange at joint1 axis; original STL radial extent about 23 mm and bottom -1.501 mm. Exclude fully enclosed flange triangles only; preserve boundary triangles.
+- link: link2
+  joint: joint2
+  radius_m: 0.018
+  axial_m: [-0.030, 0.030]
+  reason: Proximal hinge boss about 16 mm radial and +/-28.2 mm axial in source collision STL. Diagnostic internal boss region, not physical clearance certification.
+- link: l_in_link
+  joint: l_in_joint
+  radius_m: 0.0045
+  axial_m: [-0.001, 0.013]
+  reason: Source proximal pin ring has about 3.6 mm radial extent and 12.23 mm axial length; preserve long rod and boundary facets.
+- link: r_in_link
+  joint: r_in_joint
+  radius_m: 0.0045
+  axial_m: [-0.013, 0.001]
+  reason: Mirror proximal pin-ring diagnostic, source radial extent 3.67 mm. No closed-loop alignment or hardware calibration claim.
+- link: l_out_link
+  joint: l_out_joint
+  radius_m: 0.0045
+  axial_m: [0.001, 0.011]
+  reason: Local out-joint pivot only; closed-loop l_link/l_out_link is deliberately not exempted.
+- link: r_out_link
+  joint: r_out_joint
+  radius_m: 0.0045
+  axial_m: [-0.011, -0.001]
+  reason: Mirror local out-joint pivot only; closed-loop r_link/r_out_link remains official full geometry.
+target_pairs:
+- [back_shell_green_link, link1]
+- [link2, servo_link1]
+- [gripper_link, l_in_link]
+- [gripper_link, r_in_link]
+- [l_in_link, l_out_link]
+- [r_in_link, r_out_link]

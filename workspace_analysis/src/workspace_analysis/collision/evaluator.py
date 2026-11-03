@@ -10,7 +10,7 @@ from .protocol import CollisionError
 
 class Evaluator:
     """Model/scene/policy/gripper/thresholds are explicit and immutable per session."""
-    def __init__(self,model,scene,policy,backend,*,gripper=.3,clearance=None,timeout=30):
+    def __init__(self,model,scene,policy,backend,*,gripper=.3,clearance=None,timeout=30,geometry_profile=None):
         self.model=model;self.scene=scene;self.policy=policy;self.gripper=gripper
         self.clearance=dict(clearance) if clearance is not None else {'environment_m':0.,'self_m':0.}
         if set(self.clearance)!={'environment_m','self_m'} or any(type(x) not in (int,float) or not math.isfinite(x) or x<0 for x in self.clearance.values()):
@@ -18,12 +18,16 @@ class Evaluator:
         model.joint_positions(model.limits.mean(axis=1),{'r_joint':gripper})
         self.client=CollisionClient(backend,timeout=timeout)
         try:
-            self.ready=self.client.initialize(model,scene);self.client.set_policy(*policy)
+            self.ready=self.client.initialize(model,scene,**({'geometry_profile':geometry_profile} if geometry_profile is not None else {}));self.client.set_policy(*policy)
         except BaseException:self.client.close();raise
         self.identity={**self.client.identity,'gripper_state_rad':gripper,'clearance_settings':self.clearance,
                        'contact_mode':'FCL_raw_boolean','hardware_validated':False,'scope':'bare_gripper_official_URDF_24_mesh'}
         self.identity['evaluation_sha256']=sha256(json.dumps(self.identity,sort_keys=True).encode()).hexdigest()
         self.last_native=None
+        if geometry_profile is not None:
+            self.identity['scope']='pair-local diagnostic self geometry; official full environment' if geometry_profile.effective_xml is not None else 'official full geometry'
+            self.identity['missing_coverage']=['lidar_collision','RJ45_tool_TCP','cable','hardware_calibration']+(['unvalidated_internal_joint_exclusions'] if geometry_profile.effective_xml is not None else [])
+            self.identity['evaluation_sha256']=sha256(json.dumps(self.identity,sort_keys=True).encode()).hexdigest()
 
     def evaluate(self,q,*,start_index=0,batch_size=64):
         """Return one record for every q row, including input/protocol failures."""
@@ -55,6 +59,10 @@ class Evaluator:
                         clearance={'native':native['clearance'],'required':self.clearance,'threshold_met':threshold_met},
                         ee_position=np.array(native['T_base_to_ee'])[:3,3].tolist(),
                         ee_orientation=np.array(native['T_base_to_ee'])[:3,:3].tolist(),native_query_time=native['query_elapsed_s'],pairs_may_be_truncated=native['pairs_may_be_truncated'])
+                    if 'geometry_profile' in self.identity:
+                        row['geometry_profile']=self.identity['geometry_profile'];row['missing_coverage']=self.identity['missing_coverage']
+                        row['source_urdf_identity']=self.identity['source_urdf_sha256'];row['effective_collision_geometry_identity']=self.identity['robot_geometry_sha256']
+                        if self.identity['geometry_review_status']=='diagnostic_only':row['verification_status']='DIAGNOSTIC_GEOMETRY_ONLY'
                 except Exception as exc:row['error']=f'{type(exc).__name__}: {exc}'
                 row['query_time']=time.perf_counter()-started;result.append(row)
         return result

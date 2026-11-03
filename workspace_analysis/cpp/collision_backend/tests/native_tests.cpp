@@ -110,6 +110,12 @@ int main() {
     cable::Engine nearest;nearest.initialize(multi);auto nd=nearest.query(q);
     distance_check("nearest of multiple objects",nd["clearance"]["environment"]["separation_m"].get<double>(),.15);
     check(nd["clearance"]["environment"]["nearest_pair"][0]=="nearer" || nd["clearance"]["environment"]["nearest_pair"][1]=="nearer","nearest object identity");
+    auto audit_multi=both.query({{"joint_positions",{{"j",0}}},{"geometry_audit",{{"max_contacts_per_pair",8},{"max_contacts",100}}}});
+    check(audit_multi["self_collision"].get<bool>() && audit_multi["environment_collision"].get<bool>(),"audit must retain booleans");
+    check(!audit_multi["contact_collection"]["complete_contact_surface"].get<bool>(),"finite contacts never prove complete surface");
+    check(audit_multi["contacts_base"].size()>2,"audit retrieves audit_multiple real contacts");
+    bool invalid_audit=false;try{both.query({{"joint_positions",{{"j",0}}},{"geometry_audit",{{"max_contacts_per_pair",513},{"max_contacts",1000}}}});}catch(...){invalid_audit=true;}
+    check(invalid_audit,"audit limits bounded");
     std::cout << "CLEARANCE_VALIDATION=" << clearance_cases.dump() << '\n';
     std::cout << "PASS: real MoveIt/FCL, collision regressions, analytic clearance and explicit solver order\n";
     return 0;
