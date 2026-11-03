@@ -39,7 +39,8 @@ def test_all_static_imports_including_lazy_imports_form_a_dag_and_obey_domain_bo
         'geometry': {'geometry'}, 'robot': {'robot', 'geometry'},
         'scene': {'scene', 'geometry'}, 'workspace': {'workspace', 'robot', 'geometry'},
         'viz': {'viz', 'workspace', 'scene', 'robot', 'geometry'},
-        'experiments': {'experiments', 'workspace', 'scene', 'robot', 'geometry', 'viz'},
+        'experiments': {'experiments', 'workspace', 'scene', 'robot', 'geometry', 'viz', 'collision'},
+        'collision': {'collision', 'workspace', 'scene', 'robot', 'geometry'},
     }
     edges = {name: set() for name in paths}
     for name, path in paths.items():
