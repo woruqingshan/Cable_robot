@@ -1,13 +1,16 @@
-# JetRover Workspace Analysis — G1-A / G1-B
+# JetRover Workspace Analysis — G1-A / G1-B / G2
 
 G1-A 已由用户运行并验收：三组 PyKDL/独立参考一致，pytest 为
 `48 passed, 1 warning`；本机 `results/g1a_fk.json` 的最大位置误差约
 `1.22e-16 m`，最大姿态误差约 `1.50e-16 rad`。
 
-本次新增 G1-B ROS2 TF 对照，**代码完成，等待用户运行验收**。
-G1-A 入口不启动 ROS 节点；G1-B 只启动自己的 Robot State Publisher。
-两者均不启动机器人驱动或控制器，不调用实体机器人服务。
-不含工作空间采样、三维可视化或碰撞/规划算法。
+G1-B v3 也已由用户执行并验收：Zero、Nonzero、Near-limit 均 PASS，严格端点
+身份检查通过，三个 RSP 均正常退出（退出码 0），见 results/g1b_tf_v3.json。
+
+本轮新增 G2 几何工作空间采样与数据读写，**等待用户运行采样与结果验收**。
+G1-A/G2 不启动 ROS 节点；G1-B 只启动自己的 Robot State Publisher。
+所有入口均不启动机器人驱动或控制器，不调用实体机器人服务。
+不含 G3 三维可视化或碰撞/规划算法。
 
 ## 模型和坐标约定
 
@@ -152,7 +155,7 @@ pytest 各项应 PASSED，不能有 FAILED/ERROR，也不因缺少模型而静�
 
 测试会在 pytest 的临时目录生成最小测试文件，不写官方模型或配置。
 独立测试 URDF 使用人工构造参数，仅存在于 tests，不替代官方模型。
-上述 G1-A 验收结果由用户提供；本轮没有重跑 G1-A，也没有执行 G1-B 验收。
+上述 G1-A 验收结果由用户提供；G2 开发仅运行离线单元回归，不重新执行 TF 集成。
 阈值仅代表两种软件实现一致性，不代表真实定位精度。
 几何可达不等于姿态可行、无碰撞或存在完整 RJ45 插拔轨迹。
 
@@ -268,7 +271,7 @@ Ctrl+C 的清理路径已实现，实际运行效果待用户验证。
 RSP 与 PyKDL 共用 KDL 后端；本项验证 ROS 集成一致性，G1-A 的 NumPy/SciPy
 参考仍承担不同数学实现的交叉检查。软件一致性不代表硬件定位精度。
 
-**当前状态：G1-B 代码完成，等待用户运行验收；不继续 G2。**
+上述是 G1-B 的运行流程；当前 G1-B v3 已由用户验收，后续进度见 G2 部分。
 
 ## G1-B Hotfix v3：Endpoint 发现竞态
 
@@ -320,4 +323,139 @@ Hotfix 新增 UNKNOWN→正确、持续 UNKNOWN、UNKNOWN→错误、多发布�
 顺序、QoS/Graph 不一致、GID 改变、运行中身份短暂未解析、-6 退出及清理
 屏障等测试；全部保留原有测试。
 
-**v3 实际集成验证尚未执行，不据单元测试宣称 G1-B 验收通过。**
+v3 实际集成验证现已由用户执行并验收；本轮不重跑 ROS2 集成验证。
+
+## G2：几何可达工作空间采样
+
+开发分支：feat/workspace-planning。新增 sampling.py、results.py、
+scripts/sample_workspace.py 和 tests/test_sampling_results.py，不修改已验证
+的 model.py、fk.py 或 tf_validation.py，不引入新依赖。
+
+数学定义为 joint-limit-constrained geometric reachable workspace：从 URDF
+动态读取关节上下限，使用 NumPy default_rng(seed) 在各关节区间独立均匀采样，
+再顺序调用已有 ForwardKinematics.pose(q)。底盘固定，Base=base_link，
+EE=end_effector_link，q 的顺序为 joint1..joint5，单位 m/rad。
+采样/保存核心支持模型的动态关节数量；当前 CLI 固定检查已批准的五关节链。
+
+每个样本保存完整 q、XYZ、旋转矩阵及 xyzw 四元数。joint5 虽不改变当前
+EE 的 XYZ，仍参与五维采样并保留其姿态。失败样本带零起始 sample_index
+明确报错，立即终止，不静默丢弃或返回部分成功数据。
+
+### 先运行 100 样本快速验证
+
+```bash
+source /opt/ros/humble/setup.bash
+source /home/siyuen/Desktop/jetrover_sim_ws/install/setup.bash
+
+/usr/bin/python3 /home/siyuen/Desktop/code/cable_robot/cable_vla_robot/workspace_analysis/scripts/sample_workspace.py \
+  --config /home/siyuen/Desktop/code/cable_robot/cable_vla_robot/workspace_analysis/config/workspace.yaml \
+  --samples 100 --seed 42 \
+  --output-prefix /home/siyuen/Desktop/code/cable_robot/cable_vla_robot/workspace_analysis/results/workspace_n100_seed42
+```
+
+确认快速验证的数字、文件和报告后，再由用户执行正式 10,000 样本：
+
+```bash
+/usr/bin/python3 /home/siyuen/Desktop/code/cable_robot/cable_vla_robot/workspace_analysis/scripts/sample_workspace.py \
+  --config /home/siyuen/Desktop/code/cable_robot/cable_vla_robot/workspace_analysis/config/workspace.yaml \
+  --samples 10000 --seed 42 \
+  --output-prefix /home/siyuen/Desktop/code/cable_robot/cable_vla_robot/workspace_analysis/results/workspace_n10000_seed42
+```
+
+不需要 need_compile、RViz、Gazebo、RSP 或机器人驱动。所有入口用自身位置
+解析默认配置和本地模块，支持任意 CWD。显式提供的相对配置/输出路径相对
+调用者 CWD；建议使用上述绝对路径。N 默认 10,000，seed 默认 42；不要把
+不带参数执行脚本当成小规模烟雾测试。未指定输出前缀时，默认放在本目录
+results/workspace_n<N>_seed<seed>。前缀不包含 .npz/.json 后缀。
+
+正常输出应有模型、关节顺序、N/seed、完成数量、XYZ 范围、FK 耗时、两份
+文件路径，最后为 status: PASS 和 stage_acceptance: pending_user_review。
+计时包含顺序 FK、位姿检查、四元数转换与进度回调，不是纯 KDL 内核性能基准。
+非法参数/输出冲突/计算或保存错误返回非零，Ctrl+C 返回 130。
+
+### 文件格式与验证
+
+同一前缀生成 .npz 和 .json。NPZ 用标准 numpy.savez 格式，含四个 float64 数组：
+
+| 字段 | 当前形状 | 含义 |
+|---|---|---|
+| q | (N,5) | 全部五个关节角，rad |
+| position | (N,3) | EE XYZ，m |
+| rotation | (N,3,3) | EE 旋转矩阵 |
+| quaternion_xyzw | (N,4) | 归一化四元数，xyzw |
+
+四个数组的相同行号对应同一个 q。旋转矩阵额外保存以核对四元数编码；
+四元数 q/-q 等价，不以符号差异判断姿态误差。
+
+JSON schema_version=1，主要字段：
+
+- experiment：算法、请求/完成数、seed、完成 UTC 时间、FK 循环耗时和软件版本。
+- robot_model：Base/EE、关节顺序和动态限位、固定段、辅助状态、模型来源、
+  Xacro 配置、源文件清单哈希、展开模型 SHA-256。
+- configuration：配置绝对路径及 SHA-256；加载前后和写入前检查配置未变化。
+- dataset：NPZ 文件名、SHA-256、各数组 shape/dtype、单位和四元数约定。
+- workspace_statistics：按 XYZ 排列的 min/max/mean/std（ddof=0）、AABB 边长
+  和 aabb_volume_m3。这个体积仅是轴对齐包围盒体积，不是实际可达空间体积。
+- reproducibility：Generator/default_rng、实际 BitGenerator 名称、seed、NumPy
+  版本、模型/配置/数据身份，以及按数组值比较的复现约定。
+- validation：全量数组、限位、姿态编码校验和抽取首/中/末至多三行的 FK 重算误差。
+- scope：明确不检查碰撞、RJ45 任务约束、严格边界或已标定 TCP。
+
+写入前验证所有行的有限值、dtype、shape、限位、R 正交性/行列式及四元数
+归一化和旋转一致性，并使用原 G1-A FK 抽取至多三行重算。NPZ 暂存文件
+写完后重新读取并逐数组比较。CLI 在成对保存后再读回，校验文件哈希、元数据、
+统计、数组和模型身份，并再执行抽样 FK 核对，然后才打印 PASS。
+PASS 仅表示软件数据检查通过，不代表 G2 用户验收或真实机械臂精度。
+
+复现比较以同一软件环境、模型、N、seed 下的数组值为准；计时和时间戳会
+变化，NPZ 原始二进制哈希不要求跨运行相同。跨 NumPy/SciPy 版本不承诺
+位级一致，文件内记录版本。均匀关节采样不等于均匀笛卡尔空间采样。
+
+### 写入保护与中断残留
+
+默认拒绝覆盖任何已有 NPZ、JSON 或同前缀 .lock，包括悬空符号链接。
+先创建独占 .lock，再在同一个目标目录创建两份临时文件，以实际验证两份
+暂存路径均可写。文件写完并 fsync 后，用 hard-link 原子 NO-REPLACE 发布
+NPZ，最后发布作为提交标志的 JSON；删除临时文件和锁后读者才接受该对文件。
+发生普通异常或 Ctrl+C 时回滚本次拥有的文件，不删除其他写入者的文件。
+
+两个独立文件名无法在一次文件系统操作中同时提交。强制 SIGKILL/掉电可能
+留下 .tmp、.lock 或孤立 NPZ，读取器会拒绝 .lock 或不完整文件对。不要将
+残留文件当成有效结果；保留现场检查，重跑使用新前缀，不自动删除旧文件。
+该提交策略面向当前 Ubuntu 本地文件系统；不支持 hard-link 的文件系统会
+明确失败，不降级为覆盖写入。results/ 已由现有 .gitignore 忽略，本轮不改动它。
+
+### Python API 与离线单元测试
+
+```python
+from workspace_analysis.model import load_model
+from workspace_analysis.sampling import sample_workspace
+from workspace_analysis.results import file_sha256, save_results, load_results
+
+config = "/absolute/path/to/config/workspace.yaml"
+config_hash = file_sha256(config)
+model = load_model(config)
+run = sample_workspace(model, samples=100, seed=42)
+save_results("/absolute/path/to/results/workspace_n100_seed42", run, model,
+             config_path=config, config_sha256=config_hash)
+arrays, metadata = load_results("/absolute/path/to/results/workspace_n100_seed42", model=model)
+```
+
+在其他 Python 程序中导入 API 时，仍按前述方式设置绝对 src 路径。
+load_results 不传 model 时检查文件/数组/元数据；传 model 时另外核对模型
+身份、限位并重算抽样 FK。所有 NPZ 读取均使用 allow_pickle=False。
+
+```bash
+/usr/bin/python3 -m pytest -q /home/siyuen/Desktop/code/cable_robot/cable_vla_robot/workspace_analysis/tests
+```
+
+G2 测试覆盖合法性、动态关节数量、seed 复现、独立 FK 参考、joint5/零位、
+四元数编码、成对读写、哈希/统计、禁止覆盖、损坏/不完整文件、写入/中断
+回滚及任意 CWD 的 CLI。CLI 单测仅运行 7 个样本；不执行正式 10,000 样本，
+不需要实时 DDS、RSP、RViz、Gazebo 或实车，保留全部 G1-A/G1-B 测试。
+
+G2 仅研究模型关节限位约束下的原始几何 FK 点集。自碰撞、环境碰撞、真实
+电机有效范围、动力学、RJ45 姿态/接近方向/接触约束均未检查。有限样本不能
+证明严格边界，模型 EE 不等于标定后的 RJ45 TCP。本轮不开发 G3 或规划算法。
+
+**G2 代码实现完成，等待用户运行采样与结果验收。**
