@@ -1,4 +1,4 @@
-# JetRover Workspace Analysis — G1-A / G1-B / G2 / G3
+# JetRover Workspace Analysis — G1-A / G1-B / G2 / G3 / G4
 
 G1-A 已由用户运行并验收：三组 PyKDL/独立参考一致，pytest 为
 `48 passed, 1 warning`；本机 `results/g1a_fk.json` 的最大位置误差约
@@ -9,10 +9,11 @@ G1-B v3 也已由用户执行并验收：Zero、Nonzero、Near-limit 均 PASS，
 
 G2 已由用户运行并验收：100 / 10,000 行实验 PASS，两组 NPZ 哈希与 JSON
 一致，G2 完整回归为 `152 passed, 1 warning`。既有数据保存在 results/。
-本轮新增 G3 交互式可视化，**等待用户运行可视化与结果验收**。
-G1-A/G2/G3 不启动 ROS 节点；G1-B 只启动自己的 Robot State Publisher。
+G3 已由用户完成测试及交互式可视化验收；G3 代码已提交。
+本轮新增 G4 复现、采样稳定性与基础体素命中分析，**等待用户正式实验与验收**。
+G1-A/G2/G3/G4 不启动 ROS 节点；G1-B 只启动自己的 Robot State Publisher。
 所有入口均不启动机器人驱动或控制器，不调用实体机器人服务。
-不含碰撞/规划算法或 G4。
+不含碰撞检测、IK、环境建模或规划算法。
 
 ## 模型和坐标约定
 
@@ -496,9 +497,9 @@ customdata 列为 `[原始 NPZ 行号, X, Y, Z, q1, ..., q5]`。悬停显示全�
 用相同行号索引 position/q，不重新随机采样。标题显示 shown/total，HTML
 meta 记录选择方法；色标和初始 2D 范围仍取全量数据，CLI 范围也是全量极值。
 
-### 当前依赖状态与可选安装方案
+### G3 开发时的依赖状态与可选安装方案（历史记录）
 
-本轮实测 `/usr/bin/python3` 为 3.10.12，**Plotly 和 tenacity 缺失**；
+G3 开发时实测 `/usr/bin/python3` 为 3.10.12，**Plotly 和 tenacity 缺失**；
 packaging=21.3 可用。没有执行任何安装或升级，也没有安装 Kaleido。
 缺少 Plotly 时，数据验证仍可执行，绘图/导出明确报 MissingPlotlyError，
 CLI 返回 1，不生成 HTML，不打印 PASS。
@@ -599,7 +600,7 @@ Ctrl+C 为 130。不支持 hard-link 的输出文件系统会明确失败。
 既有 G2 回归包含 7 点 CLI 采样测试，本轮保留；不执行 10,000 点采样/渲染，
 所有单测均不启动 ROS 节点或机器人程序。
 
-本轮在临时测试副本中运行全部原有测试和 G3 测试：
+G3 开发时，在临时测试副本中运行全部原有测试和 G3 测试：
 **176 passed, 5 skipped, 1 warning**。其中 G3 为 24 passed、5 skipped；
 warning 是既有 URDF 解析依赖的 Python 3.11 提示。
 通过项覆盖读取复用、原行号/关节配对、负 Z 保留、非法数组/元数据、损坏
@@ -624,4 +625,151 @@ workspace samples**。不等于 collision-free、physically valid、task-feasibl
 后的网线插头 TCP。点云密度取决于关节空间采样分布，不是空间均匀密度或
 可操作性指标；点云极值/投影外形不是严格边界，也不从凸包推断真实可达体积。
 
-**G3 代码开发完成，等待用户运行可视化与结果验收。**
+**G3 此后已由用户运行并验收；以下为当前 G4 开发说明。**
+
+## G4 — 复现性、采样稳定性与基础体素命中
+
+新增 validation.py（验证、实验编排、体素统计）、validation_report.py
+（CSV/JSON/Markdown）、scripts/validate_workspace.py、
+tests/test_workspace_validation.py 和 reports/g4_validation.md 待实验模板。
+仅另行更新 README，G1-A/G1-B/G2/G3 核心、官方模型、配置和旧数据保持原样。
+
+### 当前环境与实验设计
+
+G4 只读检查现有 .venv 可导入 Python 3.10.12、NumPy 1.21.5、SciPy 1.8.0、
+PyKDL 1.5.1、Plotly 5.24.1、pytest 6.2.5；没有安装或升级任何依赖。
+以下命令使用用户已建立的 .venv，仍须 source ROS/overlay 以定位官方模型。
+
+- 复现：两次独立调用原 sample_workspace，均 N=1000、seed=42；分别保存
+  独立的 G2 NPZ/JSON 对，再读回核对。四数组都要求 shape/dtype 一致且
+  np.array_equal；姿态等价误差另行记录，不放宽确定性判据。时间、耗时、NPZ
+  二进制哈希不要求相同。仅承诺同环境复现，不宣称跨版本/跨系统逐位一致。
+- 稳定性：N={100,1000,10000} × seed={42,43,44}，共九组。传入的既有数据
+  必须经 load_results(model=model) 校验，另外核对配置 SHA256、完整模型/
+  源文件身份、N/seed、原七项软件版本、NPZ 哈希。重复前缀或重复 (N,seed)、
+  设计之外的数据、不完整或损坏数据均拒绝。不会根据文件名猜测实验参数。
+- 原 N=100/10000、seed=42 可核验复用。命令显式指定这两个输入；缺失时
+  直接失败，不静默换成新采样。其余七组另存新目录；复现两次与稳定性组
+  各自独立记录，不覆盖既有数据。
+- 每组 XYZ min/max/mean/std 用 G2 workspace_statistics（std ddof=0），
+  另保存 AABB 边长、AABB 体积、原 FK 循环耗时、统一网格命中数。对这些
+  标量跨 seed 计算均值与样本标准差（ddof=1），不是置信区间。
+- 同 seed 跨 N 的数据为 RNG 前缀，不是 N 之间的独立重复。历史复用的
+  耗时与新耗时并列记录，不可当成受控性能测试。稳定性只描述观测变化，
+  不预设随 N 单调收敛，也不把软件 PASS 解释成统计收敛证明。
+
+### 统一体素网格
+
+默认 origin=(-0.6,-0.6,-0.4) m、upper=(0.6,0.6,0.8) m、voxel_size=0.02 m，
+shape=(60,60,60)。它是覆盖既有样本范围的固定实验区域，不是模型理论边界；
+每一组仍逐点检查越界。`--grid-origin X Y Z`、`--grid-upper X Y Z` 和
+`--voxel-size H` 可调整，跨度须为 H 的整数倍。所有组共用同一实例，不能
+用各自 AABB 建网格；改变网格应新建 run，不能混合比较。
+
+每轴 float64 edge[k]=origin+k*H，体素为半开区间 [edge[k],edge[k+1])；
+通过 searchsorted(side='right')-1 索引，原点含、实际 upper 不含。
+此规则明确解决十进制浮点边界；JSON 保存请求 upper 和实际对齐后的 upper。
+跨度对整数体素数的允许舍入误差为 1e-8 个体素，实际网格边界以输出为准。
+区域外样本报出原始 sample_index 与位置，不裁剪或丢弃。voxel_hits 返回
+逐点索引、unique_indices、各体素命中次数和不同命中体素数；汇总保存命中数
+及完整网格参数，所有逐点/体素索引均可从原数据与索引规则重算。
+
+命中不证明整个体素可达或无碰撞；未命中不证明不可达。没有占据概率、
+OctoMap 或碰撞地图，也不计算“严格可达体积”。2 cm 是分析分辨率，
+不是机器人定位精度；后续研究可以在相同输入上比较其他分辨率。
+
+### 用户执行正式 G4（本轮未执行）
+
+先运行离线回归：
+
+```bash
+source /opt/ros/humble/setup.bash
+source /home/siyuen/Desktop/jetrover_sim_ws/install/setup.bash
+cd /home/siyuen/Desktop/code/cable_robot/cable_vla_robot/workspace_analysis
+
+.venv/bin/python -m pytest -q -rs tests
+```
+
+正式运行以下命令。输出目录和报告路径**必须全新**，不要提前 mkdir 输出
+目录；已有空目录、文件或符号链接也拒绝。若路径已用，换 g4_run02 等新名。
+
+```bash
+.venv/bin/python scripts/validate_workspace.py \
+  --config config/workspace.yaml \
+  --output-dir results/g4_run01 \
+  --reuse-prefix results/workspace_n100_seed42 \
+  --reuse-prefix results/workspace_n10000_seed42 \
+  --voxel-size 0.02 \
+  --grid-origin -0.6 -0.6 -0.4 \
+  --grid-upper 0.6 0.6 0.8 \
+  --report-path reports/g4_validation_run01.md
+```
+
+N/seed 和复现 N/seed 默认就是正式设计。G1-A/G1-B 原报告默认从项目
+results/g1a_fk.json、results/g1b_tf_v3.json 读取，验证 stage/模型身份、
+三组误差与成功证据后引用路径及哈希，**不启动 RSP、不重跑 TF**。
+G3 默认清点 workspace_n10000_seed42 的两份 HTML，记录路径与哈希，
+不重新渲染或声称本轮再次视觉验收。入口导入和默认配置不依赖 CWD；
+显式相对路径相对调用者 CWD，可使用绝对路径运行。
+
+默认成功状态应包含 profile: formal、reproducibility: PASS、status: PASS、
+stage_acceptance: pending_user_review；四个数组一致性和具体误差见 JSON/报告。
+PASS 表示所声明的软件实验检查完成，不是 P2.2 用户验收，也不是证明统计收敛。
+复现失败会生成真实 FAIL 报告，CLI 返回 1；运行异常返回 1，Ctrl+C 返回 130。
+不带必需的 --output-dir 只会显示参数错误，不会启动默认实验。
+
+如仅需小规模诊断，可另外指定 `--sample-counts 3 7 --seeds 42 43
+--repro-samples 5`，同时移除不属于该设计的既有复用前缀，并使用新输出名。
+非正式 N/seed 配置会明确标为 profile: diagnostic，不得作为九组正式实验验收。
+
+### 输出内容与防覆盖
+
+```text
+results/g4_run01/
+  reproducibility/run1_n1000_seed42.npz + .json
+  reproducibility/run2_n1000_seed42.npz + .json
+  experiments/workspace_n<N>_seed<S>.npz + .json  # 七组新数据
+  experiments.csv       # 九组逐实验统计、来源/哈希与 reused 标志
+  across_seed.csv       # 每个 N/标量统计量的跨 seed 均值和样本 SD
+  validation.json       # 全部参数、身份、数组误差、统计、网格和输出哈希
+reports/g4_validation_run01.md  # 实际数值与基于观测的解释
+reports/g4_validation.md        # 本轮交付的 NOT_RUN 模板，保持不覆盖
+```
+
+JSON 记录模型和配置 SHA256、原七项软件版本、环境、模块源码哈希、每组源
+NPZ/JSON 哈希和数组 schema、G1 历史证据及 G3 文件清单。CSV 数值保留 Python
+float 的往返精度；JSON 包含相同的逐实验与跨 seed 行，发布前后核对一致性。
+Markdown 展示逐轴统计、各组 AABB/FK/体素、跨 seed 表和观测解释，不伪造结果。
+
+新输出目录独占创建，运行期间保留 .g4_incomplete。汇总 CSV/Markdown 暂存
+后采用本地 hard-link NO-REPLACE 发布，最后发布 validation.json；所有读回
+检查结束才移除 marker。正常异常保留已生成的 G2 数据和 failure.json 诊断，
+不删除已有实验或重新覆盖运行。强制结束/掉电可能留下不完整目录；含 marker
+或 failure.json 的 run 不能作为已完成结果。多文件无法一次原子提交，不承诺
+掉电事务恢复；输出文件系统必须支持 hard-link。重新运行请使用新目录。
+
+可在其他 Python 程序中按既有导入方式调用
+`validation_report.load_validation_bundle(run_dir)`，拒绝不完整 run，验证输出
+哈希、CSV/JSON 行一致性、跨 seed 聚合和复现状态。数据源的路径和哈希用于
+追溯，不是密码学身份认证；移动结果时需保留或更新外部 Markdown 路径。
+
+### 本轮测试与待验收项
+
+本轮临时副本的完整离线回归为 **221 passed, 1 warning**，没有 SKIP；
+其中新增 G4 为 40 项，既有 G1/G2/G3 共 181 项全部保留并通过。
+warning 是既有 URDF 解析依赖的 Python 3.11 私有变量提示。
+G4 测试仅使用小数组、2/3/5/7 点采样和诊断设计，不运行正式九组实验。
+保留全部 G1/G2/G3 测试；G3 回归最多渲染 100 点，TF 测试不启动 RSP。
+测试覆盖同 seed 复现、不同 seed、四元数符号、维度/dtype、统计定义、
+固定网格命中/边界/越界、配置/模型/版本身份、损坏/重复数据、输出防覆盖、
+CSV/JSON 一致性、真实 FAIL、异常退出和诊断保留。实际测试结果见本轮交付。
+
+待用户执行正式两次复现与九组稳定性实验，检查具体误差、跨 seed 波动、
+体素命中、报告来源及输出一致性后，才能验收 G4。当前报告模板没有正式
+PASS 或编造的实验值，P2.2 尚不能直接宣布全部完成。
+
+P2.2 之后仍需研究：实物 TCP/模型标定与硬件误差、真实安全限位、
+自碰撞/环境碰撞、IDC 约束建模、RJ45 姿态与接近方向约束、IK 和轨迹规划。
+这些是后续技术问题，本轮不实现。
+
+**G4 代码开发完成，等待用户运行正式实验与验收。**
