@@ -1,6 +1,7 @@
 #pragma once
 #include <nlohmann/json.hpp>
 #include <moveit/planning_scene/planning_scene.h>
+#include <moveit/collision_detection_fcl/collision_common.h>
 #include <urdf_model/model.h>
 #include <string>
 
@@ -21,6 +22,7 @@ class Engine {
   planning_scene::PlanningScenePtr scene_;
   J identity_, audit_, objects_, policy_;
   collision_detection::AllowedCollisionMatrix policy_acm_;
+  std::vector<collision_detection::FCLGeometryConstPtr> distance_geometry_;
   std::string base_, ee_;
 };
 }

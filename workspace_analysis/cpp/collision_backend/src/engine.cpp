@@ -92,7 +92,7 @@ J Engine::initialize(const J& in) {
   for(const auto& obj:s.at("collision_objects")) {
     const std::string id=obj.at("id");need(flat.count(id),"missing object");const auto& f=flat.at(id);
     need(f.at("type")==obj.at("type"),"object type mismatch");
-    const auto expected=frames.at(obj.at("parent_frame"))*pose(obj.at("pose"));
+    const Eigen::Isometry3d expected=frames.at(obj.at("parent_frame"))*pose(obj.at("pose"));
     need((matrix(f.at("transform")).matrix()-expected.matrix()).norm()<1e-9,"object transform mismatch");
     for(const auto& key: {"size_m","radius_m","length_m"})if(obj.contains(key))need(f.at(key)==obj.at(key),"object dimensions mismatch");
   }
@@ -172,13 +172,24 @@ J Engine::initialize(const J& in) {
       double radius=number(obj.at("radius_m")),length=number(obj.at("length_m"));need(radius>0 && length>0,"nonpositive cylinder");
       primitive.dimensions={length,radius};
     }
-    auto t=root_to_base*matrix(obj.at("transform"));Eigen::Quaterniond q(t.linear());geometry_msgs::msg::Pose p;
+    Eigen::Isometry3d t=root_to_base*matrix(obj.at("transform"));Eigen::Quaterniond q(t.linear());geometry_msgs::msg::Pose p;
     p.position.x=t.translation().x();p.position.y=t.translation().y();p.position.z=t.translation().z();
     p.orientation.x=q.x();p.orientation.y=q.y();p.orientation.z=q.z();p.orientation.w=q.w();
     msg.primitives.push_back(primitive);msg.primitive_poses.push_back(p);
     need(scene_->processCollisionObjectMsg(msg),"scene object load failed");
   }
   need(scene_->getWorld()->size()==objects_.size(),"MoveIt world count mismatch");
+  // Pin MoveIt's shape cache for persistent distance queries; reuse the exact
+  // loaded/scaled geometry and native RobotState, never a second FK/model.
+  distance_geometry_.clear();
+  for(const auto* link:robot->getLinkModels())
+    for(size_t i=0;i<link->getShapes().size();++i)
+      distance_geometry_.push_back(collision_detection::createCollisionGeometry(link->getShapes()[i],link,i));
+  for(const auto& id:scene_->getWorld()->getObjectIds()) {
+    const auto object=scene_->getWorld()->getObject(id);
+    for(const auto& shape:object->shapes_)
+      distance_geometry_.push_back(collision_detection::createCollisionGeometry(shape,object.get()));
+  }
   J loaded_objects=J::array();
   for(const auto& id:scene_->getWorld()->getObjectIds()) {
     auto object=scene_->getWorld()->getObject(id);
@@ -280,15 +291,56 @@ J Engine::query(const J& in) {
         {"normal_base",{base_normal.x(),base_normal.y(),base_normal.z()}},{"depth_m",contact.depth},
         {"source","MoveIt/FCL CollisionResult"}});
     }
+  // Installed MoveIt distanceCallback uses the default LIBCCD solver, which
+  // fails the reversed-box analytic fixture on this FCL 0.7 installation.
+  // Select FCL GST_INDEP explicitly on MoveIt's own geometry/transforms.
+  using NamedObject=std::pair<std::string,std::shared_ptr<fcl::CollisionObjectd>>;
+  std::vector<NamedObject> robot_objects,world_objects;
+  for(const auto* link:scene_->getRobotModel()->getLinkModels())
+    for(size_t i=0;i<link->getShapes().size();++i) {
+      auto g=collision_detection::createCollisionGeometry(link->getShapes()[i],link,i);
+      robot_objects.emplace_back(link->getName(),std::make_shared<fcl::CollisionObjectd>(g->collision_geometry_,state.getCollisionBodyTransform(link,i)));
+    }
+  for(const auto& id:scene_->getWorld()->getObjectIds()) {
+    const auto object=scene_->getWorld()->getObject(id);
+    for(size_t i=0;i<object->shapes_.size();++i) {
+      auto g=collision_detection::createCollisionGeometry(object->shapes_[i],object.get());
+      world_objects.emplace_back(id,std::make_shared<fcl::CollisionObjectd>(g->collision_geometry_,object->global_shape_poses_[i]));
+    }
+  }
+  auto distance_json=[&](bool self_query,bool colliding,const collision_detection::CollisionResult& collisions) {
+    double best=std::numeric_limits<double>::infinity();J nearest=J::array();
+    if(colliding) {
+      best=0;
+      if(!collisions.contacts.empty())nearest={collisions.contacts.begin()->first.first,collisions.contacts.begin()->first.second};
+    } else for(size_t i=0;i<robot_objects.size();++i) {
+      const auto& first=robot_objects[i];const auto& others=self_query?robot_objects:world_objects;
+      for(size_t j=self_query?i+1:0;j<others.size();++j) {
+        const auto& second=others[j];
+        collision_detection::AllowedCollision::Type type;
+        if(self_query && (first.first==second.first || (policy_acm_.getAllowedCollision(first.first,second.first,type) && type==collision_detection::AllowedCollision::ALWAYS)))continue;
+        if(first.second->getAABB().distance(second.second->getAABB())>best)continue;
+        fcl::DistanceRequestd request(false);request.gjk_solver_type=fcl::GST_INDEP;
+        fcl::DistanceResultd result;
+        const double value=fcl::distance(first.second.get(),second.second.get(),request,result);
+        need(std::isfinite(value),"FCL distance returned nonfinite value");
+        if(std::max(0.0,value)<best) {best=std::max(0.0,value);nearest={first.first,second.first};}
+      }
+    }
+    return J{{"separation_m",std::isfinite(best)?J(best):J(nullptr)},{"nearest_pair",nearest},{"available",std::isfinite(best)},
+       {"solver","FCL/GST_INDEP"},{"meaning","unsigned set separation; overlap maps to zero; not penetration depth"}};
+  };
   const bool collision=self.collision || env.collision;
   return {{"identity",identity_},{"backend_status","OK"},{"collision_detected",collision},
+          {"clearance",{{"self",distance_json(true,effective.collision,effective)},{"environment",distance_json(false,env.collision,env)},
+            {"self_acm_applied",true},{"signed_penetration_distance",false}}},
           {"raw_self_collision",self.collision},{"effective_self_collision",effective.collision},
           {"effective_decision",effective.collision || env.collision ? "COLLIDING":"UNVERIFIED"},
           {"filtered_pairs",filtered},{"effective_self_pairs",effective_pairs},{"applied_policy",policy_},
           {"self_collision",self.collision},{"environment_collision",env.collision},{"colliding_pairs",pairs},{"contacts_base",contacts},
           {"pairs_may_be_truncated",self.contact_count>=req.max_contacts || env.contact_count>=req.max_contacts},
           {"decision",collision?"COLLIDING":"UNVERIFIED"},
-          {"unverified_reasons",{"collision_coverage_unreviewed","ACM_unreviewed_empty","RJ45_tool_TCP_missing","gripper_uncalibrated","clearance_not_implemented"}},
+          {"unverified_reasons",{"collision_coverage_unreviewed","ACM_model_scope_only","RJ45_tool_TCP_missing","gripper_uncalibrated","clearance_hardware_tolerance_unvalidated"}},
           {"joint_positions_used",used},{"link_transforms_base",transforms},
           {"T_base_to_ee",transforms.at(ee_)},{"object_count",objects_.size()},
           {"query_elapsed_s",std::chrono::duration<double>(std::chrono::steady_clock::now()-start).count()}};

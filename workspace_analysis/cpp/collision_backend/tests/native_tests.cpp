@@ -17,6 +17,11 @@ static J initialization(bool self_overlap=false,double world_x=10) {
 }
 int main() {
   try {
+    J clearance_cases=J::array();
+    auto distance_check=[&](const char* name,double actual,double expected) {
+      clearance_cases.push_back({{"case",name},{"actual_m",actual},{"expected_m",expected},{"absolute_error_m",std::abs(actual-expected)},{"tolerance_m",1e-6}});
+      check(std::abs(actual-expected)<1e-6,name);
+    };
     const J q={{"joint_positions",{{"j",0}}}};
     cable::Engine separated;auto ready=separated.initialize(initialization());
     check(ready["audit"]["detector"]=="FCL","real FCL initialization");
@@ -38,6 +43,7 @@ int main() {
     check(!sequence.query({{"joint_positions",{{"j",1}}}})["collision_detected"].get<bool>(),"recover after bad query");
     cable::Engine overlap;overlap.initialize(initialization(true,10));
     auto result=overlap.query(q);check(result["self_collision"].get<bool>() && !result["environment_collision"].get<bool>(),"self-only fixture");
+    check(result["clearance"]["self"]["separation_m"]==0,"overlap is unsigned zero, not penetration distance");
     cable::Engine both;both.initialize(initialization(true,0));result=both.query(q);
     check(result["self_collision"].get<bool>() && result["environment_collision"].get<bool>(),"both fixture");
     auto bad=initialization();bad["model"]["urdf_sha256"]="wrong";
@@ -53,6 +59,7 @@ int main() {
     policy_engine.set_policy({{"policy_canonical_json",policy.dump()},{"policy_sha256",cable::hash(policy.dump())}});
     result=policy_engine.query(q);
     check(result["raw_self_collision"].get<bool>() && !result["effective_self_collision"].get<bool>() && result["environment_collision"].get<bool>(),"ACM self only; environment preserved");
+    check(!result["clearance"]["self"]["available"].get<bool>() && result["clearance"]["self"]["separation_m"].is_null(),"all self pairs explicitly ACM-excluded: distance unavailable");
     auto three=policy_input;xml=three["model"]["urdf_xml"].get<std::string>();
     xml.insert(xml.find("</robot>"),R"(<link name="third"><collision><geometry><box size="0.1 0.1 0.1"/></geometry></collision></link><joint name="fixed_c" type="fixed"><parent link="base_link"/><child link="third"/><origin xyz="0.035 0 0"/></joint>)");
     three["model"]["urdf_xml"]=xml;three["model"]["urdf_sha256"]=cable::hash(xml);policy["model_sha256"]=cable::hash(xml);
@@ -71,7 +78,40 @@ int main() {
       check(std::abs(contact["position_base_m"][2].get<double>())<.2,"contact root-to-base conversion");
       check(contact["depth_m"].get<double>()>=0,"contact penetration finite nonnegative");
     }
-    std::cout << "PASS: real MoveIt/FCL, separated, environment overlap, sequential clearing, invalid state, self-only, both, bad identity, missing mesh\n";
+    for(double x:{.5,.15,0.}) {
+      cable::Engine distance_fixture;distance_fixture.initialize(initialization(false,x));auto d=distance_fixture.query(q);
+      std::cerr<<"distance probe x="<<x<<" "<<d["clearance"].dump()<<std::endl;
+      distance_check("box environment positive/touch/overlap",d["clearance"]["environment"]["separation_m"].get<double>(),std::max(0.,x-.15));
+      distance_check("primitive self distance",d["clearance"]["self"]["separation_m"].get<double>(),1.85);
+    }
+    auto sphere_input=initialization(false,.5);xml=sphere_input["model"]["urdf_xml"].get<std::string>();
+    at=xml.find("<box size=\"0.2 0.2 0.2\"/>");xml.replace(at,std::string("<box size=\"0.2 0.2 0.2\"/>").size(),"<sphere radius=\"0.1\"/>");
+    sphere_input["model"]["urdf_xml"]=xml;sphere_input["model"]["urdf_sha256"]=cable::hash(xml);
+    cable::Engine sphere;sphere.initialize(sphere_input);auto sd=sphere.query(q);
+    distance_check("sphere-box distance",sd["clearance"]["environment"]["separation_m"].get<double>(),.35);
+    // Regression for the locally reproduced LIBCCD input-order discrepancy.
+    auto a=std::make_shared<fcl::Boxd>(.2,.2,.2),b=std::make_shared<fcl::Boxd>(.1,.1,.1);
+    Eigen::Isometry3d bt=Eigen::Isometry3d::Identity();bt.translation().x()=.5;
+    fcl::CollisionObjectd first(a),second(b,bt);
+    for(bool reverse:{false,true}) {
+      fcl::DistanceRequestd request(false);request.gjk_solver_type=fcl::GST_INDEP;fcl::DistanceResultd answer;
+      distance_check("order-independent box distance",fcl::distance(reverse?&second:&first,reverse?&first:&second,request,answer),.35);
+    }
+    auto rotated=initialization(false,.5);auto canon=J::parse(rotated["scene_canonical_json"].get<std::string>());
+    canon["scene"]["collision_objects"][0]["pose"]["quaternion_xyzw"]={0,0,std::sin(.7853981633974483/2),std::cos(.7853981633974483/2)};
+    Eigen::Isometry3d rt=Eigen::Isometry3d::Identity();rt.linear()=Eigen::AngleAxisd(.7853981633974483,Eigen::Vector3d::UnitZ()).toRotationMatrix();rt.translation().x()=.5;
+    rotated["objects"][0]["transform"]=cable::matrix_json(rt);rotated["scene_canonical_json"]=canon.dump();rotated["scene_sha256"]=cable::hash(canon.dump());
+    cable::Engine rotated_distance;rotated_distance.initialize(rotated);auto rd=rotated_distance.query(q);
+    distance_check("rotated box distance",rd["clearance"]["environment"]["separation_m"].get<double>(),.4-.05*std::sqrt(2.));
+    auto multi=initialization(false,.5);canon=J::parse(multi["scene_canonical_json"].get<std::string>());
+    auto closer=canon["scene"]["collision_objects"][0];closer["id"]="nearer";closer["pose"]["position_m"]={.3,0,0};canon["scene"]["collision_objects"].push_back(closer);
+    auto flat=multi["objects"][0];flat["id"]="nearer";auto tr=Eigen::Isometry3d::Identity();tr.translation().x()=.3;flat["transform"]=cable::matrix_json(tr);multi["objects"].push_back(flat);
+    multi["scene_canonical_json"]=canon.dump();multi["scene_sha256"]=cable::hash(canon.dump());
+    cable::Engine nearest;nearest.initialize(multi);auto nd=nearest.query(q);
+    distance_check("nearest of multiple objects",nd["clearance"]["environment"]["separation_m"].get<double>(),.15);
+    check(nd["clearance"]["environment"]["nearest_pair"][0]=="nearer" || nd["clearance"]["environment"]["nearest_pair"][1]=="nearer","nearest object identity");
+    std::cout << "CLEARANCE_VALIDATION=" << clearance_cases.dump() << '\n';
+    std::cout << "PASS: real MoveIt/FCL, collision regressions, analytic clearance and explicit solver order\n";
     return 0;
   } catch(const std::exception& e) {std::cerr<<e.what()<<'\n';return 1;}
 }

@@ -1138,3 +1138,25 @@ R1 最终实际目录回归：**388 passed, 1 warning, 0 skipped**（重构前 3
 
 R1 没有执行真实 ROS2 TF 集成、重新生成正式采样数据或进入 P2.3-C。
 严格数值基线只承诺本次已验收的软件版本；不能据此推断跨版本逐位一致或实物精度。
+
+
+## C2.6 / D0：碰撞模型细化与受限工作空间探索
+
+模型级 ACM v1、定向关节/夹爪诊断、FCL 无符号距离及通用 Evaluator 已实现。
+100 / 1,000 / 10,000 既有配置的 Empty/v0/v1 对照均已运行；所有配置仍有拒绝性自碰撞，不能据此断言真实机器人没有工作空间。
+活动连接/夹爪的物理几何审核为 PARTIAL，未执行硬件安全认证。
+
+- [碰撞细化与 Clearance 证据](docs/c26_collision_refinement.md)
+- [实际实验、API、完整复跑与 Viewer 命令](docs/d0_constrained_workspace_pilot.md)
+
+```python
+from workspace_analysis.collision.evaluator import Evaluator
+from workspace_analysis.collision.policy import load_policy
+
+policy = load_policy(policy_path, model)
+with Evaluator(model, scene_snapshot, policy, backend_path,
+               gripper=0.3,
+               clearance={"environment_m": 0.0, "self_m": 0.0}) as evaluator:
+    rows = evaluator.evaluate(q, batch_size=64)
+# rows[i]["model_scope_collision_free"] 不是实物安全结论；Final 不自动变成 CLEAR。
+```
