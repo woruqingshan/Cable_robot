@@ -118,7 +118,7 @@ class CollisionClient:
             reply=check_query(self._exchange(payload))
             if self.ready and 'semantic' in self.ready.get('audit',{}):
                 from .semantic import check_semantic_query
-                check_semantic_query(reply,self.ready['audit']['semantic']['actual_disabled_pairs'])
+                check_semantic_query(reply,self.ready['audit']['semantic']['actual_disabled_pairs'],self.ready['audit']['semantic']['review_status'])
             if task_scope is not None:
                 from .scope import check_scope_result
                 check_scope_result(reply,task_scope,self.identity)

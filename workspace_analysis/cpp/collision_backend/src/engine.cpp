@@ -145,7 +145,30 @@ J Engine::initialize(const J& in) {
     const std::string review=sem.at("review_canonical_json");
     need(hash(review)==sem.at("review_sha256"),"semantic review hash mismatch");
     auto reviewed=J::parse(review);need(reviewed.at("urdf_sha256")==hash(xml) && reviewed.at("srdf_sha256")==hash(srdf_xml),"semantic review binding mismatch");
-    need(reviewed.at("status")=="model_only_partial","unsupported semantic review claim");
+    const std::string review_status=reviewed.at("status");
+    const bool candidate=review_status=="candidate_baseline_unverified";
+    need(candidate || review_status=="model_only_partial","unsupported semantic review claim");
+    std::map<std::pair<std::string,std::string>,std::string> source_selected;
+    if(candidate) {
+      need(sem.value("allow_candidate_baseline",false),"candidate baseline requires explicit opt-in");
+      need(reviewed.at("usage")=="research_only" && reviewed.at("hardware_validated")==false && reviewed.at("selected_categories")==J({"Adjacent","Default"}),"invalid candidate usage/selection claim");
+      const std::string bytes=sem.at("candidate_source_json");
+      need(hash(bytes)==reviewed.at("candidate_source_sha256"),"candidate source hash mismatch");
+      const auto source=J::parse(bytes).at("result");
+      need(source.at("status")=="OK" && source.at("backend_status")=="CANDIDATES" && source.at("method")=="MoveIt Setup Assistant computeDefaultCollisions","invalid candidate generator source");
+      need(source.at("semantic_acm_modified")==false && source.at("finite_sampling_is_safety_proof")==false,"unsupported candidate safety claim");
+      need(source.at("identity").at("urdf_sha256")==hash(xml) && source.at("identity").at("robot_geometry_sha256")==hash(geometry.dump()) && reviewed.at("source_geometry_sha256")==hash(geometry.dump()),"candidate source model/geometry mismatch");
+      std::set<std::string> collision_links;for(const auto& [n,l]:urdf_->links_)if(!l->collision_array.empty())collision_links.insert(n);
+      std::set<std::pair<std::string,std::string>> seen;const std::set<std::string> categories={"Adjacent","Default","Always","Never","Not Disabled"};
+      for(const auto& row:source.at("candidate_pairs")) {
+        const auto names=row.at("links");need(names.is_array() && names.size()==2,"invalid candidate source pair");
+        const std::string a=names[0],b=names[1],kind=row.at("candidate_class");
+        need(a<b && collision_links.count(a) && collision_links.count(b) && seen.insert({a,b}).second && categories.count(kind),"invalid/duplicate candidate source pair/class");
+        need(row.at("applied")==false && row.at("review_status")=="UNREVIEWED" && row.at("generator_disable_recommendation").is_boolean() && row.at("generator_disable_recommendation").get<bool>()==(kind!="Not Disabled"),"invalid candidate source flags");
+        if(kind=="Adjacent" || kind=="Default")source_selected[{a,b}]=kind;
+      }
+      need(seen.size()==collision_links.size()*(collision_links.size()-1)/2,"incomplete candidate source matrix");
+    } else need(!sem.contains("candidate_source_json") && !sem.value("allow_candidate_baseline",false),"candidate flags supplied to strict semantics");
     need(srdf_xml.find("<!DOCTYPE")==std::string::npos && srdf_xml.find("<!ENTITY")==std::string::npos,"SRDF DTD/entities forbidden");
     tinyxml2::XMLDocument doc;need(doc.Parse(srdf_xml.c_str())==tinyxml2::XML_SUCCESS,"invalid SRDF XML");
     const auto* root=doc.RootElement();
@@ -194,10 +217,16 @@ J Engine::initialize(const J& in) {
     need(expected==sem.at("disabled_pairs") && expected==reviewed.at("disabled_pairs"),"reviewed SRDF disabled pairs mismatch");
     std::set<std::pair<std::string,std::string>> reviewed_pairs;
     for(const auto& row:reviewed.at("pair_reviews")) {
-      auto names=row.at("links");need(names.is_array() && names.size()==2 && row.at("decision")=="disabled_model_only" && row.at("evidence").is_string() && !row.at("evidence").get<std::string>().empty(),"missing semantic pair review evidence");
-      need(reviewed_pairs.insert(pair_key(names[0],names[1])).second,"duplicate semantic review pair");
+      auto names=row.at("links");need(names.is_array() && names.size()==2 && row.at("decision")==(candidate?"candidate_disabled_unverified":"disabled_model_only") && row.at("evidence").is_string() && !row.at("evidence").get<std::string>().empty(),"missing semantic pair review evidence");
+      const auto key=pair_key(names[0],names[1]);
+      need(reviewed_pairs.insert(key).second,"duplicate semantic review pair");
+      if(candidate)need(source_selected.count(key) && row.at("candidate_class")==source_selected.at(key),"candidate review/source classification mismatch");
     }
     need(reviewed_pairs==declared_pairs,"unreviewed disabled SRDF pair");
+    if(candidate) {
+      std::set<std::pair<std::string,std::string>> selected;for(const auto& [p,k]:source_selected)selected.insert(p);
+      need(declared_pairs==selected,"candidate SRDF must select exactly Adjacent and Default; Never/Always forbidden");
+    }
     semantic_enabled_=true;
     semantic_audit_={{"disabled_pairs",expected},{"review_sha256",hash(review)},{"review_status",reviewed.at("status")},{"raw_acm_size",0},{"overlay_applied",false}};
   }
@@ -313,6 +342,10 @@ J Engine::initialize(const J& in) {
     audit_["semantic"]=semantic_audit_;
     identity_["semantic_acm_sha256"]=semantic_audit_.at("acm_sha256");
     identity_["semantic_review_sha256"]=semantic_audit_.at("review_sha256");
+    if(semantic_audit_.at("review_status")=="candidate_baseline_unverified") {
+      identity_["semantic_review_status"]="candidate_baseline_unverified";
+      identity_["semantic_usage"]="research_only";
+    }
   }
   J reply={{"audit",audit_},{"backend_status","READY"}};
   if(in.contains("geometry_profile_canonical_json")) {
@@ -527,6 +560,7 @@ J Engine::query(const J& in) {
     J blocking=J::array();for(const auto& c:sem.contacts)blocking.push_back({c.first.first,c.first.second});
     need(sem.collision==sem_bool.collision,"semantic contact/boolean disagreement");
     response["semantic_self_collision"]=sem_bool.collision;
+    response["semantic_review_status"]=semantic_audit_.at("review_status");
     response["semantic_blocking_pairs"]=blocking;
     response["disabled_collision_pairs"]=semantic_audit_.at("actual_disabled_pairs");
     response["semantic_clearance"]={{"self",distance_json(true,sem_bool.collision,sem,0,&acm)},{"environment",response.at("clearance").at("environment")}};

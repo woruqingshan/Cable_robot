@@ -1,0 +1,403 @@
+{
+  "id": "standard_moveit_candidate_v0",
+  "status": "candidate_baseline_unverified",
+  "usage": "research_only",
+  "urdf_sha256": "5ff0007d08a798ebe31bc4e243d457e0f463aa7b896c088a889c919571ccd72d",
+  "source_geometry_sha256": "4858b34b1ff62f8af791809701888028637650c2372dc5f3978a1d5e606b216d",
+  "srdf_sha256": "cfd956aa2216c8b8d5cc247bafdb74800f90b12e9daa656a5c67acf68f983083",
+  "candidate_source_sha256": "1a3e0268636d0ecde30b31ad47ae00b6f08bd8256a58d205cafd3225eb1371e2",
+  "candidate_source_origin": "/home/siyuen/Desktop/code/cable_robot/cable_vla_robot/workspace_analysis/results/c3/semantic_review_20261104_02/moveit_candidate_matrix.json",
+  "selected_categories": [
+    "Adjacent",
+    "Default"
+  ],
+  "disabled_pairs": [
+    [
+      "back_shell_black_link",
+      "back_shell_green_link"
+    ],
+    [
+      "back_shell_black_link",
+      "base_link"
+    ],
+    [
+      "back_shell_green_link",
+      "base_link"
+    ],
+    [
+      "back_shell_green_link",
+      "link1"
+    ],
+    [
+      "base_link",
+      "imu_link"
+    ],
+    [
+      "base_link",
+      "link1"
+    ],
+    [
+      "base_link",
+      "wheel_left_back_link"
+    ],
+    [
+      "base_link",
+      "wheel_left_front_link"
+    ],
+    [
+      "base_link",
+      "wheel_right_back_link"
+    ],
+    [
+      "base_link",
+      "wheel_right_front_link"
+    ],
+    [
+      "camera_connect_link",
+      "depth_cam_link"
+    ],
+    [
+      "camera_connect_link",
+      "link4"
+    ],
+    [
+      "gripper_link",
+      "l_in_link"
+    ],
+    [
+      "gripper_link",
+      "l_link"
+    ],
+    [
+      "gripper_link",
+      "link5"
+    ],
+    [
+      "gripper_link",
+      "r_in_link"
+    ],
+    [
+      "gripper_link",
+      "r_link"
+    ],
+    [
+      "l_in_link",
+      "l_out_link"
+    ],
+    [
+      "l_link",
+      "l_out_link"
+    ],
+    [
+      "l_link",
+      "r_link"
+    ],
+    [
+      "l_out_link",
+      "r_out_link"
+    ],
+    [
+      "link1",
+      "servo_link1"
+    ],
+    [
+      "link2",
+      "link3"
+    ],
+    [
+      "link2",
+      "servo_link1"
+    ],
+    [
+      "link3",
+      "link4"
+    ],
+    [
+      "link4",
+      "servo_link2"
+    ],
+    [
+      "link5",
+      "servo_link2"
+    ],
+    [
+      "r_in_link",
+      "r_out_link"
+    ],
+    [
+      "r_link",
+      "r_out_link"
+    ]
+  ],
+  "pair_reviews": [
+    {
+      "links": [
+        "back_shell_black_link",
+        "back_shell_green_link"
+      ],
+      "candidate_class": "Default",
+      "decision": "candidate_disabled_unverified",
+      "evidence": "candidate_source.json; standard MoveIt classification only; physical review PENDING"
+    },
+    {
+      "links": [
+        "back_shell_black_link",
+        "base_link"
+      ],
+      "candidate_class": "Adjacent",
+      "decision": "candidate_disabled_unverified",
+      "evidence": "candidate_source.json; standard MoveIt classification only; physical review PENDING"
+    },
+    {
+      "links": [
+        "back_shell_green_link",
+        "base_link"
+      ],
+      "candidate_class": "Adjacent",
+      "decision": "candidate_disabled_unverified",
+      "evidence": "candidate_source.json; standard MoveIt classification only; physical review PENDING"
+    },
+    {
+      "links": [
+        "back_shell_green_link",
+        "link1"
+      ],
+      "candidate_class": "Default",
+      "decision": "candidate_disabled_unverified",
+      "evidence": "candidate_source.json; standard MoveIt classification only; physical review PENDING"
+    },
+    {
+      "links": [
+        "base_link",
+        "imu_link"
+      ],
+      "candidate_class": "Adjacent",
+      "decision": "candidate_disabled_unverified",
+      "evidence": "candidate_source.json; standard MoveIt classification only; physical review PENDING"
+    },
+    {
+      "links": [
+        "base_link",
+        "link1"
+      ],
+      "candidate_class": "Adjacent",
+      "decision": "candidate_disabled_unverified",
+      "evidence": "candidate_source.json; standard MoveIt classification only; physical review PENDING"
+    },
+    {
+      "links": [
+        "base_link",
+        "wheel_left_back_link"
+      ],
+      "candidate_class": "Adjacent",
+      "decision": "candidate_disabled_unverified",
+      "evidence": "candidate_source.json; standard MoveIt classification only; physical review PENDING"
+    },
+    {
+      "links": [
+        "base_link",
+        "wheel_left_front_link"
+      ],
+      "candidate_class": "Adjacent",
+      "decision": "candidate_disabled_unverified",
+      "evidence": "candidate_source.json; standard MoveIt classification only; physical review PENDING"
+    },
+    {
+      "links": [
+        "base_link",
+        "wheel_right_back_link"
+      ],
+      "candidate_class": "Adjacent",
+      "decision": "candidate_disabled_unverified",
+      "evidence": "candidate_source.json; standard MoveIt classification only; physical review PENDING"
+    },
+    {
+      "links": [
+        "base_link",
+        "wheel_right_front_link"
+      ],
+      "candidate_class": "Adjacent",
+      "decision": "candidate_disabled_unverified",
+      "evidence": "candidate_source.json; standard MoveIt classification only; physical review PENDING"
+    },
+    {
+      "links": [
+        "camera_connect_link",
+        "depth_cam_link"
+      ],
+      "candidate_class": "Adjacent",
+      "decision": "candidate_disabled_unverified",
+      "evidence": "candidate_source.json; standard MoveIt classification only; physical review PENDING"
+    },
+    {
+      "links": [
+        "camera_connect_link",
+        "link4"
+      ],
+      "candidate_class": "Adjacent",
+      "decision": "candidate_disabled_unverified",
+      "evidence": "candidate_source.json; standard MoveIt classification only; physical review PENDING"
+    },
+    {
+      "links": [
+        "gripper_link",
+        "l_in_link"
+      ],
+      "candidate_class": "Adjacent",
+      "decision": "candidate_disabled_unverified",
+      "evidence": "candidate_source.json; standard MoveIt classification only; physical review PENDING"
+    },
+    {
+      "links": [
+        "gripper_link",
+        "l_link"
+      ],
+      "candidate_class": "Adjacent",
+      "decision": "candidate_disabled_unverified",
+      "evidence": "candidate_source.json; standard MoveIt classification only; physical review PENDING"
+    },
+    {
+      "links": [
+        "gripper_link",
+        "link5"
+      ],
+      "candidate_class": "Adjacent",
+      "decision": "candidate_disabled_unverified",
+      "evidence": "candidate_source.json; standard MoveIt classification only; physical review PENDING"
+    },
+    {
+      "links": [
+        "gripper_link",
+        "r_in_link"
+      ],
+      "candidate_class": "Adjacent",
+      "decision": "candidate_disabled_unverified",
+      "evidence": "candidate_source.json; standard MoveIt classification only; physical review PENDING"
+    },
+    {
+      "links": [
+        "gripper_link",
+        "r_link"
+      ],
+      "candidate_class": "Adjacent",
+      "decision": "candidate_disabled_unverified",
+      "evidence": "candidate_source.json; standard MoveIt classification only; physical review PENDING"
+    },
+    {
+      "links": [
+        "l_in_link",
+        "l_out_link"
+      ],
+      "candidate_class": "Adjacent",
+      "decision": "candidate_disabled_unverified",
+      "evidence": "candidate_source.json; standard MoveIt classification only; physical review PENDING"
+    },
+    {
+      "links": [
+        "l_link",
+        "l_out_link"
+      ],
+      "candidate_class": "Default",
+      "decision": "candidate_disabled_unverified",
+      "evidence": "candidate_source.json; standard MoveIt classification only; physical review PENDING"
+    },
+    {
+      "links": [
+        "l_link",
+        "r_link"
+      ],
+      "candidate_class": "Default",
+      "decision": "candidate_disabled_unverified",
+      "evidence": "candidate_source.json; standard MoveIt classification only; physical review PENDING"
+    },
+    {
+      "links": [
+        "l_out_link",
+        "r_out_link"
+      ],
+      "candidate_class": "Default",
+      "decision": "candidate_disabled_unverified",
+      "evidence": "candidate_source.json; standard MoveIt classification only; physical review PENDING"
+    },
+    {
+      "links": [
+        "link1",
+        "servo_link1"
+      ],
+      "candidate_class": "Adjacent",
+      "decision": "candidate_disabled_unverified",
+      "evidence": "candidate_source.json; standard MoveIt classification only; physical review PENDING"
+    },
+    {
+      "links": [
+        "link2",
+        "link3"
+      ],
+      "candidate_class": "Adjacent",
+      "decision": "candidate_disabled_unverified",
+      "evidence": "candidate_source.json; standard MoveIt classification only; physical review PENDING"
+    },
+    {
+      "links": [
+        "link2",
+        "servo_link1"
+      ],
+      "candidate_class": "Adjacent",
+      "decision": "candidate_disabled_unverified",
+      "evidence": "candidate_source.json; standard MoveIt classification only; physical review PENDING"
+    },
+    {
+      "links": [
+        "link3",
+        "link4"
+      ],
+      "candidate_class": "Adjacent",
+      "decision": "candidate_disabled_unverified",
+      "evidence": "candidate_source.json; standard MoveIt classification only; physical review PENDING"
+    },
+    {
+      "links": [
+        "link4",
+        "servo_link2"
+      ],
+      "candidate_class": "Adjacent",
+      "decision": "candidate_disabled_unverified",
+      "evidence": "candidate_source.json; standard MoveIt classification only; physical review PENDING"
+    },
+    {
+      "links": [
+        "link5",
+        "servo_link2"
+      ],
+      "candidate_class": "Adjacent",
+      "decision": "candidate_disabled_unverified",
+      "evidence": "candidate_source.json; standard MoveIt classification only; physical review PENDING"
+    },
+    {
+      "links": [
+        "r_in_link",
+        "r_out_link"
+      ],
+      "candidate_class": "Adjacent",
+      "decision": "candidate_disabled_unverified",
+      "evidence": "candidate_source.json; standard MoveIt classification only; physical review PENDING"
+    },
+    {
+      "links": [
+        "r_link",
+        "r_out_link"
+      ],
+      "candidate_class": "Default",
+      "decision": "candidate_disabled_unverified",
+      "evidence": "candidate_source.json; standard MoveIt classification only; physical review PENDING"
+    }
+  ],
+  "normal_reference_status": "PENDING",
+  "hardware_validated": false,
+  "strict_reference_srdf_sha256": "5bf9ddcf8167da5f5e448b9f8f84ca7cd1353b161a45d96eece87e014fac5df7",
+  "excluded_categories": [
+    "Never",
+    "Always",
+    "Not Disabled"
+  ]
+}

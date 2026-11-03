@@ -1206,3 +1206,8 @@ with Evaluator(model, scene, policy, backend_path, task_scope=scope, gripper=0.3
 See [C3 semantics](docs/c3_collision_semantics.md) and [validation commands](docs/c3_semantic_validation.md).
 The optional SRDF channel keeps Raw, historical ACM and Semantic FCL queries separate.
 Current model review is PARTIAL; normal-reference validation is PENDING. No10,000 rerun is enabled.
+
+## 装配碰撞规则与独立研究基线
+
+见 [装配规则根因与实现](docs/assembly_collision_rules.md)。严格 SRDF 保持原样；
+新增 Adjacent/Default 候选配置需要显式启用，输出 RESEARCH_CANDIDATE，不能用作正式规划许可。

@@ -6,6 +6,7 @@ import time
 import numpy as np
 from .client import CollisionClient
 from .protocol import CollisionError
+from .decision import semantic_configuration_decision
 
 
 class Evaluator:
@@ -21,6 +22,7 @@ class Evaluator:
             if canonical_scope(json.loads(task_scope[0]),model,policy)!=task_scope:raise CollisionError('invalid task scope canonical identity')
         if semantic is not None and (policy is not None or task_scope is not None or geometry_profile is not None):raise CollisionError('semantic configuration is independent; no implicit policy/scope/geometry union')
         self.semantic=semantic
+        self.semantic_review_status=None if semantic is None else semantic.review_status
         self.client=CollisionClient(backend,timeout=timeout)
         try:
             options={}
@@ -39,7 +41,7 @@ class Evaluator:
             self.identity['missing_coverage']=['lidar_collision','RJ45_tool_TCP','cable','hardware_calibration']+(['unvalidated_internal_joint_exclusions'] if geometry_profile.effective_xml is not None else [])
             self.identity['evaluation_sha256']=sha256(json.dumps(self.identity,sort_keys=True).encode()).hexdigest()
         if semantic is not None:
-            self.identity['evaluation_mode']='official_geometry_reviewed_SRDF_model_only_partial'
+            self.identity['evaluation_mode']='official_geometry_candidate_SRDF_unverified' if self.semantic_review_status=='candidate_baseline_unverified' else 'official_geometry_reviewed_SRDF_model_only_partial'
             self.identity['evaluation_sha256']=sha256(json.dumps(self.identity,sort_keys=True).encode()).hexdigest()
         if task_scope is not None:
             self.identity['task_scope_sha256']=task_scope[1]
@@ -60,7 +62,7 @@ class Evaluator:
                      'model_scope_collision_free':None,'verification_status':'ERROR','final_decision':'ERROR',
                      'allowed_pairs':[],'remaining_collision_pairs':[],'clearance':None,
                      'ee_position':None,'ee_orientation':None}
-                if self.semantic is not None:row.update(semantic_self_collision=None,model_configuration_valid=None,semantic_decision='ERROR',hardware_validated=False,semantic_blocking_pairs=[],disabled_collision_pairs=[])
+                if self.semantic is not None:row.update(semantic_self_collision=None,model_configuration_valid=None,semantic_decision='ERROR',configuration_decision={**semantic_configuration_decision(None,self.semantic_review_status),'status':'ERROR'},hardware_validated=False,semantic_blocking_pairs=[],disabled_collision_pairs=[])
                 if self.task_scope is not None:row.update(task_scope_candidate=None,task_scope_status='ERROR',task_scope_blocking_self_collision=None,gripper_internal_collision=None,task_scope_blocking_pairs=[],gripper_internal_pairs=[],gripper_internal_verification='UNVERIFIED_MECHANISM',hardware_safe=None)
                 started=time.perf_counter()
                 try:
@@ -86,7 +88,8 @@ class Evaluator:
                             met[kind]=True if self.clearance[key]==0 else (d['separation_m']>=self.clearance[key] if d['available'] and d['separation_m'] is not None else None)
                         blocked=native['semantic_self_collision'] or native['environment_collision']
                         valid=False if blocked else None if any(v is None for v in met.values()) else all(met.values())
-                        row.update(semantic_decision='VALID_MODEL_ONLY' if valid is True else 'REJECTED' if valid is False else 'UNVERIFIED',semantic_self_collision=native['semantic_self_collision'],raw_collision_pairs=native['colliding_pairs'],semantic_blocking_pairs=native['semantic_blocking_pairs'],disabled_collision_pairs=native['disabled_collision_pairs'],model_configuration_valid=valid,verification_status='MODEL_ONLY_PARTIAL' if valid is not None else 'CLEARANCE_UNSUPPORTED',hardware_validated=False,semantic_clearance={'native':native['semantic_clearance'],'required':self.clearance,'threshold_met':met})
+                        decision=semantic_configuration_decision(valid,self.semantic_review_status)
+                        row.update(configuration_decision=decision,semantic_decision=decision['status'],semantic_self_collision=native['semantic_self_collision'],raw_collision_pairs=native['colliding_pairs'],semantic_blocking_pairs=native['semantic_blocking_pairs'],disabled_collision_pairs=native['disabled_collision_pairs'],model_configuration_valid=valid,verification_status=('CANDIDATE_BASELINE_UNVERIFIED' if self.semantic_review_status=='candidate_baseline_unverified' else 'MODEL_ONLY_PARTIAL') if valid is not None else 'CLEARANCE_UNSUPPORTED',hardware_validated=False,semantic_clearance={'native':native['semantic_clearance'],'required':self.clearance,'threshold_met':met})
                     if 'geometry_profile' in self.identity:
                         row['geometry_profile']=self.identity['geometry_profile'];row['missing_coverage']=self.identity['missing_coverage']
                         row['source_urdf_identity']=self.identity['source_urdf_sha256'];row['effective_collision_geometry_identity']=self.identity['robot_geometry_sha256']
