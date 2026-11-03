@@ -156,7 +156,17 @@ source /home/siyuen/Desktop/jetrover_sim_ws/install/setup.bash
   --output results/s1_idc_workspace_n100.html
 ```
 
-本轮文件已存在；重跑请改为 `s1_idc_scene_only_review02.html` / `s1_idc_workspace_n100_review02.html` 等新名字。
+上述是 S1 初次生成命令，现有文件保留为历史产物。R2.1 中，原根目录的
+`s1_idc_scene_only_review02.html` / `s1_idc_workspace_n100_review02.html` 已迁移至：
+
+- `results/visualizations/s1/review02/s1_idc_scene_only_review02.html`
+- `results/visualizations/s1/review02/s1_idc_workspace_n100_review02.html`
+
+用户当前选用的稳定入口是 `results/current/s1_scene.html` 与
+`results/current/s1_workspace.html`，均为相对符号链接。当前选择不等于正式验收证据。
+这些已有目标不得作为重跑输出。未来请显式选择新的版本目录及文件名，例如
+`results/visualizations/s1/review03/s1_scene.html`，且确认目标不存在。
+手动切换规则见 `results/_index/README.md`；不要向 current 链接或已有真实 HTML 写入。
 
 ## 6. 测试、哈希及变更范围
 
