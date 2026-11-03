@@ -209,6 +209,30 @@ J Engine::initialize(const J& in) {
   need(audit_["detector"]=="FCL","FCL not active");
   return {{"identity",identity_},{"audit",audit_},{"backend_status","READY"}};
 }
+J Engine::set_policy(const J& in) {
+  need(bool(scene_),"not initialized");
+  const auto text=in.at("policy_canonical_json").get<std::string>();
+  need(hash(text)==in.at("policy_sha256"),"policy hash mismatch");
+  const auto p=J::parse(text);
+  need(p.at("version")==1 && p.at("model_sha256")==identity_.at("urdf_sha256"),"policy model/version mismatch");
+  need(p.at("review_status")=="baseline" || p.at("review_status")=="provisional_diagnostic","unvalidated review claim");
+  need(p.at("scope")=="bare_gripper_model","unsupported tool scope");
+  const auto c=p.at("clearance");
+  need(number(c.at("environment_m"))==0 && number(c.at("self_m"))==0 && c.at("contact_mode")=="FCL_raw_boolean","unsupported clearance");
+  collision_detection::AllowedCollisionMatrix acm;std::set<std::pair<std::string,std::string>> pairs;
+  for(const auto& item:p.at("allowed_pairs")) {
+    auto pair=item.at("links").get<std::vector<std::string>>();need(pair.size()==2,"invalid pair");std::sort(pair.begin(),pair.end());
+    need(pair[0]!=pair[1] && scene_->getRobotModel()->hasLinkModel(pair[0]) && scene_->getRobotModel()->hasLinkModel(pair[1]),"unknown self link");
+    need(item.at("review_status")=="provisional_model_only" && !item.at("reason").get<std::string>().empty() && !item.at("evidence").get<std::string>().empty(),"unreviewed pair");
+    need(pairs.insert({pair[0],pair[1]}).second,"duplicate policy pair");acm.setEntry(pair[0],pair[1],true);
+  }
+  for(const auto& pair:p.at("unresolved_pairs")) {
+    auto names=pair.get<std::vector<std::string>>();need(names.size()==2,"invalid unresolved pair");std::sort(names.begin(),names.end());
+    need(!pairs.count({names[0],names[1]}),"unresolved pair allowed");
+  }
+  policy_acm_=acm;policy_=p;identity_["policy_sha256"]=hash(text);
+  return {{"identity",identity_},{"backend_status","POLICY_SET"},{"policy",policy_}};
+}
 J Engine::query(const J& in) {
   need(bool(scene_) && !identity_.is_null(),"backend not initialized");
   const auto start=std::chrono::steady_clock::now();const auto positions=in.at("joint_positions");
@@ -234,12 +258,34 @@ J Engine::query(const J& in) {
   collision_detection::CollisionResult self,env;self.clear();env.clear();
   scene_->getCollisionEnvUnpadded()->checkSelfCollision(req,self,state,scene_->getAllowedCollisionMatrix());
   scene_->getCollisionEnvUnpadded()->checkRobotCollision(req,env,state,scene_->getAllowedCollisionMatrix());
-  J pairs=J::array();
+  J pairs=J::array(), contacts=J::array();
   for(auto item : {std::make_pair("self",&self),std::make_pair("environment",&env)})
     for(const auto& contact:item.second->contacts)pairs.push_back({{"kind",item.first},{"first",contact.first.first},{"second",contact.first.second}});
+  collision_detection::CollisionResult effective;effective.clear();
+  scene_->getCollisionEnvUnpadded()->checkSelfCollision(req,effective,state,policy_acm_);
+  J filtered=J::array(), effective_pairs=J::array();
+  for(const auto& contact:self.contacts) {
+    collision_detection::AllowedCollision::Type type;
+    if(policy_acm_.getEntry(contact.first.first,contact.first.second,type) && type==collision_detection::AllowedCollision::ALWAYS)
+      filtered.push_back({contact.first.first,contact.first.second});
+  }
+  for(const auto& contact:effective.contacts)effective_pairs.push_back({contact.first.first,contact.first.second});
+  for(auto item : {std::make_pair("self",&self),std::make_pair("environment",&env)})
+    for(const auto& pair:item.second->contacts) for(const auto& contact:pair.second) {
+      const Eigen::Vector3d base_position=root_to_base.inverse()*contact.pos;
+      const Eigen::Vector3d base_normal=root_to_base.linear().transpose()*contact.normal;
+      need(base_position.allFinite() && base_normal.allFinite() && std::isfinite(contact.depth),"invalid FCL contact");
+      contacts.push_back({{"kind",item.first},{"first",pair.first.first},{"second",pair.first.second},
+        {"position_base_m",{base_position.x(),base_position.y(),base_position.z()}},
+        {"normal_base",{base_normal.x(),base_normal.y(),base_normal.z()}},{"depth_m",contact.depth},
+        {"source","MoveIt/FCL CollisionResult"}});
+    }
   const bool collision=self.collision || env.collision;
   return {{"identity",identity_},{"backend_status","OK"},{"collision_detected",collision},
-          {"self_collision",self.collision},{"environment_collision",env.collision},{"colliding_pairs",pairs},
+          {"raw_self_collision",self.collision},{"effective_self_collision",effective.collision},
+          {"effective_decision",effective.collision || env.collision ? "COLLIDING":"UNVERIFIED"},
+          {"filtered_pairs",filtered},{"effective_self_pairs",effective_pairs},{"applied_policy",policy_},
+          {"self_collision",self.collision},{"environment_collision",env.collision},{"colliding_pairs",pairs},{"contacts_base",contacts},
           {"pairs_may_be_truncated",self.contact_count>=req.max_contacts || env.contact_count>=req.max_contacts},
           {"decision",collision?"COLLIDING":"UNVERIFIED"},
           {"unverified_reasons",{"collision_coverage_unreviewed","ACM_unreviewed_empty","RJ45_tool_TCP_missing","gripper_uncalibrated","clearance_not_implemented"}},

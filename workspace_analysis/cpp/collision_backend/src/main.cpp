@@ -29,10 +29,13 @@ int main() {
       std::set<std::string> allowed={"protocol_version","id","op"};
       if(op=="INIT")for(const auto* key:{"model","scene_canonical_json","scene_sha256","objects"})allowed.insert(key);
       if(op=="QUERY")allowed.insert("joint_positions");
+      if(op=="POLICY") {allowed.insert("policy_canonical_json");allowed.insert("policy_sha256");}
       for(const auto& field:in.items())if(!allowed.count(field.key()))throw std::runtime_error("unknown request option");
       if(op=="INIT") {
         if(engine)throw std::runtime_error("already initialized");
         auto candidate=std::make_unique<cable::Engine>();response.update(candidate->initialize(in));engine=std::move(candidate);
+      } else if(op=="POLICY") {
+        if(!engine)throw std::runtime_error("not initialized");response.update(engine->set_policy(in));
       } else if(op=="QUERY") {
         if(!engine)throw std::runtime_error("not initialized");response.update(engine->query(in));
       } else if(op=="SHUTDOWN") { if(engine)response["identity"]=engine->identity();response["backend_status"]="STOPPED";quit=true; }

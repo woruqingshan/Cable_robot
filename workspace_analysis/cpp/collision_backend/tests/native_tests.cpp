@@ -46,6 +46,31 @@ int main() {
     auto at=xml.find("<box size=\"0.2 0.2 0.2\"/>");xml.replace(at,std::string("<box size=\"0.2 0.2 0.2\"/>").size(),"<mesh filename=\"file:///not_present_c1.stl\"/>");
     bad["model"]["urdf_xml"]=xml;bad["model"]["urdf_sha256"]=cable::hash(xml);
     rejected=false;try{cable::Engine engine;engine.initialize(bad);}catch(...){rejected=true;}check(rejected,"missing mesh rejected");
+    auto policy_input=initialization(true,0);cable::Engine policy_engine;policy_engine.initialize(policy_input);
+    J policy={{"version",1},{"model_sha256",policy_input["model"]["urdf_sha256"]},{"review_status","provisional_diagnostic"},{"scope","bare_gripper_model"},
+      {"clearance",{{"environment_m",0},{"self_m",0},{"contact_mode","FCL_raw_boolean"}}},{"unresolved_pairs",J::array()},
+      {"allowed_pairs",J::array({{{"links",{"base_link","tip"}},{"reason","test assembly"},{"evidence","synthetic fixture"},{"review_status","provisional_model_only"}}})}};
+    policy_engine.set_policy({{"policy_canonical_json",policy.dump()},{"policy_sha256",cable::hash(policy.dump())}});
+    result=policy_engine.query(q);
+    check(result["raw_self_collision"].get<bool>() && !result["effective_self_collision"].get<bool>() && result["environment_collision"].get<bool>(),"ACM self only; environment preserved");
+    auto three=policy_input;xml=three["model"]["urdf_xml"].get<std::string>();
+    xml.insert(xml.find("</robot>"),R"(<link name="third"><collision><geometry><box size="0.1 0.1 0.1"/></geometry></collision></link><joint name="fixed_c" type="fixed"><parent link="base_link"/><child link="third"/><origin xyz="0.035 0 0"/></joint>)");
+    three["model"]["urdf_xml"]=xml;three["model"]["urdf_sha256"]=cable::hash(xml);policy["model_sha256"]=cable::hash(xml);
+    cable::Engine third;third.initialize(three);third.set_policy({{"policy_canonical_json",policy.dump()},{"policy_sha256",cable::hash(policy.dump())}});
+    result=third.query({{"joint_positions",{{"j",0},{"fixed_c",0}}}});
+    check(result["effective_self_collision"].get<bool>(),"A-C still collides after A-B allowed");
+    policy["allowed_pairs"][0]["links"]={"base_link","missing"};rejected=false;
+    try{third.set_policy({{"policy_canonical_json",policy.dump()},{"policy_sha256",cable::hash(policy.dump())}});}catch(...){rejected=true;}
+    check(rejected,"unknown ACM link rejected");
+    auto shifted=initialization(false,0);xml=shifted["model"]["urdf_xml"].get<std::string>();
+    xml.insert(xml.find("</robot>"),R"(<link name="footprint"/><joint name="root_offset" type="fixed"><parent link="footprint"/><child link="base_link"/><origin xyz="0 0 1"/></joint>)");
+    shifted["model"]["urdf_xml"]=xml;shifted["model"]["urdf_sha256"]=cable::hash(xml);
+    cable::Engine offset;offset.initialize(shifted);result=offset.query({{"joint_positions",{{"j",0},{"root_offset",0}}}});
+    check(!result["contacts_base"].empty(),"actual FCL contact required");
+    for(const auto& contact:result["contacts_base"]) {
+      check(std::abs(contact["position_base_m"][2].get<double>())<.2,"contact root-to-base conversion");
+      check(contact["depth_m"].get<double>()>=0,"contact penetration finite nonnegative");
+    }
     std::cout << "PASS: real MoveIt/FCL, separated, environment overlap, sequential clearing, invalid state, self-only, both, bad identity, missing mesh\n";
     return 0;
   } catch(const std::exception& e) {std::cerr<<e.what()<<'\n';return 1;}

@@ -14,11 +14,13 @@ class Engine {
  public:
   J initialize(const J& request);
   J query(const J& request);
+  J set_policy(const J& request);
   const J& identity() const { return identity_; }
  private:
   urdf::ModelInterfaceSharedPtr urdf_;
   planning_scene::PlanningScenePtr scene_;
-  J identity_, audit_, objects_;
+  J identity_, audit_, objects_, policy_;
+  collision_detection::AllowedCollisionMatrix policy_acm_;
   std::string base_, ee_;
 };
 }

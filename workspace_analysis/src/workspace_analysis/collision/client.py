@@ -70,6 +70,21 @@ class CollisionClient:
         except BaseException:
             self._broken=True;self.close();raise
 
+    def set_policy(self, canonical, digest):
+        """Explicit additive protocol-v1 operation; lock the acknowledged new policy identity."""
+        previous=self.identity
+        if previous is None:raise CollisionError('initialize first')
+        self.identity=None
+        try:
+            reply=self._exchange({'op':'POLICY','policy_canonical_json':canonical,'policy_sha256':digest})
+            expected={**previous,'policy_sha256':digest}
+            if reply.get('identity')!=expected or reply.get('backend_status')!='POLICY_SET':
+                raise CollisionError('policy acknowledgement mismatch')
+            self.identity=expected
+            return reply
+        except BaseException:
+            self.identity=previous;self._broken=True;raise
+
     def query_positions(self, positions):
         """Send full URDF state including fixed/mimic joints; never infer CLEAR."""
         if self.identity is None:raise CollisionError('initialize first')

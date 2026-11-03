@@ -1,0 +1,91 @@
+"""Rendering geometry and contact identity checks, separate from user visual acceptance."""
+import copy
+from hashlib import sha256
+import json
+import os
+from pathlib import Path
+import struct
+from types import SimpleNamespace
+import numpy as np
+import pytest
+from workspace_analysis.collision.assets import read_stl,robot_surfaces
+from workspace_analysis.collision.protocol import CollisionError
+from workspace_analysis.collision.client import CollisionClient
+from workspace_analysis.robot.model import load_model
+from workspace_analysis.scene.schema import load_scene
+from workspace_analysis.viz.collision import build_collision_figure,export_collision_viewer,CAMERA
+
+ROOT=Path(__file__).resolve().parents[1]
+
+
+def test_nonzero_collision_origin_nonuniform_scale_and_native_link_transform(tmp_path):
+    path=tmp_path/'triangle.stl'
+    path.write_bytes(b' '*80+struct.pack('<I',1)+struct.pack('<12fH',0,0,1,1,0,0,0,1,0,0,0,1,0))
+    local=[[0,0,1,.1],[0,1,0,.2],[-1,0,0,.3],[0,0,0,1]]
+    link=[[0,-1,0,1],[1,0,0,2],[0,0,1,3],[0,0,0,1]]
+    xml=f'<robot><link name="l"><collision><origin xyz=".1 .2 .3" rpy="0 1.5707963267948966 0"/><geometry><mesh filename="{path.as_uri()}" scale="2 3 4"/></geometry></collision></link></robot>'
+    ident={'urdf_sha256':'u','scene_sha256':'s','robot_geometry_sha256':'g','backend_sha256':'b'}
+    ready={'identity':ident,'audit':{'geometry':[{'link':'l','uri':path.as_uri(),'scale':[2,3,4],'resource_sha256':sha256(path.read_bytes()).hexdigest()}],
+           'loaded_shapes':[{'link':'l','origin':local}],'moveit_shape_count':1}}
+    model=SimpleNamespace(urdf_xml=xml,metadata=lambda:{'expanded_urdf_sha256':'u'})
+    result=robot_surfaces(model,ready,{'identity':ident,'link_transforms_base':{'l':link}})
+    np.testing.assert_allclose(result[0]['vertices'][0],[.8,2.1,1.3],atol=1e-12)
+    path.write_bytes(path.read_bytes()+b'bad')
+    with pytest.raises(CollisionError):read_stl(path)
+
+
+@pytest.fixture(scope='module')
+def views():
+    binary=os.environ.get('C1_BACKEND');assert binary
+    model=load_model(ROOT/'config/workspace.yaml');scene=load_scene(ROOT/'config/scenes/idc_prototype_v0.yaml')
+    with np.load(ROOT/'results/workspace_n100_seed42.npz',allow_pickle=False) as a:qs=a['q']
+    result=[]
+    with CollisionClient(binary) as client:
+        ready=client.initialize(model,scene)
+        for i in [8,73]:
+            row={**client.query(model,qs[i]),'q':qs[i].tolist(),'sample_index':i}
+            surfaces=robot_surfaces(model,ready,row);figure=build_collision_figure(scene,surfaces,row)
+            result.append((row,surfaces,figure))
+    return result
+
+
+def test_all_robot_surfaces_poses_distinct_and_cabinet_fixed(views):
+    for row,surfaces,fig in views:
+        assert len(surfaces)==24 and sum(len(s['faces']) for s in surfaces)==21568
+        assert len({s['id'] for s in surfaces})==24
+        meshes=[t for t in fig.data if (t.meta or {}).get('role')=='robot_collision_mesh']
+        assert len(meshes)==24 and all(t.visible is not False and t.opacity>0 for t in meshes)
+        assert {t.meta['object_id'] for t in meshes}=={s['id'] for s in surfaces}
+        assert fig.layout.scene.aspectmode=='data' and fig.layout.scene.camera.eye.x==CAMERA['eye']['x']
+    byid=lambda x:{s['id']:s['vertices'] for s in x}
+    assert not np.allclose(byid(views[0][1])['link4'],byid(views[1][1])['link4'])
+    for name in ['base_link','back_shell_green_link']:
+        np.testing.assert_array_equal(byid(views[0][1])[name],byid(views[1][1])[name])
+    scenes=lambda fig:[t.to_plotly_json() for t in fig.data if (t.meta or {}).get('role')=='scene_object']
+    for a,b in zip(scenes(views[0][2]),scenes(views[1][2])):
+        for key in ['x','y','z','i','j','k']:np.testing.assert_array_equal(a[key],b[key])
+
+
+def test_real_contacts_and_pairs_correspond_to_displayed_objects(views):
+    for row,surfaces,fig in views:
+        assert row['environment_collision'] and row['contacts_base']
+        ids={t.meta['object_id'] for t in fig.data if (t.meta or {}).get('role') in {'robot_collision_mesh','scene_object'}}
+        for pair in row['colliding_pairs']:
+            assert {pair['first'],pair['second']}<=ids
+        contacts=next(t for t in fig.data if (t.meta or {}).get('role')=='fcl_contacts')
+        np.testing.assert_array_equal(np.column_stack([contacts.x,contacts.y,contacts.z]),[c['position_base_m'] for c in row['contacts_base']])
+        assert all(c['source']=='MoveIt/FCL CollisionResult' for c in row['contacts_base'])
+        for trace in fig.data:
+            if (trace.meta or {}).get('role') in {'frame_label','port_direction','robot_link_frame'}:assert trace.visible is False
+
+
+def test_offline_pair_selector_and_export_refuses_overwrite(views,tmp_path):
+    row,_,fig=views[0];out=tmp_path/'viewer.html'
+    export_collision_viewer(fig,row,out)
+    text=out.read_text()
+    assert 'pair-select' in text and 'layer-robot' not in text  # generated by runtime layer controls
+    assert 'Robot Mesh (all 24)' in text and 'Actual FCL Contacts' in text
+    assert 'window.collisionViewer' in text and 'Plotly.newPlot' in text
+    before=out.read_bytes()
+    with pytest.raises(ValueError):export_collision_viewer(fig,row,out)
+    assert out.read_bytes()==before
