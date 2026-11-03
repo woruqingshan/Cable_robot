@@ -1,4 +1,4 @@
-# JetRover Workspace Analysis — G1-A / G1-B / G2 / G3 / G4
+# JetRover Workspace Analysis — P2.2 / P2.3-B1
 
 G1-A 已由用户运行并验收：三组 PyKDL/独立参考一致，pytest 为
 `48 passed, 1 warning`；本机 `results/g1a_fk.json` 的最大位置误差约
@@ -10,10 +10,11 @@ G1-B v3 也已由用户执行并验收：Zero、Nonzero、Near-limit 均 PASS，
 G2 已由用户运行并验收：100 / 10,000 行实验 PASS，两组 NPZ 哈希与 JSON
 一致，G2 完整回归为 `152 passed, 1 warning`。既有数据保存在 results/。
 G3 已由用户完成测试及交互式可视化验收；G3 代码已提交。
-本轮新增 G4 复现、采样稳定性与基础体素命中分析，**等待用户正式实验与验收**。
-G1-A/G2/G3/G4 不启动 ROS 节点；G1-B 只启动自己的 Robot State Publisher。
+G4 正式九组实验和复现报告现已由用户运行并验收，见 reports/g4_validation_run01.md。
+P2.3-A 架构已审核通过；当前新增 B1 严格场景模型与坐标变换，**等待用户审核**。
+G1-A/G2/G3/G4/B1 不启动 ROS 节点；G1-B 只启动自己的 Robot State Publisher。
 所有入口均不启动机器人驱动或控制器，不调用实体机器人服务。
-不含碰撞检测、IK、环境建模或规划算法。
+目前包含合成场景的几何表示，不含碰撞检测、IK、场景可视化或规划算法。
 
 ## 模型和坐标约定
 
@@ -773,3 +774,170 @@ P2.2 之后仍需研究：实物 TCP/模型标定与硬件误差、真实安全�
 这些是后续技术问题，本轮不实现。
 
 **G4 代码开发完成，等待用户运行正式实验与验收。**
+
+## P2.3-B1 — Strict Scene Model & Coordinate Transforms
+
+P2.3-A 设计见 docs/p23_architecture.md；本轮只实现 B1，不进入 B2/C/D/E。
+新增 transforms.py、scene_model.py、config/scenes/synthetic_dev.yaml、
+tests/test_transforms.py 和 tests/test_scene_model.py。
+G1–G4 算法和官方资源不变；另外将包 __init__.py 的四个既有模型导出改为
+惰性加载，避免导入场景模块时先加载 URDF/ROS 依赖。原 __all__ 和导出对象
+身份保持兼容，已有调用方式不变，已在回归测试中核验。
+
+### API 与 Frame 图
+
+```python
+from workspace_analysis.scene_model import load_scene, parse_scene, SceneError
+from workspace_analysis.transforms import (
+    pose_to_matrix, quaternion_to_matrix, matrix_to_quaternion,
+    validate_rotation, validate_transform, compose_transforms, invert_transform,
+    transform_point, transform_direction, resolve_transform,
+    Pose, Frame, FrameGraph, TransformError,
+)
+
+scene = load_scene('/absolute/path/to/config/scenes/synthetic_dev.yaml')
+T_base_port = resolve_transform(scene, 'base_link', 'synthetic_demo/port_01_frame')
+T_base_box = scene.object_transform('oriented_test_box')
+canonical_dict = scene.to_dict()  # 可编辑的深层副本，不会修改原 Snapshot
+canonical_json = scene.to_json()  # 精确参与 Canonical Hash 的 JSON 字符串
+```
+
+Pose/Frame/FrameGraph 和 SceneSnapshot 使用冻结、带 slots 的对象。内部向量与
+矩阵缓存存为元组，嵌套映射使用私有副本的 MappingProxyType；没有暴露可变数组。
+矩阵/点/方向 API 总是返回新数组，改动返回值不会影响 Snapshot 或输入数组。
+通过 to_dict/to_json 生成未来 native JSON 请求的数据，不要直接对 MappingProxyType
+调用 json.dumps。parse_scene 接受 str/bytes，支持严格 YAML 及本接口的 JSON 文本。
+
+FrameGraph 隐式包含唯一 base_link 根，检查重复 ID/多父、缺失父、环和不连通
+节点；不补造 Frame。构造时从根广度优先计算 ^base T_frame，并保存不可变缓存。
+resolve_transform(scene,target,source) 返回 **^target T_source**，即
+inverse(^base T_target) @ ^base T_source，使用列向量。
+Frame 列表顺序不影响解析。Scene Frame 必须采用 scene_id/局部名称，不覆盖机器人 Link。
+可直接用 FrameGraph/Frame/Pose 做不依赖 Scene Schema 的坐标图测试。
+
+所有矩阵都检查形状、有限性和 SO(3)（正交及 det=+1，绝对容差 1e-10）；
+齐次矩阵末行必须为 [0,0,0,1]。四元数为 XYZW，非零，单位范数容差 1e-8，
+只对容许的浮点范数误差做归一化；不通过 SciPy 静默修复错误旋转矩阵。
+transform_point 使用 R*p+t，transform_direction 只使用 R*d，不平移、不自动单位化。
+错误为包含输入位置的 TransformError/SceneError，均继承 ValueError。
+
+### 实际支持的 Schema v1
+
+顶层必须是 schema_version: 1 和 scene。scene 必须完整包含：
+id、provenance、reference_frame、units、coverage、frames、entities、
+collision_objects、ports、clearance、tool；所有层级未知/缺失字段均拒绝。
+
+- provenance：kind 为 synthetic/measured/vision，hardware_verified 必须是 bool；
+  synthetic 不能声称 hardware_verified=true。provenance/coverage 仅记录输入声明，
+  解析通过不能证明物理测量、碰撞覆盖或安全性。B1 交付的配置明确为合成场景。
+- units 必须为 length:m、angle:rad，reference_frame 必须为 base_link；不推断或转换单位。
+- frames：id、parent、pose；pose 仅含 position_m[3]、quaternion_xyzw[4]。
+  ID 使用 ASCII 字母/下划线开头的段，可含数字、下划线、连字符，Frame 段之间用 /。
+- collision_objects：id、type、parent_frame、pose；box 用完整边长 size_m[3]，
+  cylinder 用 radius_m/length_m（局部 +Z 轴），所有尺寸有限且 >0。旋转 Box 用 pose 表示。
+- entities：id、kind(cabinet/patch_panel)、frame、components；components 必须非空、
+  无重复并引用实际 object。实体只分组，不另外生成一个填满机柜的 solid。
+- ports：id、entity、frame、三个局部操作轴、task_parameters_status；entity 必须是
+  实际 patch_panel，port frame 必须位于它的后代分支。各类 ID 分别唯一。
+  outward=[0,0,+1]、insertion=[0,0,-1]、key=[+1,0,0]，校验绝对容差 1e-12，
+  规范化保存上述固定轴。Port 不自动给实体面板挖孔。
+- clearance：robot_environment_m、self_m、contact_epsilon_m，均非负有限实数；
+  只保存参数，B1 不执行间隙判定，也不把 epsilon 当实际安全裕量。
+- tool：当前精确支持 uncalibrated、ee_frame=end_effector_link、tcp_frame=null；
+  port task_parameters_status 当前只支持 unmeasured。真实测量/标定字段尚无实现定义，
+  不接受用 calibrated/measured 字符串替代完整数据，不自动补单位 TCP。
+
+YAML 重复 key、未知 tag、非字符串 key、merge key、alias、多个文档、非法编码
+均拒绝；数字检查排除 bool（包括与数字混合的列表）、数值字符串、NaN/Inf。
+解析资源限制为 UTF-8 1 MiB、64 层、20,000 个 YAML 节点。别名首版全部拒绝，
+避免无界展开；这些是输入资源限制，不是机器人几何精度。
+支持未加引号的 1e-07 等科学计数法，带引号的数字仍是非法数值字符串。
+
+### Canonical Hash 与不可变性
+
+Raw YAML SHA256 对读取的原始 bytes 计算，包含注释、换行、空白；保存路径不参与。
+Canonical Scene SHA256 对规范化完整 Schema 的 JSON UTF-8 字节计算，不包含来源路径、
+raw hash、自身 hash 或末尾换行。
+
+规范化规则：数值参数转为有限 float64/Python float；负零转正零；四元数在范数
+容差内归一化，按 **(w,x,y,z) 首个非零分量为正**固定 q/-q 符号。
+Frames/Objects/Entities/Ports 按 id 排序，components 按 ID 排序；空间向量分量不能排序。
+JSON 固定为 json.dumps(sort_keys=True,ensure_ascii=False,separators=(',',':'),allow_nan=False)。
+映射键顺序、空白、注释、这些无序集合的排列及 q/-q 不改变 Canonical Hash；
+几何、位姿、来源声明、关联或间隙等规范内容改变时哈希改变。
+
+这是本项目 v1 的 Python float64/JSON 约定，不宣称 RFC 8785 或跨科学计算版本的
+位级协议。未来 native 后端应核验原 canonical UTF-8 payload 的字节哈希，不能另用
+未约定的四舍五入或浮点格式重算。Snapshot 没有外部可变原字典引用；只读结构与
+导出的副本都已有测试覆盖。
+
+当前 synthetic_dev.yaml 的实测指纹：
+
+```text
+raw_yaml_sha256       cae02112d6a051b0bff3a6c7c8698ee1acc9a12e226fd75bd4df9b683ab5fba4
+canonical_scene_sha256 0196cd18fc10ef9e4a23cc054e1aecfcb4e3509f220344ee538d152a5fb210a6
+```
+
+仅编辑注释会改变前者；这些值是配置身份，不代表碰撞/硬件验证通过。
+
+### 合成场景的人工真值
+
+配置直接采用已审核架构第 6.2 节的几何参数，仅加合成声明注释：3 Frames、
+2 个语义实体、9 个几何体（8 Box + 1 Cylinder）、1 个 Port。
+包括左右侧板、后板、围成测试开口的四个 Box、圆柱及旋转 Box；不是实测 RJ45 几何。
+
+数学真值（m；显示舍去约 1e-16 的浮点残差）：
+
+```text
+^base T_cabinet = [[1,0,0,0.45], [0,1,0,0], [0,0,1,0.20], [0,0,0,1]]
+^base T_panel = ^base T_port =
+[[0,0,-1,0.30], [0,1,0,0], [1,0,0,0.20], [0,0,0,1]]
+```
+
+Panel 的局部偏移 (-0.15,0,0) 与 Cabinet 的 (0.45,0,0.20) 相加后，
+原点为 (0.30,0,0.20)，Ry(-90°) 将局部 +Z 旋到 Base -X。
+Port 在 Panel 中为零位姿，故外向 Base -X、插入 Base +X、键控 Base +Z。
+这是坐标变换结果，不证明五关节机器人可达到该姿态。
+额外手算测试用 Rz(90°) 和多层平移验证非交换连乘，不能仅靠同一实现互相对照。
+
+### 用户本地验收命令
+
+B1 API 本身无需 source ROS；隔离解释器测试已确认它不加载 model、rclpy、PyKDL、
+MoveIt、FCL 或 Plotly。完整测试还核验旧 G1 导出兼容性，因此先 source 既有环境：
+
+```bash
+source /opt/ros/humble/setup.bash
+source /home/siyuen/Desktop/jetrover_sim_ws/install/setup.bash
+cd /home/siyuen/Desktop/code/cable_robot/cable_vla_robot/workspace_analysis
+
+.venv/bin/python -m pytest -q -rs tests/test_transforms.py tests/test_scene_model.py
+.venv/bin/python -m pytest -q -rs tests
+
+PYTHONPATH=/home/siyuen/Desktop/code/cable_robot/cable_vla_robot/workspace_analysis/src \
+.venv/bin/python - <<'PY'
+from workspace_analysis.scene_model import load_scene
+from workspace_analysis.transforms import resolve_transform, transform_direction
+s = load_scene('config/scenes/synthetic_dev.yaml')
+print(s.scene_id, len(s.frames), len(s.collision_objects), len(s.ports))
+print('Raw:', s.raw_yaml_sha256)
+print('Canonical:', s.canonical_scene_sha256)
+for frame in ('cabinet', 'panel', 'port_01_frame'):
+    print(frame)
+    print(resolve_transform(s, 'base_link', 'synthetic_demo/' + frame))
+T = resolve_transform(s, 'base_link', 'synthetic_demo/port_01_frame')
+print('outward:', transform_direction(T, [0, 0, 1]))
+print('insertion:', transform_direction(T, [0, 0, -1]))
+PY
+```
+
+本轮临时副本测试：**B1 115 passed**；全套 **336 passed, 1 warning，无 SKIP**。
+原 G1–G4 的 221 项全部保留并通过。warning 是原 URDF 解析依赖的 Python 3.11
+私有变量提示。测试没有启动机器人、RSP、Gazebo、MoveIt Move Group 或控制节点。
+原 G3 回归仍包含临时目录的小样本 HTML 导出；没有实现或运行 B2 场景可视化。
+没有生成新的正式 Workspace 采样或碰撞结果。
+
+待用户复核实际矩阵、严格错误信息、不可变对象和哈希后再验收 B1。
+当前场景为合成刚体几何数据，TCP 未标定；lidar overlay、真实机柜/工具/线缆、
+碰撞、安全间隙、任务可行性、IK 和规划均未验证或实现。
+
+**P2.3-B1 Code Implementation Completed — Pending User Review.**
