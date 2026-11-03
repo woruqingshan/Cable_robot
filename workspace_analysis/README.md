@@ -1211,3 +1211,8 @@ Current model review is PARTIAL; normal-reference validation is PENDING. No10,00
 
 见 [装配规则根因与实现](docs/assembly_collision_rules.md)。严格 SRDF 保持原样；
 新增 Adjacent/Default 候选配置需要显式启用，输出 RESEARCH_CANDIDATE，不能用作正式规划许可。
+
+## 研究级受限工作空间恢复
+
+见 [100/1,000样本对照、装配审核及验收命令](docs/research_workspace_recovery.md)。
+使用 evaluate_research_workspace.py 显式选择候选基线；所有结果保持 RESEARCH_ONLY。
