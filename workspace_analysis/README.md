@@ -1180,3 +1180,23 @@ with Evaluator(model, scene, policy, backend_path, geometry_profile=profile,
     rows = evaluator.evaluate(q)
 # Geometry Profile 与 ACM Policy 独立；诊断候选不能作为实物安全结论。
 ```
+
+
+## C2.8 / D2：机构诊断与任务范围碰撞
+
+官方完整几何、既有 ACM v1 和独立 task_scope_v0 分开管理。七对显式夹爪内部 Pair 单独诊断，其他 Self Pair 与全部环境碰撞继续检查。
+100 / 1,000 / 10,000 原配置对照已运行；实际任务候选仍为 0，主要阻塞转为官方 Arm/Base 近轴 Pair。内部机械和硬件验证仍未完成。
+
+- [机构、Scope、Native 正反例与可视化](docs/c28_gripper_assembly_modeling.md)
+- [D2 实验、API、完整运行与验收命令](docs/d2_task_scoped_workspace.md)
+
+```python
+from workspace_analysis.collision.scope import load_scope
+from workspace_analysis.collision.evaluator import Evaluator
+
+scope = load_scope(scope_path, model, policy)
+with Evaluator(model, scene, policy, backend_path, task_scope=scope, gripper=0.3) as evaluator:
+    rows = evaluator.evaluate(q)
+# rows[i]["task_scope_candidate"] 独立于原 model_scope_collision_free / final_decision。
+# 内部诊断仍 UNVERIFIED，Task Candidate 不代表完整机器人或硬件安全。
+```

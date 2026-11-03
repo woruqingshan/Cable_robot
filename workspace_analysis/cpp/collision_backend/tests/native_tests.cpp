@@ -116,6 +116,22 @@ int main() {
     check(audit_multi["contacts_base"].size()>2,"audit retrieves audit_multiple real contacts");
     bool invalid_audit=false;try{both.query({{"joint_positions",{{"j",0}}},{"geometry_audit",{{"max_contacts_per_pair",513},{"max_contacts",1000}}}});}catch(...){invalid_audit=true;}
     check(invalid_audit,"audit limits bounded");
+    auto assembly_input=initialization(false,10);auto assembly_xml=assembly_input["model"]["urdf_xml"].get<std::string>();
+    size_t rename=0;while((rename=assembly_xml.find("tip",rename))!=std::string::npos){assembly_xml.replace(rename,3,"gripper_link");rename+=12;}
+    assembly_xml.insert(assembly_xml.find("</robot>"),R"(<link name="inner"><collision><geometry><box size="0.1 0.1 0.1"/></geometry></collision></link><joint name="transmission" type="revolute"><parent link="gripper_link"/><child link="inner"/><origin xyz="0.025 0 0"/><axis xyz="0 0 1"/><limit lower="-1" upper="1" effort="1" velocity="1"/><mimic joint="j" multiplier="1" offset="0"/></joint>)");
+    assembly_input["model"]["urdf_xml"]=assembly_xml;assembly_input["model"]["urdf_sha256"]=cable::hash(assembly_xml);assembly_input["model"]["ee_frame"]="gripper_link";
+    cable::Engine assembly;assembly.initialize(assembly_input);
+    J scope={{"version",1},{"id","synthetic_native_only"},{"source_model_sha256",cable::hash(assembly_xml)},{"existing_acm_policy_sha256",assembly.identity().at("policy_sha256")},{"assembly_root","gripper_link"},{"assembly_members",{"gripper_link","inner"}},
+      {"internal_diagnostic_pairs",J::array({{{"links",{"gripper_link","inner"}},{"mechanism","joint_bearing_candidate"},{"urdf_joint_path",{"transmission"}},{"evidence","synthetic overlapping boxes"},{"unverified_factors",{"not physical robot validation"}}}})},
+      {"blocking_rule","all_other_self_pairs_with_existing_acm"},{"environment_rule","official_full_all_scene_objects"},{"geometry_rule","official_full_only"},{"missing_coverage",{"synthetic geometry only"}},{"verification_status","task_scoped_unverified"},{"evidence_references",{"native fixture"}}};
+    J state={{"joint_positions",{{"j",0},{"transmission",0}}}};auto before_scope=assembly.query(state);auto scoped_state=state;
+    scoped_state["task_scope_canonical_json"]=scope.dump();scoped_state["task_scope_sha256"]=cable::hash(scope.dump());scoped_state["task_scope_context"]=assembly.identity();
+    scoped_state["geometry_audit"]={{"max_contacts_per_pair",1},{"max_contacts",1}};
+    auto scoped=assembly.query(scoped_state);check(scoped["effective_self_collision"].get<bool>(),"scope preserves full self fact");
+    check(scoped["task_scope"]["zero_clearance_candidate"].get<bool>() && scoped["task_scope"]["gripper_internal_collision"].get<bool>(),"independent task candidate with internal collision");
+    check(scoped["task_scope"]["candidate_computed_from_fresh_boolean_queries"].get<bool>(),"no inference from capped contacts");
+    auto after_scope=assembly.query(state);check(before_scope["colliding_pairs"]==after_scope["colliding_pairs"] && before_scope["clearance"]==after_scope["clearance"],"scope does not pollute next query");
+    std::cout << "TASK_SCOPE_NATIVE_VALIDATION=" << scoped["task_scope"].dump() << '\n';
     std::cout << "CLEARANCE_VALIDATION=" << clearance_cases.dump() << '\n';
     std::cout << "PASS: real MoveIt/FCL, collision regressions, analytic clearance and explicit solver order\n";
     return 0;

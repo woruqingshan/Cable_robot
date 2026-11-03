@@ -28,7 +28,7 @@ int main() {
       const auto op=in.at("op").get<std::string>();
       std::set<std::string> allowed={"protocol_version","id","op"};
       if(op=="INIT")for(const auto* key:{"model","scene_canonical_json","scene_sha256","objects","geometry_profile_canonical_json","geometry_profile_sha256","effective_model"})allowed.insert(key);
-      if(op=="QUERY" || op=="EVALUATE")for(const auto* key:{"joint_positions","geometry_audit"})allowed.insert(key);
+      if(op=="QUERY" || op=="EVALUATE")for(const auto* key:{"joint_positions","geometry_audit","task_scope_canonical_json","task_scope_sha256","task_scope_context"})allowed.insert(key);
       if(op=="POLICY") {allowed.insert("policy_canonical_json");allowed.insert("policy_sha256");}
       for(const auto& field:in.items())if(!allowed.count(field.key()))throw std::runtime_error("unknown request option");
       if(op=="INIT") {

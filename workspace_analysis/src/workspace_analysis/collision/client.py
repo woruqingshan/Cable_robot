@@ -88,18 +88,24 @@ class CollisionClient:
         except BaseException:
             self.identity=previous;self._broken=True;raise
 
-    def query_positions(self, positions, *, geometry_audit=None):
+    def query_positions(self, positions, *, geometry_audit=None, task_scope=None):
         """Send full URDF state including fixed/mimic joints; never infer CLEAR."""
         if self.identity is None:raise CollisionError('initialize first')
         payload={'op':'QUERY','joint_positions':positions}
         if geometry_audit is not None:payload['geometry_audit']=geometry_audit
-        try:return check_query(self._exchange(payload))
+        if task_scope is not None:payload.update(task_scope_canonical_json=task_scope[0],task_scope_sha256=task_scope[1],task_scope_context=self.identity)
+        try:
+            reply=check_query(self._exchange(payload))
+            if task_scope is not None:
+                from .scope import check_scope_result
+                check_scope_result(reply,task_scope,self.identity)
+            return reply
         except BaseException:
             self._broken=True;raise
 
-    def query(self, model, q, *, auxiliary_positions=None, geometry_audit=None):
+    def query(self, model, q, *, auxiliary_positions=None, geometry_audit=None, task_scope=None):
         """Reuse G1 joint-state/mimic semantics before submitting a full state."""
-        return self.query_positions(model.joint_positions(q,auxiliary_positions),geometry_audit=geometry_audit)
+        return self.query_positions(model.joint_positions(q,auxiliary_positions),geometry_audit=geometry_audit,task_scope=task_scope)
 
     def close(self):
         """Return resource release and exit-code evidence separately."""

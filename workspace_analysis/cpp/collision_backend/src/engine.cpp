@@ -305,6 +305,7 @@ J Engine::set_policy(const J& in) {
 }
 J Engine::query(const J& in) {
   need(bool(scene_) && !identity_.is_null(),"backend not initialized");
+  if(refined_ && (in.contains("task_scope_canonical_json") || in.contains("task_scope_sha256") || in.contains("task_scope_context")))throw std::runtime_error("task scope v0 requires official full geometry; diagnostic refinement unsupported");
   const auto start=std::chrono::steady_clock::now();const auto positions=in.at("joint_positions");
   need(positions.is_object() && positions.size()==urdf_->joints_.size(),"full URDF joint state required");
   for(const auto& [name,j]:urdf_->joints_) {
@@ -380,7 +381,7 @@ J Engine::query(const J& in) {
       world_objects.emplace_back(id,std::make_shared<fcl::CollisionObjectd>(g->collision_geometry_,object->global_shape_poses_[i]));
     }
   }
-  auto distance_json=[&](bool self_query,bool colliding,const collision_detection::CollisionResult& collisions,int exclude_targets=0) {
+  auto distance_json=[&](bool self_query,bool colliding,const collision_detection::CollisionResult& collisions,int exclude_targets=0,const collision_detection::AllowedCollisionMatrix* override_acm=nullptr) {
     double best=std::numeric_limits<double>::infinity();J nearest=J::array();
     if(self_query && (exclude_targets || !distance_only_pairs_.empty())) {
       colliding=false;for(const auto& pair:collisions.contacts) {
@@ -400,7 +401,8 @@ J Engine::query(const J& in) {
         const auto& second=others[j];
         if(self_query && ((exclude_targets && selected(profile_pairs_,first.first,second.first)) || (!distance_only_pairs_.empty() && !selected(distance_only_pairs_,first.first,second.first))))continue;
         collision_detection::AllowedCollision::Type type;
-        if(self_query && (first.first==second.first || (policy_acm_.getAllowedCollision(first.first,second.first,type) && type==collision_detection::AllowedCollision::ALWAYS)))continue;
+        const auto& used_acm=override_acm?*override_acm:policy_acm_;
+        if(self_query && (first.first==second.first || (used_acm.getAllowedCollision(first.first,second.first,type) && type==collision_detection::AllowedCollision::ALWAYS)))continue;
         if(first.second->getAABB().distance(second.second->getAABB())>best)continue;
         fcl::DistanceRequestd request(false);request.gjk_solver_type=fcl::GST_INDEP;
         fcl::DistanceResultd result;
@@ -485,6 +487,56 @@ J Engine::query(const J& in) {
       }
     }
     if(in.contains("geometry_audit"))response["derived_contact_collection"]=derived.at("contact_collection");
+  }
+  if(in.contains("task_scope_canonical_json") || in.contains("task_scope_sha256") || in.contains("task_scope_context")) {
+    need(!refined_,"task scope v0 requires official full geometry; diagnostic refinement unsupported");
+    const std::string text=in.at("task_scope_canonical_json");const auto digest=hash(text);
+    need(digest==in.at("task_scope_sha256") && in.at("task_scope_context")==identity_,"task scope/context identity mismatch");
+    const auto scope=J::parse(text);
+    need(scope.dump()==text,"task scope must be canonical JSON without ambiguous keys");
+    const std::set<std::string> scope_keys={"version","id","source_model_sha256","existing_acm_policy_sha256","assembly_root","assembly_members","internal_diagnostic_pairs","blocking_rule","environment_rule","geometry_rule","missing_coverage","verification_status","evidence_references"};
+    need(scope.is_object() && scope.size()==scope_keys.size(),"task scope fields");for(const auto& item:scope.items())need(scope_keys.count(item.key()),"unknown task scope field");
+    need(scope.at("version").is_number_integer() && scope.at("version")==1 && !scope.at("id").get<std::string>().empty(),"task scope version/id");
+    need(scope.at("source_model_sha256")==identity_.at("urdf_sha256") && scope.at("existing_acm_policy_sha256")==identity_.at("policy_sha256"),"task scope model/ACM mismatch");
+    need(scope.at("assembly_root")=="gripper_link" && bool(urdf_->getLink("gripper_link")),"task scope gripper root");
+    need(scope.at("blocking_rule")=="all_other_self_pairs_with_existing_acm" && scope.at("environment_rule")=="official_full_all_scene_objects" && scope.at("geometry_rule")=="official_full_only" && scope.at("verification_status")=="task_scoped_unverified","unsupported task scope rule");
+    need(!scope.at("missing_coverage").empty() && !scope.at("evidence_references").empty(),"scope must retain missing coverage/evidence");
+    std::set<std::string> members={"gripper_link"};bool progress=true;
+    while(progress) {progress=false;for(const auto& [name,j]:urdf_->joints_)if(members.count(j->parent_link_name) && members.insert(j->child_link_name).second)progress=true;}
+    const auto declared=scope.at("assembly_members").get<std::vector<std::string>>();
+    need(std::set<std::string>(declared.begin(),declared.end())==members && declared.size()==members.size(),"scope assembly membership mismatch");
+    std::vector<std::string> all_names;for(const auto& [name,l]:urdf_->links_)all_names.push_back(name);
+    collision_detection::AllowedCollisionMatrix scoped_acm=policy_acm_,internal_acm(all_names,true);
+    std::set<std::pair<std::string,std::string>> internal_pairs;
+    for(const auto& item:scope.at("internal_diagnostic_pairs")) {
+      need(item.is_object() && item.size()==5 && item.contains("links") && item.contains("mechanism") && item.contains("urdf_joint_path") && item.contains("evidence") && item.contains("unverified_factors"),"internal diagnostic fields");
+      const auto names=item.at("links").get<std::vector<std::string>>();need(names.size()==2 && names[0]!=names[1] && members.count(names[0]) && members.count(names[1]),"illegal internal pair");
+      need(internal_pairs.insert(pair_key(names[0],names[1])).second,"duplicate internal pair");
+      collision_detection::AllowedCollision::Type kind;need(!policy_acm_.getAllowedCollision(names[0],names[1],kind) || kind!=collision_detection::AllowedCollision::ALWAYS,"internal pair already ACM-allowed");
+      const auto mechanism=item.at("mechanism").get<std::string>();need(mechanism=="gear_meshing_candidate" || mechanism=="joint_bearing_candidate" || mechanism=="linkage_assembly_candidate" || mechanism=="unresolved_internal_contact","invalid mechanism claim");
+      need(!item.at("evidence").get<std::string>().empty() && !item.at("unverified_factors").empty(),"unverified internal evidence required");
+      auto ancestry=[&](std::string name) {std::vector<std::string> result={name};auto l=urdf_->getLink(name);while(l->parent_joint){l=urdf_->getLink(l->parent_joint->parent_link_name);result.push_back(l->name);}return result;};
+      auto a=ancestry(names[0]),b=ancestry(names[1]);std::string common;
+      for(const auto& n:b)if(std::find(a.begin(),a.end(),n)!=a.end()){common=n;break;}
+      std::vector<std::string> path;for(const auto& name:names){auto l=urdf_->getLink(name);while(l->name!=common){path.push_back(l->parent_joint->name);l=urdf_->getLink(l->parent_joint->parent_link_name);}}
+      auto expected=item.at("urdf_joint_path").get<std::vector<std::string>>();std::sort(path.begin(),path.end());std::sort(expected.begin(),expected.end());need(path==expected,"internal pair topology mismatch");
+      scoped_acm.setEntry(names[0],names[1],true);internal_acm.setEntry(names[0],names[1],false);
+    }
+    need(!internal_pairs.empty(),"explicit internal diagnostics required");
+    collision_detection::CollisionResult blocking,internal,blocking_bool,internal_bool,environment_bool;
+    scene_->getCollisionEnvUnpadded()->checkSelfCollision(req,blocking,state,scoped_acm);
+    scene_->getCollisionEnvUnpadded()->checkSelfCollision(req,internal,state,internal_acm);
+    collision_detection::CollisionRequest boolean_req;boolean_req.contacts=false;
+    // Authoritative complete searches: never infer candidate by editing a capped contact list.
+    scene_->getCollisionEnvUnpadded()->checkSelfCollision(boolean_req,blocking_bool,state,scoped_acm);
+    scene_->getCollisionEnvUnpadded()->checkSelfCollision(boolean_req,internal_bool,state,internal_acm);
+    scene_->getCollisionEnvUnpadded()->checkRobotCollision(boolean_req,environment_bool,state,scene_->getAllowedCollisionMatrix());
+    need(environment_bool.collision==env.collision,"task/official environment disagreement");
+    auto list_pairs=[](const collision_detection::CollisionResult& r){J result=J::array();for(const auto& p:r.contacts)result.push_back({p.first.first,p.first.second});return result;};
+    J internal_contacts=J::array();for(const auto& c:contacts)if(c.at("kind")=="self" && selected(internal_pairs,c.at("first"),c.at("second")))internal_contacts.push_back(c);
+    // Query internal contacts independently too: raw global contacts may have been capped before reaching these pairs.
+    internal_contacts=J::array();for(const auto& pair:internal.contacts)for(const auto& contact:pair.second){Eigen::Vector3d p=root_to_base.inverse()*contact.pos;internal_contacts.push_back({{"kind","internal_diagnostic"},{"first",pair.first.first},{"second",pair.first.second},{"position_base_m",{p.x(),p.y(),p.z()}},{"depth_m",contact.depth},{"source","independent Native FCL internal query"}});}
+    response["task_scope"]={{"scope_sha256",digest},{"scope_id",scope.at("id")},{"binding",identity_},{"official_raw_self_collision",self.collision},{"official_effective_self_collision",effective.collision},{"task_scope_blocking_self_collision",blocking_bool.collision},{"gripper_internal_collision",internal_bool.collision},{"environment_collision",environment_bool.collision},{"zero_clearance_candidate",!blocking_bool.collision && !environment_bool.collision},{"task_scope_blocking_pairs",list_pairs(blocking)},{"gripper_internal_pairs",list_pairs(internal)},{"gripper_internal_contacts",internal_contacts},{"declared_internal_pairs",scope.at("internal_diagnostic_pairs")},{"gripper_internal_verification","UNVERIFIED_MECHANISM"},{"missing_coverage",scope.at("missing_coverage")},{"clearance",{{"self",distance_json(true,blocking_bool.collision,blocking,0,&scoped_acm)},{"environment",response.at("clearance").at("environment")}}},{"blocking_pair_list_may_be_truncated",blocking.contact_count>=req.max_contacts},{"internal_pair_list_may_be_truncated",internal.contact_count>=req.max_contacts},{"contact_surface_complete",false},{"candidate_computed_from_fresh_boolean_queries",true}};
   }
   response["query_elapsed_s"]=std::chrono::duration<double>(std::chrono::steady_clock::now()-start).count();return response;
 }

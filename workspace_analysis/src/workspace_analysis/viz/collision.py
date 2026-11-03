@@ -38,6 +38,14 @@ def build_collision_figure(scene,surfaces,row):
         marker={'size':5,'color':'#facc15','symbol':'diamond'},name='FCL contacts (base_link)',
         text=[x['first']+' / '+x['second'] for x in contacts],hovertemplate='%{text}<br>FCL contact (%{x:.5f}, %{y:.5f}, %{z:.5f}) m<extra></extra>',
         meta={'role':'fcl_contacts','contact_source':'actual Native CollisionResult','pairs':contacts}))
+    if 'task_scope' in row:
+        scoped=row['task_scope'];internal={tuple(sorted(p)) for p in scoped['gripper_internal_pairs']};blocking={tuple(sorted(p)) for p in scoped['task_scope_blocking_pairs']}
+        figure.data[-1].visible=False;figure.data[-1].meta={**figure.data[-1].meta,'suppressed_for_task_scope':True}
+        groups=[('Internal Diagnostic — UNVERIFIED',scoped['gripper_internal_contacts'],'#a855f7','scope_internal_contacts'),('Blocking Self Contacts',[c for c in contacts if c['kind']=='self' and tuple(sorted([c['first'],c['second']])) in blocking],'#ef4444','scope_blocking_contacts'),('Environment Contacts',[c for c in contacts if c['kind']=='environment'],'#f97316','scope_environment_contacts')]
+        for name,items,color,role in groups:
+            pts=np.array([c['position_base_m'] for c in items]).reshape(-1,3)
+            figure.add_trace(go.Scatter3d(x=pts[:,0],y=pts[:,1],z=pts[:,2],mode='markers',marker={'color':color,'size':5},name=name,text=[c['first']+' / '+c['second'] for c in items],meta={'role':role,'pairs':items,'surface_complete':False}))
+        figure.add_annotation(text='Purple: internal mechanism diagnostics UNVERIFIED. Red: blocking self. Orange: environment. Task candidate never means full robot/hardware safe.',xref='paper',yref='paper',x=0,y=1.03,showarrow=False)
     # Fixed metric ranges encompass every mesh and scene solid; identical camera
     # and a generous common range for JetRover samples, expanded if necessary.
     points=np.vstack([s['vertices'] for s in surfaces]+[np.column_stack([t.x,t.y,t.z]) for t in figure.data if (t.meta or {}).get('role')=='scene_object'])
@@ -53,6 +61,9 @@ def build_collision_figure(scene,surfaces,row):
     figure.add_annotation(x=0,y=-.08,xref='paper',yref='paper',showarrow=False,xanchor='left',align='left',
         text='Geometry: blue robot collision Mesh; translucent IDC solids. Pair: red / orange; actual FCL contacts: yellow.<br>'
              'All 24 modeled collision Mesh shown. LiDAR / RJ45 / cable coverage incomplete; physical policy validation PARTIAL.')
+    if 'task_scope' in row:
+        scoped=row['task_scope'];figure.update_layout(title=f'Task scope {"CANDIDATE (not full safe)" if scoped["zero_clearance_candidate"] else "REJECTED"} — official full {row["effective_decision"]} — {row["sample_index"]}',meta={**dict(figure.layout.meta),'task_scope':scoped})
+        figure.add_annotation(text='Purple: internal mechanism diagnostics UNVERIFIED. Red: blocking self. Orange: environment. Task candidate never means full robot/hardware safe.',xref='paper',yref='paper',x=0,y=1.03,showarrow=False)
     return figure
 
 
@@ -67,8 +78,17 @@ def export_collision_viewer(figure,row,output):
         names=tuple(sorted([pair['first'],pair['second']]))
         mode='environment' if pair['kind']=='environment' else 'filtered' if names in filtered else 'effective'
         pairs.append({**pair,'mode':mode,'effective':pair['kind']=='environment' or names in effective})
+    scoped=row.get('task_scope')
+    if scoped:
+        internals={tuple(sorted(p)) for p in scoped['gripper_internal_pairs']};blockers={tuple(sorted(p)) for p in scoped['task_scope_blocking_pairs']}
+        seen={tuple(sorted([p['first'],p['second']])) for p in pairs if p['kind']=='self'}
+        for names in sorted((internals|blockers)-seen):pairs.append({'kind':'self','first':names[0],'second':names[1],'mode':'internal' if names in internals else 'blocking','effective':True})
+        for p in pairs:
+            key=tuple(sorted([p['first'],p['second']]))
+            if p['kind']=='self' and key in internals:p['mode']='internal'
+            elif p['kind']=='self' and key in blockers:p['mode']='blocking'
     payload=json.dumps({'pairs':pairs,'q':row['q'],'index':row['sample_index'],'decision':row['effective_decision'],
-                         'policy':row.get('applied_policy'),'identity':row['identity']},allow_nan=False).replace('<','\\u003c')
+                         'policy':row.get('applied_policy'),'identity':row['identity'],'task_scope':scoped},allow_nan=False).replace('<','\\u003c')
     script=r'''
 const root=document.getElementById('{plot_id}');
 const model=PAYLOAD;
@@ -81,6 +101,7 @@ for(const [key,label] of Object.entries({robot:'Robot Mesh (all 24)',scene:'Scen
 }
 const detail=document.createElement('pre');detail.style='white-space:pre-wrap';panel.append(detail);
 const select=panel.querySelector('#pair-select'),filter=panel.querySelector('#pair-filter');
+if(model.task_scope){filter.add(new Option('Task Blocking Self','blocking'));filter.add(new Option('Internal Diagnostic (UNVERIFIED)','internal'));const note=document.createElement('b');note.textContent=' Task zero-clearance candidate: '+model.task_scope.zero_clearance_candidate+'; official full decision: '+model.decision+'; internal mechanics UNVERIFIED';panel.prepend(note);}
 function choices(){select.replaceChildren();let first=new Option('All objects; no pair selection','-1');select.add(first);
 model.pairs.forEach((p,i)=>{if(filter.value==='raw'||(filter.value==='effective'&&p.effective)||filter.value===p.mode)select.add(new Option(p.kind+' / '+p.mode+': '+p.first+' ↔ '+p.second,''+i));}); select.value=select.options.length>1?select.options[1].value:'-1';render();}
 const defaults=root.data.map(t=>({color:t.color,opacity:t.opacity,visible:t.visible!==false}));
@@ -90,22 +111,22 @@ function render(){const pair=model.pairs[+select.value];const selected=pair?[pai
  if(role==='robot_collision_mesh')visible=layers.robot;
  if(role==='scene_object'||role==='object_edges')visible=layers.scene;
  if(role==='robot_link_frame')visible=layers.frame;
- if(role==='fcl_contacts')visible=layers.contact;
+ if(['fcl_contacts','scope_internal_contacts','scope_blocking_contacts','scope_environment_contacts'].includes(role))visible=layers.contact&&!m.suppressed_for_task_scope;
  let color=defaults[i].color,opacity=defaults[i].opacity;
  if(role==='robot_collision_mesh'||role==='scene_object'){
- const which=selected.indexOf(m.object_id);color=which===0?'#ef4444':which===1?'#f59e0b':defaults[i].color;
+ const which=selected.indexOf(m.object_id);color=which===0?(pair&&pair.mode==='internal'?'#a855f7':'#ef4444'):which===1?(pair&&pair.mode==='internal'?'#38bdf8':'#f59e0b'):defaults[i].color;
  opacity=which>=0?.98:selected.length?(role==='robot_collision_mesh'?.48:.12):defaults[i].opacity;
  }
- if(role==='fcl_contacts'&&pair){const points=m.pairs.filter(p=>p.kind===pair.kind&&((p.first===pair.first&&p.second===pair.second)||(p.first===pair.second&&p.second===pair.first)));
+ if(['fcl_contacts','scope_internal_contacts','scope_blocking_contacts','scope_environment_contacts'].includes(role)&&pair){const points=m.pairs.filter(p=>(p.kind===pair.kind||p.kind==='internal_diagnostic'&&pair.mode==='internal')&&((p.first===pair.first&&p.second===pair.second)||(p.first===pair.second&&p.second===pair.first)));
  Plotly.restyle(root,{x:[points.map(p=>p.position_base_m[0])],y:[points.map(p=>p.position_base_m[1])],z:[points.map(p=>p.position_base_m[2])],text:[points.map(p=>p.first+' / '+p.second)]},[i]);}
- if(role==='fcl_contacts'&&!pair){const points=m.pairs;Plotly.restyle(root,{x:[points.map(p=>p.position_base_m[0])],y:[points.map(p=>p.position_base_m[1])],z:[points.map(p=>p.position_base_m[2])],text:[points.map(p=>p.first+' / '+p.second)]},[i]);}
+ if(['fcl_contacts','scope_internal_contacts','scope_blocking_contacts','scope_environment_contacts'].includes(role)&&!pair){const points=m.pairs;Plotly.restyle(root,{x:[points.map(p=>p.position_base_m[0])],y:[points.map(p=>p.position_base_m[1])],z:[points.map(p=>p.position_base_m[2])],text:[points.map(p=>p.first+' / '+p.second)]},[i]);}
  updates.visible.push(visible);updates.color.push(color);updates.opacity.push(opacity);
  });
  // Only Mesh3d supports color as a top-level property.
  const meshes=root.data.map((t,i)=>t.type==='mesh3d'?i:-1).filter(i=>i>=0);
  Plotly.restyle(root,{visible:updates.visible});
  Plotly.restyle(root,{color:meshes.map(i=>updates.color[i]),opacity:meshes.map(i=>updates.opacity[i])},meshes);
- detail.textContent=JSON.stringify({sample_index:model.index,q:model.q,decision:model.decision,selected_pair:pair||null,policy:model.policy,identity:model.identity},null,2);
+ detail.textContent=JSON.stringify({sample_index:model.index,q:model.q,decision:model.decision,task_scope:model.task_scope,selected_pair:pair||null,policy:model.policy,identity:model.identity},null,2);
  root.dataset.selectedPair=pair?pair.first+'|'+pair.second:'none';
 }
 select.onchange=render;filter.onchange=choices;choices();
