@@ -53,14 +53,14 @@ def build_path_figure(scene, surfaces, native_start, targets, assessment, states
     return figure, local_surfaces
 
 
-def export_path_viewer(figure, local_surfaces, states, targets, output, *, label):
+def export_path_viewer(figure, local_surfaces, states, targets, output, *, label, replay_context=None):
     """Keep one immutable mesh + per-state transforms; avoid enormous mesh frames."""
     import plotly.io as pio
     path = Path(output).absolute()
     if path.suffix != '.html' or os.path.lexists(path): raise ValueError('new .html output required')
     data = {'usage': 'RESEARCH_ONLY', 'label': label, 'surfaces': local_surfaces, 'states': states,
             'T_ee_tcp': targets.spec.T_ee_tcp.tolist(), 'tcp': targets.spec.data['tcp'],
-            'pre_tcp_position': list(targets.pre_tcp.position_m)}
+            'pre_tcp_position': list(targets.pre_tcp.position_m), 'replay_context': replay_context}
     payload = json.dumps(data, allow_nan=False).replace('<', '\\u003c')
     script = r'''
 const root=document.getElementById('{plot_id}');
@@ -77,43 +77,57 @@ const meshIndices=root.data.map((t,i)=>(t.meta||{}).role==='robot_collision_mesh
 const mul=(t,p)=>t.slice(0,3).map(r=>r[0]*p[0]+r[1]*p[1]+r[2]*p[2]+r[3]);
 const rot=(t,p)=>t.slice(0,3).map(r=>r[0]*p[0]+r[1]*p[1]+r[2]*p[2]);
 const matmul=(a,b)=>a.map(r=>b[0].map((_,j)=>r.reduce((s,x,k)=>s+x*b[k][j],0)));
-let timer=null,busy=false,pending=null;
+let timer=null,busy=false,pending=null,currentIndex=0;
+function stopPlayback(){if(timer!==null)clearInterval(timer);timer=null;play.textContent='Play';}
 async function draw(index){
+ if(!Number.isInteger(index)||index<0||index>=model.states.length)return;
  if(busy){pending=index;return;}busy=true;
  try{
  const s=model.states[index],tc=matmul(s.T_base_to_ee,model.T_ee_tcp),p=tc.slice(0,3).map(r=>r[3]);
- const pairs=[...s.semantic_blocking_pairs,...s.environment_pairs.map(p=>[p.first,p.second])],blocked=new Set(pairs.flat());
+ const expected=s.expected_T_base_tcp?s.expected_T_base_tcp.slice(0,3).map(r=>r[3]):model.pre_tcp_position;
+ const pairs=[...(s.semantic_blocking_pairs||[]),...(s.environment_pairs||[]).map(p=>[p.first,p.second])],blocked=new Set(pairs.flat());
  const data=root.data.map(t=>({...t}));
  model.surfaces.forEach((surface,j)=>{const points=surface.vertices.map(v=>mul(s.link_transforms_base[surface.link],v)),t=data[meshIndices[j]];
    t.x=points.map(v=>v[0]);t.y=points.map(v=>v[1]);t.z=points.map(v=>v[2]);t.color=blocked.has(surface.link)?'#ef4444':'#6096ba';t.visible=controls.robot;});
- data.forEach(t=>{const m=t.meta||{};
+ data.forEach(t=>{const m=t.meta||{},traceName=typeof t.name==='string'?t.name:'';
  if(m.role==='scene_object'||m.role==='object_edges'){t.visible=controls.scene;if(t.type==='mesh3d')t.color=blocked.has(m.object_id)?'#f97316':'#94a3b8';}
  if(m.role==='robot_link_frame'){
-   const tr=s.link_transforms_base[m.object_id],o=tr.slice(0,3).map(r=>r[3]);let axis=t.line.color==='red'?0:t.line.color==='green'?1:2;
-   const e=o.map((v,j)=>v+.015*tr[j][axis]);t.x=[o[0],e[0]];t.y=[o[1],e[1]];t.z=[o[2],e[2]];t.visible=controls.frame;
+   const tr=s.link_transforms_base[m.object_id],axis={red:0,green:1,blue:2}[(t.line||{}).color];
+   if(!tr||axis===undefined){t.visible=false;}else{const o=tr.slice(0,3).map(r=>r[3]),e=o.map((v,j)=>v+.015*tr[j][axis]);
+   t.x=[o[0],e[0]];t.y=[o[1],e[1]];t.z=[o[2],e[2]];t.visible=controls.frame;}
  }
  if(m.role==='fcl_contacts'){const c=s.contacts_base||[];t.x=c.map(c=>c.position_base_m[0]);t.y=c.map(c=>c.position_base_m[1]);t.z=c.map(c=>c.position_base_m[2]);t.text=c.map(c=>c.first+' / '+c.second);t.visible=controls.contact;}
- if(t.name==='Actual synthetic TCP'){t.x=[p[0]];t.y=[p[1]];t.z=[p[2]];}
+ if(traceName==='Actual synthetic TCP'){t.x=[p[0]];t.y=[p[1]];t.z=[p[2]];}
+ if(traceName==='Approach expected TCP'){t.x=[expected[0]];t.y=[expected[1]];t.z=[expected[2]];}
+ if(model.replay_context&&model.replay_context.all_samples_task_constrained&&traceName.startsWith('Target TCP ')){
+   const axis=['X','Y','Z'].indexOf(traceName.slice(-1));
+   if(axis>=0&&s.expected_T_base_tcp){const e=expected.map((v,j)=>v+.018*s.expected_T_base_tcp[j][axis]);
+   if(axis>=0&&t.type==='scatter3d'){t.x=[expected[0],e[0]];t.y=[expected[1],e[1]];t.z=[expected[2],e[2]];}
+   if(axis>=0&&t.type==='cone'){t.x=[e[0]];t.y=[e[1]];t.z=[e[2]];}
+   }
+ }
  for(const [name,axis] of [['Actual tool insertion axis',model.tcp.insertion_axis_local],['Actual tool key direction',model.tcp.key_axis_local]]){
    const d=rot(tc,axis),e=p.map((v,j)=>v+.035*d[j]);
-   if(t.name===name&&t.type==='scatter3d'){t.x=[p[0],e[0]];t.y=[p[1],e[1]];t.z=[p[2],e[2]];}
-   if(t.name===name&&t.type==='cone'){t.x=[e[0]];t.y=[e[1]];t.z=[e[2]];t.u=[d[0]];t.v=[d[1]];t.w=[d[2]];}
+   if(traceName===name&&t.type==='scatter3d'){t.x=[p[0],e[0]];t.y=[p[1],e[1]];t.z=[p[2],e[2]];}
+   if(traceName===name&&t.type==='cone'){t.x=[e[0]];t.y=[e[1]];t.z=[e[2]];t.u=[d[0]];t.v=[d[1]];t.w=[d[2]];}
  }
- if(t.name==='Synthetic EE to TCP offset'||t.name==='TCP position residual'){
-   const a=t.name==='Synthetic EE to TCP offset'?s.T_base_to_ee.slice(0,3).map(r=>r[3]):model.pre_tcp_position;
+ if(traceName==='Synthetic EE to TCP offset'||traceName==='TCP position residual'){
+   const a=traceName==='Synthetic EE to TCP offset'?s.T_base_to_ee.slice(0,3).map(r=>r[3]):expected;
    t.x=[a[0],p[0]];t.y=[a[1],p[1]];t.z=[a[2],p[2]];
  }
  });
  const layout={...root.layout,title:{text:model.label+' — sample '+index+'/'+(model.states.length-1)+' — '+s.status},scene:{...root.layout.scene,uirevision:'T3-fixed-camera'},
-   meta:{...root.layout.meta,path_sample_index:index,q:s.q,actual_T_base_tcp:tc,current_configuration_valid:s.valid,current_task_errors:s.task_errors,
+   meta:{...root.layout.meta,path_sample_index:index,q:s.q,actual_T_base_tcp:tc,current_configuration_valid:s.configuration_valid===undefined?s.valid:s.configuration_valid,current_path_state_valid:s.valid,current_task_errors:s.task_errors,current_approach_check:s.approach_check||null,
      semantic_self_collision:s.semantic_self_collision,semantic_blocking_pairs:s.semantic_blocking_pairs,semantic_clearance:s.semantic_clearance}};
  await Plotly.react(root,data,layout,{responsive:true,displaylogo:false,scrollZoom:true});
- slider.value=index;root.dataset.pathIndex=index;root.dataset.pathValid=s.valid;
- detail.textContent=JSON.stringify({sample_index:index,q:s.q,configuration_status:s.status,reasons:s.reasons,semantic_blocking_pairs:s.semantic_blocking_pairs,environment_pairs:s.environment_pairs,semantic_clearance:s.semantic_clearance,task_errors:s.task_errors,only_endpoint_is_task_constrained:true,query_id:s.query_id,usage:'RESEARCH_ONLY'},null,2);
- }catch(error){root.dataset.replayError=String(error);throw error;}finally{busy=false;if(pending!==null){const next=pending;pending=null;draw(next);}}
+ currentIndex=index;slider.value=index;root.dataset.pathIndex=index;root.dataset.pathValid=s.valid;delete root.dataset.replayError;
+ detail.textContent=JSON.stringify({sample_index:index,q:s.q,configuration_status:s.status,reasons:s.reasons,semantic_blocking_pairs:s.semantic_blocking_pairs,environment_pairs:s.environment_pairs,semantic_clearance:s.semantic_clearance,task_errors:s.task_errors,approach_check:s.approach_check||null,approach_result:model.replay_context||null,only_endpoint_is_task_constrained:!(model.replay_context&&model.replay_context.all_samples_task_constrained),query_id:s.query_id,usage:'RESEARCH_ONLY'},null,2);
+ if(index===model.states.length-1)stopPlayback();
+ }catch(error){pending=null;stopPlayback();root.dataset.replayError=String(error);detail.textContent=JSON.stringify({error:String(error),last_displayed_index:currentIndex,usage:'RESEARCH_ONLY'},null,2);}
+ finally{busy=false;if(pending!==null){const next=pending;pending=null;draw(next);}}
 }
 slider.oninput=()=>draw(+slider.value);
-play.onclick=()=>{if(timer){clearInterval(timer);timer=null;play.textContent='Play';return;}if(+slider.value===model.states.length-1)slider.value=0;play.textContent='Pause';timer=setInterval(()=>{if(busy)return;const i=+slider.value;if(i>=model.states.length-1){clearInterval(timer);timer=null;play.textContent='Play';}else draw(i+1);},200);};
+play.onclick=()=>{if(timer!==null){stopPlayback();return;}play.textContent='Pause';timer=setInterval(()=>{if(busy)return;if(currentIndex>=model.states.length-1)stopPlayback();else draw(currentIndex+1);},200);if(!busy&&currentIndex===model.states.length-1)draw(0);};
 window.pathViewer={root,model,draw};draw(0);
 '''.replace('PAYLOAD', payload)
     html = pio.to_html(figure, full_html=True, include_plotlyjs=True, post_script=script,

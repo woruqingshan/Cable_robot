@@ -1228,3 +1228,9 @@ See [P22 path planning](docs/p22_path_planning.md) for the unchanged IK goals,
 deterministic G4 simulation start, semantic FCL linear/RRT-Connect comparison,
 full robot playback, result formats and reproducible commands. All results are
 `RESEARCH_ONLY`; discrete validation is not continuous collision or hardware safety.
+
+## T4 — P22 Cartesian Approach
+
+见 [40→10 mm 顺序 IK、全程任务约束与 FCL 验证](docs/p22_cartesian_approach.md)。
+复用 T2 完整精度起点与 T3 有效性/机器人回放；路点和关节插值中间状态均检查原有 TCP 位置与方向容差。
+所有结果保持 `RESEARCH_ONLY`，不包含实际插入、接触许可或连续碰撞安全证明。

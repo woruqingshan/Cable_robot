@@ -19,7 +19,7 @@ BASELINE = json.loads((ROOT / 'tests/fixtures/r1_numeric_baseline.json').read_te
 PURE_MODULES = (
     'geometry.se3', 'scene.frames', 'scene.model', 'scene.schema', 'task.spec', 'task.targets',
     'workspace.artifacts', 'workspace.sampling', 'workspace.results',
-    'viz.meshes', 'viz.scene', 'viz.workspace', 'viz.task', 'viz.joint_path',
+    'viz.meshes', 'viz.scene', 'viz.workspace', 'viz.task', 'viz.joint_path', 'viz.approach',
     'planning.joint_path', 'planning.rrt_connect',
     'experiments.statistics', 'experiments.reporting', 'experiments.tf_validation',
 )
