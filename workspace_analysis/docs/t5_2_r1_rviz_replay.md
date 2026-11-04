@@ -126,7 +126,9 @@ Direct replay/panel entry points refuse default/non-loopback settings. All repla
 traffic is under `/idc_replay/`: joint_states, tf, tf_static, robot_description,
 scene_markers, port_markers, command and status. JointState publishers refuse
 remaps away from their declared private output. There are no controller clients.
-RViz fixed frame is base_link; no /clock is used (use_sim_time=false).
+R1 originally used base_link as the RViz fixed frame. T5.2-R2 now uses world,
+publishes world to the actual URDF root, and requires the explicitly selected
+Manifest SHA256. See t5_2_r2_base_pose.md. No /clock is used (use_sim_time=false).
 The selected private domain must not be intentionally reused for hardware nodes.
 
 Normal main launch opens both Qt and RViz. Closing either, or Ctrl+C, closes the

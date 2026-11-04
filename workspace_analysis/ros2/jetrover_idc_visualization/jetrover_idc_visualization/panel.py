@@ -86,8 +86,11 @@ class ReplayPanel(QWidget):
             finally: self.syncing = False
         if ready:
             index = data.get('sample_index',0); total = data.get('total_samples',0)
+            pose=data.get('base_pose',{})
             self.info.setText(f"{data['state']} | {data['port_id']} | goal {data.get('goal_id')} | {data.get('planner')} | "
                 f"{data.get('current_phase') or data.get('phase')} | sample {index+1 if total else 0}/{total}\n"
+                f"Base {pose.get('id','b0')} | X {pose.get('x_m',0):+.3f} m Y {pose.get('y_m',0):+.3f} m Yaw {pose.get('yaw_rad',0):+.3f} rad\n"
+                f"Goal: {data.get('goal_status')} | Planner: {data.get('planner_result')}\n"
                 f"{data.get('task_detail','')}\n"+('' if not data.get('error') else str(data['error'])))
             self.identity.setText('Manifest SHA256: '+str(data.get('manifest_sha256')))
         else:
@@ -106,7 +109,10 @@ class ReplayPanel(QWidget):
     def fill_planners(self, selected=None, phase=None):
         self.planners.clear(); self.phases.clear(); goal = self.selected_goal()
         if goal is None: self.phases.addItem('Path','Path'); return
-        for method in goal['planners']: self.planners.addItem('Linear' if method == 'linear' else 'RRT-Connect',method)
+        for method in goal['planners']:
+            label='Linear' if method=='linear' else 'RRT-Connect'
+            result=goal.get('planner_results',{}).get(method,{})
+            self.planners.addItem(label+' | '+result.get('status',''),method)
         for value in goal['phases']: self.phases.addItem(value,value)
         if selected is not None: self.planners.setCurrentIndex(self.planners.findData(selected))
         if phase is not None: self.phases.setCurrentIndex(self.phases.findData(phase))

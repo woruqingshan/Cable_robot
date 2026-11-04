@@ -9,6 +9,7 @@ from test_resources import ARTIFACTS
 from jetrover_idc_visualization.reader import read_catalog
 from jetrover_idc_visualization.controller import ReplayController
 from jetrover_idc_visualization.errors import ReplayError
+from jetrover_idc_visualization.storage import sha
 
 ROOT=Path(__file__).resolve().parents[1]
 RUN='task_benchmark/t5_1_s1_20261104_03'
@@ -71,7 +72,8 @@ def test_relocated_run_never_reads_original_absolute_run_paths_and_never_plans(t
             if p.is_file():
                 target=relocated/p.relative_to(original);target.parent.mkdir(parents=True,exist_ok=True);os.link(p,target)
         active[0]=True
-        try:loaded=read_catalog(ROOT,relocated,PROFILE)
+        try:loaded=read_catalog(ROOT,relocated,PROFILE,
+            expected_manifest_sha256='3e3a0d27123c197c8ef9a41c8e1a111e2181f0998740e0fa0ca95903d58cfbcd')
         finally:active[0]=False
     assert len(loaded.ports)==9 and loaded.verification['status']=='PASS'
 
@@ -81,4 +83,5 @@ def test_wrong_manifest_anchor_and_dynamic_path_reference_are_rejected(tmp_path)
         read_catalog(ROOT,ARTIFACTS/RUN,PROFILE,expected_manifest_sha256='0'*64)
     # A forged small manifest cannot cause a read outside the run, even before hashing.
     (tmp_path/'manifest.json').write_text(json.dumps({'schema_version':1,'stage':'T5.1','status':'COMPLETED','files':{'../escape':'0'*64}}))
-    with pytest.raises(ReplayError):read_catalog(ROOT,tmp_path,PROFILE)
+    with pytest.raises(ReplayError):read_catalog(ROOT,tmp_path,PROFILE,
+        expected_manifest_sha256=sha((tmp_path/'manifest.json').read_bytes()))

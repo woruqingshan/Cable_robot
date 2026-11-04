@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "usage": "RESEARCH_ONLY",
+  "start_sample_index": 0,
+  "stations": [
+    {"pose": {"id": "b0", "x_m": 0, "y_m": 0, "yaw_rad": 0}, "ports": ["P11", "P12", "P13", "P21", "P22", "P23", "P31", "P32", "P33"]},
+    {"pose": {"id": "xm30", "x_m": -0.03, "y_m": 0, "yaw_rad": 0}, "ports": ["P12", "P22", "P32"]},
+    {"pose": {"id": "xp30", "x_m": 0.03, "y_m": 0, "yaw_rad": 0}, "ports": ["P12", "P22", "P32"]},
+    {"pose": {"id": "ym70", "x_m": 0, "y_m": -0.07, "yaw_rad": 0}, "ports": ["P21", "P22", "P23"]},
+    {"pose": {"id": "yp70", "x_m": 0, "y_m": 0.07, "yaw_rad": 0}, "ports": ["P21", "P22", "P23"]}
+  ]
+}

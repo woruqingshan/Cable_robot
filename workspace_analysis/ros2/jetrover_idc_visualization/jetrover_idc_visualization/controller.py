@@ -15,7 +15,7 @@ class ReplayController:
         port = catalog.ports[self.port_id]
         if port.goals:
             goal = port.goals[0]
-            self.select(self.port_id, goal.solution_id, next(iter(goal.paths)), 'Path')
+            self.select(self.port_id, goal.solution_id, next(iter(goal.planner_results),None), 'Path')
 
     def select(self, port_id: str, goal_id: int | None, planner: str | None, phase: str) -> None:
         # Even an invalid switch cannot leave an old animation running.
@@ -28,7 +28,10 @@ class ReplayController:
             if type(goal_id) is not int: raise ReplayError('GOAL_ID', 'explicit saved goal ID required')
             goal = next((g for g in port.goals if g.solution_id == goal_id), None)
             if goal is None: raise ReplayError('GOAL_ID', 'unknown goal')
-            sequence = goal.sequence(planner, phase)
+            if planner is not None and planner not in goal.planner_results:
+                raise ReplayError('UNAVAILABLE_SELECTION','unknown saved planner')
+            if planner in goal.paths and (phase=='Path' or goal.approach is not None):
+                sequence = goal.sequence(planner, phase)
         elif goal_id is not None or planner is not None:
             raise ReplayError('UNAVAILABLE_SELECTION', 'failed port has no playable goal/planner')
         self.port_id, self.goal_id, self.planner, self.phase = port_id, goal_id, planner, phase
@@ -59,8 +62,11 @@ class ReplayController:
 
     def current(self) -> dict:
         sequence = self.sequence
-        return {'q':list(self.catalog.start_q) if sequence is None else sequence.q[self.index].tolist(),
-                'tcp':self.catalog.start_tcp if sequence is None else sequence.tcp[self.index],
+        goal=next((g for g in self.catalog.ports[self.port_id].goals if g.solution_id==self.goal_id),None)
+        display_q=self.catalog.start_q if goal is None else goal.q
+        display_tcp=self.catalog.start_tcp if goal is None or goal.display_tcp is None else goal.display_tcp
+        return {'q':list(display_q) if sequence is None else sequence.q[self.index].tolist(),
+                'tcp':display_tcp if sequence is None else sequence.tcp[self.index],
                 'sample_index':self.index, 'total_samples':0 if sequence is None else len(sequence.q),
                 'source_frame':None if sequence is None else sequence.source_frames[self.index],
                 'query_id':None if sequence is None else int(sequence.query_id[self.index]),
@@ -68,7 +74,13 @@ class ReplayController:
 
     def status(self) -> dict:
         frame = self.current()
+        goal=next((g for g in self.catalog.ports[self.port_id].goals if g.solution_id==self.goal_id),None)
         return {'state':self.state, 'selection_revision':self.revision, 'port_id':self.port_id,
+                'base_pose':self.catalog.base_pose_info['base_pose'],
+                'world_tcp':(self.catalog.world_from_base@frame['tcp']).tolist(),
+                'goal_status':None if goal is None else goal.status,
+                'planner_result':None if goal is None else dict(goal.planner_results.get(self.planner,{})),
+                'inspection_only':self.sequence is None,
                 'goal_id':self.goal_id, 'planner':self.planner, 'phase':self.phase,
                 **{k:v for k,v in frame.items() if k != 'tcp'}, 'playable':self.sequence is not None,
                 'task_status':self.catalog.ports[self.port_id].status,

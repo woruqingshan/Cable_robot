@@ -1,5 +1,6 @@
 """One owned, loopback-only replay session; no vendor/hardware launch inclusion."""
 import os
+import re
 from pathlib import Path
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, OpaqueFunction, SetEnvironmentVariable, RegisterEventHandler, EmitEvent
@@ -23,11 +24,14 @@ def start(context):
               'input_profile':LaunchConfiguration('input_profile').perform(context),
               'expected_manifest_sha256':LaunchConfiguration('expected_manifest_sha256').perform(context),
               'replay_hz':float(LaunchConfiguration('replay_hz').perform(context))}
+    if not re.fullmatch('[0-9a-f]{64}',params['expected_manifest_sha256']):
+        raise ValueError('formal launch requires externally selected expected_manifest_sha256 (64 lowercase hex)')
     prefix = '/idc_replay'
     rsp = Node(package='robot_state_publisher',executable='robot_state_publisher',name='robot_state_publisher',namespace=prefix,
         parameters=[{'robot_description':ParameterValue(model.urdf_xml,value_type=str),'use_sim_time':False}],
         remappings=[('joint_states',prefix+'/joint_states'),('/tf',prefix+'/tf'),('/tf_static',prefix+'/tf_static')],output='screen')
-    replay = Node(package='jetrover_idc_visualization',executable='replay_node',name='replay',namespace=prefix,parameters=[params],output='screen')
+    replay = Node(package='jetrover_idc_visualization',executable='replay_node',name='replay',namespace=prefix,parameters=[params],
+        remappings=[('/tf_static',prefix+'/tf_static')],output='screen')
     panel = Node(package='jetrover_idc_visualization',executable='replay_panel',name='panel',namespace=prefix,output='screen')
     rviz = Node(package='rviz2',executable='rviz2',name='rviz2',namespace=prefix,
         arguments=['-d',str(share/'config/replay.rviz')],parameters=[{'use_sim_time':False}],
@@ -50,7 +54,7 @@ def generate_launch_description():
         DeclareLaunchArgument('workspace_root',description='Explicit existing workspace_analysis source root'),
         DeclareLaunchArgument('benchmark_dir',description='Read-only completed T5.1 run'),
         DeclareLaunchArgument('input_profile',default_value=str(share/'config/t51_inputs.json')),
-        DeclareLaunchArgument('expected_manifest_sha256',default_value=''),
+        DeclareLaunchArgument('expected_manifest_sha256',description='Externally trusted experiment Manifest SHA256; required'),
         DeclareLaunchArgument('domain_id',default_value='83'),
         DeclareLaunchArgument('replay_hz',default_value='20.0'),
         DeclareLaunchArgument('gui',default_value='true'),

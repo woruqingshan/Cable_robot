@@ -33,7 +33,17 @@ def run(mode, output):
     from replay_fixtures import catalog_fixture
     output=Path(output);output.mkdir(exist_ok=False)
     model=load_model(ROOT/'config/workspace.yaml') if mode!='panel' else None
-    fixture=None if mode=='artifact' else catalog_fixture(model)
+    artifact_mode=mode in ('artifact','world')
+    fixture=None if artifact_mode else catalog_fixture(model)
+    if mode=='panel':
+        from dataclasses import replace
+        from jetrover_idc_visualization.data import Goal
+        source=fixture.ports['P22'].goals[0]
+        failed_goal=Goal(0,source.q,'PLANNER_TIMEOUT',{},None,
+            {'linear':{'success':False,'status':'PATH_VALIDATION_FAILED'},'rrt_connect':{'success':False,'status':'PLANNER_TIMEOUT'}},
+            True,source.paths['linear'].tcp[-1])
+        ports=dict(fixture.ports);ports['P21']=replace(ports['P21'],goals=(failed_goal,),status='PLANNER_TIMEOUT')
+        fixture=replace(fixture,ports=ports)
     if model is None:model=fixture.model
     context=rclpy.context.Context();rclpy.init(context=context)
     observer=Node('replay_test_observer',namespace='/idc_replay_test',context=context,
@@ -53,12 +63,14 @@ def run(mode, output):
     observer_executor=SingleThreadedExecutor(context=context);observer_executor.add_node(observer)
     replay_executor=SingleThreadedExecutor(context=context)
     replay=None;panel=None;app=None;process=None;log=None;cleanup={};report={}
-    if mode=='artifact':
+    if artifact_mode:
         installed=Path(os.environ['IDC_REPLAY_INSTALL'])
+        base=Path(os.environ.get('IDC_REPLAY_BENCHMARK',str(Path(os.environ['WORKSPACE_ARTIFACT_ROOT'])/'task_benchmark/t5_1_s1_20261104_03')))
+        anchor=os.environ.get('IDC_REPLAY_MANIFEST_SHA256','3e3a0d27123c197c8ef9a41c8e1a111e2181f0998740e0fa0ca95903d58cfbcd')
         command=['ros2','launch','jetrover_idc_visualization','replay.launch.py',
-            'workspace_root:='+str(ROOT),'benchmark_dir:='+str(Path(os.environ['WORKSPACE_ARTIFACT_ROOT'])/'task_benchmark/t5_1_s1_20261104_03'),
+            'workspace_root:='+str(ROOT),'benchmark_dir:='+str(base),
             'gui:=false','domain_id:='+os.environ['ROS_DOMAIN_ID'],'replay_hz:=20.0',
-            'expected_manifest_sha256:=3e3a0d27123c197c8ef9a41c8e1a111e2181f0998740e0fa0ca95903d58cfbcd']
+            'expected_manifest_sha256:='+anchor]
     else:
         binary=Path(get_package_prefix('robot_state_publisher'))/'lib/robot_state_publisher/robot_state_publisher'
         parameters=output/'rsp.yaml';parameters.write_text(yaml.safe_dump({'/**':{'ros__parameters':{'robot_description':model.urdf_xml,'publish_frequency':100.0}}}))
@@ -107,6 +119,36 @@ def run(mode, output):
             except Exception:pass
             return False
         wait(matches)
+        if mode=='world':
+            from workspace_analysis.scene.base_pose import BasePose,derive_scene
+            from workspace_analysis.scene.schema import parse_scene
+            from workspace_analysis.robot.root_frame import root_mount
+            provenance=json.loads((base/'base_pose_context.json').read_text())
+            w_b=BasePose.from_dict(provenance['base_pose']).matrix()
+            def world_matches():
+                try:
+                    t=buffer.lookup_transform('world','base_link',Time()).transform;r=t.rotation
+                    actual=np.eye(4);actual[:3,3]=[t.translation.x,t.translation.y,t.translation.z]
+                    actual[:3,:3]=Rotation.from_quat([r.x,r.y,r.z,r.w]).as_matrix()
+                    return np.allclose(actual,w_b,atol=1e-9,rtol=0)
+                except Exception:return False
+            wait(world_matches)
+            world=parse_scene(provenance['world_source_text']);derived=derive_scene(world,BasePose.from_dict(provenance['base_pose']))
+            from jetrover_idc_visualization.markers import scene_specs
+            markers=[m for m in latest['scene'].markers if m.action==m.ADD]
+            errors=[]
+            for marker,source in zip(markers,scene_specs(world)):
+                p=marker.pose.position;actual=w_b@np.array([p.x,p.y,p.z,1.])
+                errors.append(float(np.max(np.abs(actual[:3]-source.position))))
+            assert len(errors)==38 and max(errors)<1e-9
+            frames=yaml.safe_load(buffer.all_frames_as_yaml())
+            root,_=root_mount(model)
+            assert frames[root]['parent']=='world' and frames['base_link']['parent']==root
+            from workspace_analysis.task.spec import parse_task
+            spec=parse_task(json.loads((base/'ports'/latest['status']['port_id']/'task_spec.json').read_text()))
+            np.testing.assert_allclose(latest['status']['world_tcp'],w_b@ForwardKinematics(model)(latest['status']['q'])@spec.T_ee_tcp,atol=1e-9)
+            report.update(world_base_tf_verified=True,world_fixed_scene_markers_checked=38,maximum_world_marker_error=max(errors),
+                urdf_root=root,base_link_single_parent=True,base_pose=provenance['base_pose'])
         names,values=joint_values(model,q,.3)
         wait(lambda:latest['joint'] is not None and latest['joint'].name==list(names) and list(latest['joint'].position)==list(values))
     try:
@@ -131,9 +173,23 @@ def run(mode, output):
             responsive=[];QTimer.singleShot(20,lambda:responsive.append(True));wait(lambda:bool(responsive))
             assert panel.grab().save(str(output/'actual_qt_panel.png'))
             select_widget(panel.ports,'P11');assert not panel.play.isEnabled() and panel.goals.count()==0
+            select_widget(panel.ports,'P21')
+            assert panel.goals.count()==1 and panel.planners.count()==2 and not panel.play.isEnabled()
+            assert latest['status']['q']==list(failed_goal.q) and latest['status']['inspection_only']
+            select_widget(panel.planners,'rrt_connect');assert not panel.play.isEnabled()
+            assert latest['status']['planner_result']['status']=='PLANNER_TIMEOUT'
+            report['failed_path_goal_visible_and_play_disabled']=True
             report['qt_offscreen_widget_test']=True;report['qt_timer_responsive']=True
         else:
             cases_to_run=[('P12',0,'linear'),('P12',1,'rrt_connect'),('P22',0,'linear'),('P22',1,'rrt_connect')] if mode=='artifact' else [('P22',0,'linear'),('P22',1,'rrt_connect')]
+            if mode=='world':
+                cases_to_run=[]
+                for port,value in latest['status']['catalog'].items():
+                    for goal in value['goals']:
+                        if goal['playable_planners'] and goal['approach_samples']:
+                            cases_to_run.append((port,goal['solution_id'],goal['playable_planners'][0]));break
+                    if cases_to_run:break
+                assert cases_to_run,'new station must have a real playable goal for this probe'
             for port,goal,method in cases_to_run:
                 selected=send('select',port_id=port,goal_id=goal,planner=method,phase='Path + Approach')
                 assert selected['last_command_ok'];revision=selected['selection_revision'];total=selected['total_samples']
@@ -141,8 +197,7 @@ def run(mode, output):
                 wait(lambda:latest['status']['state']=='FINISHED',timeout=35)
                 played=[s for s in history[start_history:] if s.get('selection_revision')==revision and s.get('state') in ('PLAYING','FINISHED')]
                 assert set(s['sample_index'] for s in played)==set(range(total)),(port,goal,total,len(played))
-                if mode=='artifact':
-                    base=Path(os.environ['WORKSPACE_ARTIFACT_ROOT'])/'task_benchmark/t5_1_s1_20261104_03'
+                if artifact_mode:
                     for state in played:
                         source,index=state['source_frame']
                         with np.load(base/source,allow_pickle=False) as arrays:
@@ -162,9 +217,11 @@ def run(mode, output):
                             except Exception:return False
                         wait(mimic_matches)
                 check_tf();cases.append({'port':port,'goal':goal,'planner':method,'samples_observed':total,'all_original_indices_seen':True})
-            failed=send('select',port_id='P11',goal_id=None,planner=None,phase='Path')
-            assert not failed['playable'] and not send('play')['last_command_ok']
-            assert latest['status']['state']=='STOPPED'
+            failures=[p for p,v in latest['status']['catalog'].items() if not v['goals']]
+            if mode!='world' or failures:
+                failed=send('select',port_id=failures[0] if mode=='world' else 'P11',goal_id=None,planner=None,phase='Path')
+                assert not failed['playable'] and not send('play')['last_command_ok']
+                assert latest['status']['state']=='STOPPED'
         pubs=observer.get_topic_names_and_types()
         assert not any(name in ('/cmd_vel','/servo_controller','/ros_robot_controller/bus_servo/set_state') for name,_ in pubs)
         report.update(status='PASS',mode=mode,cases=cases,max_ee_tf_error= max(tf_errors,default=0.),
@@ -197,7 +254,7 @@ def run(mode, output):
 
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('--mode',choices=['transport','panel','artifact'],required=True);p.add_argument('--output',required=True)
+    p=argparse.ArgumentParser();p.add_argument('--mode',choices=['transport','panel','artifact','world'],required=True);p.add_argument('--output',required=True)
     args=p.parse_args()
     try:print(json.dumps(run(args.mode,args.output)))
     except Exception:

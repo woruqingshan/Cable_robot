@@ -252,7 +252,8 @@ def run_benchmark(root: Path, backend: Path, scene_path: Path, task_template: Pa
                   seed_prefix: Path, output: Path, *, port_ids: list[str],
                   allow_candidate: bool = False, planning: dict | None = None,
                   approach: dict | None = None, viewer_ports: tuple[str, ...] = (),
-                  random_seed: int | None = None, summary_viewer: bool = False) -> dict:
+                  random_seed: int | None = None, summary_viewer: bool = False,
+                  start_sample_index: int | None = None, base_pose_context: Path | None = None) -> dict:
     """Own sessions/output. All supplied files are bound by SHA256; no history mutation."""
     root = Path(root).resolve(); out = Path(output).absolute()
     if os.path.lexists(out): raise TaskError('refusing existing benchmark output')
@@ -273,9 +274,17 @@ def run_benchmark(root: Path, backend: Path, scene_path: Path, task_template: Pa
     path_settings, cart_settings = checked_settings(planning, approach, template)
     for spec in specs: checked_settings(path_settings, cart_settings, spec)
     arrays, _ = load_results(seed_prefix, model=model)
+    if start_sample_index is not None and (type(start_sample_index) is not int or not 0 <= start_sample_index < len(arrays['q'])):
+        raise TaskError('fixed start sample index outside original G4 data')
+    context_data = None
+    if base_pose_context is not None:
+        from .base_pose_context import verify_context
+        context_data = json.loads(Path(base_pose_context).read_text())
+        verify_context(context_data, scene, model)
     strict = SemanticConfig.load(root/'config/collision/semantic/jetrover_semantic_v0.srdf', model)
     candidate = SemanticConfig.load(root/'config/collision/semantic/standard_moveit_candidate_v0/standard_moveit_candidate_v0.srdf', model, allow_candidate=True)
     inputs = {str(Path(p).resolve()): _hash(p) for p in [task_template, scene_path, str(seed_prefix)+'.npz', str(seed_prefix)+'.json', backend]}
+    if base_pose_context is not None: inputs[str(Path(base_pose_context).resolve())] = _hash(base_pose_context)
     sources = {str(p.relative_to(root)): _hash(p) for folder in ('src', 'scripts', 'cpp', 'config')
                for p in (root/folder).rglob('*') if p.is_file() and '__pycache__' not in str(p)}
     experiment_identity = {'git_head': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=root, text=True).strip(),
@@ -284,7 +293,13 @@ def run_benchmark(root: Path, backend: Path, scene_path: Path, task_template: Pa
     _write(out/'settings.json', {'planning': path_settings, 'approach': cart_settings, 'ports': port_ids,
         'viewer_ports': list(viewer_ports), 'goal_selection': 'all unique task-feasible collision-valid solutions',
         'template_sha256': template.sha256, 'input_template_sha256': original_template_sha256,
-        'random_seed': template.data['solver']['random_seed'], 'seed_prefix': str(seed_prefix)})
+        'random_seed': template.data['solver']['random_seed'], 'seed_prefix': str(seed_prefix),
+        **({'fixed_start_sample_index': start_sample_index} if start_sample_index is not None else {})})
+    embedded = {}
+    if context_data is not None:
+        for source, local in [(scene_path, 'source_scene_input.json'), (base_pose_context, 'base_pose_context.json')]:
+            (out/local).write_bytes(Path(source).read_bytes())
+            embedded[str(Path(source).resolve())] = local
     _write(out/'scene_snapshot.json', scene.to_dict()); _write(out/'model_metadata.json', model.metadata())
     _write(out/'task_template.json', template.data)
     _write(out/'strict_semantic.json', json.loads(strict.payload_json))
@@ -296,13 +311,20 @@ def run_benchmark(root: Path, backend: Path, scene_path: Path, task_template: Pa
         checker = ConfigurationValidity(evaluator)
         contexts = [TaskContext(model, scene, build_targets(spec, scene), checker) for spec in specs]
         for ctx in contexts: ctx.validate()
-        start = select_common_start(checker, arrays['q'])
+        if start_sample_index is None:
+            start = select_common_start(checker, arrays['q'])
+        else:
+            q = arrays['q'][start_sample_index]
+            state = checker.check(q, fresh=True); require_resolved([state])
+            start = {'status': 'VALID_SIMULATION_START' if state['valid'] else 'INVALID_START',
+                     'q': q.tolist(), 'original_sample_index': start_sample_index, 'tested': [state],
+                     'not_a_physical_home': True, 'rule': 'fixed original G4 row; no replacement'}
         if start['q'] is not None:
             fk = ForwardKinematics(model)
             start.update(T_base_ee=fk(start['q']).tolist(),
                          T_base_tcp=(fk(start['q']) @ template.T_ee_tcp).tolist(), identity=evaluator.identity)
         _write(out/'common_start.json', start)
-        if start['q'] is None:
+        if start['status'] != 'VALID_SIMULATION_START':
             stream = ({'port_id': p, 'status': 'INVALID_START', 'reachability': {'status': 'NOT_RUN'},
                        'goals': [], 'elapsed_s': 0.} for p in port_ids)
         else:
@@ -353,6 +375,7 @@ def run_benchmark(root: Path, backend: Path, scene_path: Path, task_template: Pa
         'status': 'COMPLETED_WITH_SYSTEM_ERRORS' if any(r['status'] in ('ERROR', 'BLOCKED') for r in records) else 'COMPLETED',
         'usage': 'RESEARCH_ONLY', **experiment_identity,
         'input_hashes': inputs, 'source_sha256': sources, 'identity': identity,
+        **({'embedded_input_files': embedded, 'base_pose_context_file': 'base_pose_context.json'} if embedded else {}),
         'settings_sha256': _hash(out/'settings.json'),
         'tasks': {s.data['target']['port_id']: {'task_sha256': s.sha256, 'tcp_sha256': s.tcp_sha256} for s in specs},
         'strict_semantic_payload_sha256': sha256(strict.payload_json.encode()).hexdigest(),

@@ -12,6 +12,8 @@ from rclpy.qos import QoSProfile, DurabilityPolicy, ReliabilityPolicy
 from sensor_msgs.msg import JointState
 from std_msgs.msg import String
 from visualization_msgs.msg import MarkerArray
+from geometry_msgs.msg import TransformStamped
+from tf2_ros import StaticTransformBroadcaster
 from .controller import ReplayController
 from .data import Catalog, joint_values
 from .errors import ReplayBlocked, ReplayError
@@ -30,6 +32,7 @@ class ReplayNode(Node):
     """Own playback; background verification never touches ROS or GUI state."""
     def __init__(self, *, catalog_loader: Callable[[], Catalog] | None = None, **kwargs):
         require_isolated_ros()
+        kwargs['cli_args']=[*kwargs.get('cli_args',[]),'--ros-args','-r','/tf_static:='+NAMESPACE+'/tf_static']
         super().__init__('replay',namespace=NAMESPACE,**kwargs)
         if self.get_namespace() != NAMESPACE: raise ReplayError('ROS_ISOLATION','fixed replay namespace required')
         for key,default in [('workspace_root',''),('benchmark_dir',''),('input_profile',''),('expected_manifest_sha256',''),('replay_hz',20.)]:
@@ -42,6 +45,9 @@ class ReplayNode(Node):
         self.scene_pub = self.create_publisher(MarkerArray,SCENE_TOPIC,durable)
         self.ports_pub = self.create_publisher(MarkerArray,PORT_TOPIC,durable)
         self.status_pub = self.create_publisher(String,STATUS_TOPIC,durable)
+        self.world_tf = StaticTransformBroadcaster(self)
+        if self.world_tf.pub_tf.topic_name != NAMESPACE+'/tf_static':
+            raise ReplayError('ROS_ISOLATION','World TF must be remapped to private replay tf_static')
         for pub,expected in [(self.joints,JOINT_TOPIC),(self.scene_pub,SCENE_TOPIC),(self.ports_pub,PORT_TOPIC),(self.status_pub,STATUS_TOPIC)]:
             if pub.topic_name != expected: raise ReplayError('ROS_ISOLATION','refusing remapped replay publisher')
         self.sub = self.create_subscription(String,COMMAND_TOPIC,self.receive,10)
@@ -91,6 +97,14 @@ class ReplayNode(Node):
                 self.error = value.report() if isinstance(value,ReplayError) else ReplayError('VERIFICATION_FAILED',str(value)).report()
                 self.get_logger().error(json.dumps(self.error)); self.publish_status(); return
             self.catalog = value; self.controller = ReplayController(value)
+            from workspace_analysis.robot.root_frame import world_root_transform
+            from workspace_analysis.geometry.se3 import matrix_to_quaternion
+            root,transform=world_root_transform(value.model,value.world_from_base)
+            world=TransformStamped();world.header.frame_id='world';world.child_frame_id=root
+            world.header.stamp=self.get_clock().now().to_msg()
+            world.transform.translation.x,world.transform.translation.y,world.transform.translation.z=transform[:3,3].tolist()
+            q=matrix_to_quaternion(transform[:3,:3]);world.transform.rotation.x,world.transform.rotation.y,world.transform.rotation.z,world.transform.rotation.w=q.tolist()
+            self.world_tf.sendTransform(world)
             self.get_logger().info('Verified replay catalog '+value.manifest_sha256+' ports='+str(list(value.ports)))
             self.scene_pub.publish(marker_array(scene_specs(value.scene),value.model.base_frame,self.get_clock().now().to_msg(),clear=True))
         if self.controller is None: return

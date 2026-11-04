@@ -12,6 +12,11 @@ T5.2-R1 的独立 ROS2/RViz2 交互式只读回放见
 [构建、启动及验收说明](docs/t5_2_r1_rviz_replay.md)。它读取已验证 T5.1 采样，
 不重新求解或规划，也不连接硬件控制接口。
 
+T5.2-R2 的 World/Base 位姿适配、五站位 Pilot、固定起点、独立场景身份和
+World RViz 回放见 [开发与验收说明](docs/t5_2_r2_base_pose.md)。本轮还修复了
+无路径 IK Goal 的查看、正式回放 Manifest SHA256 必填及 JSON 指数溢出。
+正式 Launch 必须传入已选定实验的可信 SHA256；RViz Fixed Frame 现在为 `world`。
+
 G1-A 已由用户运行并验收：三组 PyKDL/独立参考一致，pytest 为
 `48 passed, 1 warning`；本机 `results/g1a_fk.json` 的最大位置误差约
 `1.22e-16 m`，最大姿态误差约 `1.50e-16 rad`。

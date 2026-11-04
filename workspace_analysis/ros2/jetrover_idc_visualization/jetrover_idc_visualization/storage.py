@@ -1,6 +1,7 @@
 """Declared local input roots, strict paths/JSON and no-follow artifact access."""
 from hashlib import sha256
 import json
+import math
 import os
 from pathlib import Path, PurePosixPath
 import re
@@ -22,6 +23,14 @@ def json_object(raw: bytes | str) -> dict:
         if isinstance(exc, ReplayError): raise
         raise ReplayError('INVALID_JSON', str(exc)) from exc
     if not isinstance(value, dict): raise ReplayError('INVALID_JSON', 'object required')
+    def finite(item):
+        if isinstance(item,float) and not math.isfinite(item):
+            raise ReplayError('INVALID_JSON','nonfinite JSON number (including exponent overflow)')
+        if isinstance(item,dict):
+            for child in item.values(): finite(child)
+        elif isinstance(item,list):
+            for child in item: finite(child)
+    finite(value)
     return value
 
 

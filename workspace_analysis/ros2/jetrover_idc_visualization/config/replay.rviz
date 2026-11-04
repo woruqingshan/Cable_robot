@@ -7,7 +7,7 @@ Visualization Manager:
   Class: ""
   Global Options:
     Background Color: 35; 40; 48
-    Fixed Frame: base_link
+    Fixed Frame: world
     Frame Rate: 30
   Displays:
     - Class: rviz_default_plugins/Grid
@@ -75,7 +75,7 @@ Visualization Manager:
         X: 0.24
         Y: 0
         Z: 0.16
-      Target Frame: base_link
+      Target Frame: world
 Window Geometry:
   Width: 1250
   Height: 850

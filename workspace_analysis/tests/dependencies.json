@@ -2280,6 +2280,117 @@
         "ros"
       ],
       "artifacts": []
+    },
+    "test_base_pose.py::test_full_tree_world_invariance_and_axes": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_base_pose.py::test_direct_base_collision_object_transformed_once": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_base_pose.py::test_invalid_base_pose_rejected": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_base_pose.py::test_bounded_pilot_explicit_fixed_index": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_base_pose.py::test_real_root_mount_and_context_tamper_rejected": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_base_pose.py::test_station_body_classification_is_not_hardware_safety": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_replay_base_pose.py::test_json_exponent_overflow_and_nested_nonfinite_rejected": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_replay_base_pose.py::test_formal_reader_requires_external_manifest_anchor_before_any_file_access": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_replay_base_pose.py::test_failed_planners_preserve_goal_and_disable_nonexistent_playback": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_replay_base_pose.py::test_world_tcp_uses_station_pose_without_changing_saved_joint_samples": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_replay_base_pose.py::test_embedded_scene_binding_is_hash_checked_and_never_follows_old_path": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_base_pose.py::test_invalid_fixed_start_never_replaced_or_planned": {
+      "level": "integration",
+      "requires": [
+        "model",
+        "native"
+      ],
+      "artifacts": []
+    },
+    "test_base_pose_artifacts.py::test_b0_all_nine_ports_preserve_ik_goals_paths_approach_and_npz": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "base_pose_benchmark/t52_r2_s1_20261104_01",
+        "task_benchmark/t5_1_s1_20261104_03"
+      ]
+    },
+    "test_base_pose_artifacts.py::test_pilot_all_station_hashes_inputs_start_and_geometry_are_verified": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "base_pose_benchmark/t52_r2_s1_20261104_01"
+      ]
+    },
+    "test_base_pose_artifacts.py::test_new_scene_replay_uses_embedded_bound_inputs_and_preserves_goals": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "base_pose_benchmark/t52_r2_s1_20261104_01"
+      ]
+    },
+    "test_replay_ros.py::test_new_station_world_tf_fixed_cabinet_and_original_saved_samples": {
+      "level": "artifact",
+      "requires": [
+        "model",
+        "ros",
+        "replay_install"
+      ],
+      "artifacts": [
+        "base_pose_benchmark/t52_r2_s1_20261104_01/stations/xm30/benchmark"
+      ]
+    },
+    "test_base_pose.py::test_summary_plot_uses_recorded_rows_and_refuses_overwrite": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
     }
   }
 }

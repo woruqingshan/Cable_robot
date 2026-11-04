@@ -44,6 +44,12 @@ def verify_benchmark(output: Path, model, *, input_bindings: dict[str, Path] | N
         if sha256(canonical(payload).encode()).hexdigest() != manifest[kind+'_semantic_payload_sha256']:
             raise TaskError('semantic snapshot identity mismatch')
     scene = parse_scene((out/'scene_snapshot.json').read_text())
+    if 'base_pose_context_file' in manifest:
+        from .base_pose_context import verify_context
+        verify_context(json.loads((out/manifest['base_pose_context_file']).read_text()), scene, model)
+        for original, local in manifest['embedded_input_files'].items():
+            if manifest['files'].get(local) != manifest['input_hashes'].get(original):
+                raise TaskError('embedded source identity differs')
     if scene.canonical_scene_sha256 != manifest['identity']['scene_sha256']:
         raise TaskError('scene identity mismatch')
     if _hash(out/'settings.json') != manifest['settings_sha256']: raise TaskError('settings identity mismatch')
@@ -69,12 +75,19 @@ def verify_benchmark(output: Path, model, *, input_bindings: dict[str, Path] | N
         if query['valid'] and (query['reasons'] or query['semantic_self_collision'] is not False or query['environment_collision'] is not False):
             raise TaskError('optimistic semantic pass')
     start = json.loads((out/'common_start.json').read_text())
+    fixed = settings.get('fixed_start_sample_index')
+    if fixed is not None and (type(fixed) is not int or not 0 <= fixed < len(arrays['q']) or len(start['tested']) != 1):
+        raise TaskError('fixed original start index/count differs')
     for i, state in enumerate(start['tested']):
-        if state['q'] != arrays['q'][i].tolist() or state != queries[state['query_id']]:
+        if state['q'] != arrays['q'][i if fixed is None else fixed].tolist() or state != queries[state['query_id']]:
             raise TaskError('start original index/query provenance differs')
+    if fixed is not None:
+        state = start['tested'][0]
+        if start['original_sample_index'] != fixed or start['q'] != arrays['q'][fixed].tolist() or start['status'] != ('VALID_SIMULATION_START' if state['valid'] else 'INVALID_START'):
+            raise TaskError('fixed start status/provenance differs')
     if start['q'] is not None:
         index = start['original_sample_index']
-        if len(start['tested']) != index+1 or any(s['valid'] for s in start['tested'][:-1]) or not start['tested'][-1]['valid']:
+        if fixed is None and (len(start['tested']) != index+1 or any(s['valid'] for s in start['tested'][:-1]) or not start['tested'][-1]['valid']):
             raise TaskError('first-valid start rule differs')
         if start['q'] != arrays['q'][index].tolist(): raise TaskError('common start changed')
 
@@ -104,6 +117,8 @@ def verify_benchmark(output: Path, model, *, input_bindings: dict[str, Path] | N
         targets = build_targets(spec, scene)
         if targets.to_dict() != json.loads((port_out/'targets.json').read_text()): raise TaskError('derived targets differ')
         record = json.loads((port_out/'result.json').read_text()); records.append(record)
+        if start['status'] == 'INVALID_START' and (record['status'] != 'INVALID_START' or record['reachability'].get('ik') is not None or record['goals']):
+            raise TaskError('invalid fixed start must not execute task planning')
         if record['port_id'] != port: raise TaskError('record port differs')
         if record['experiment_identity'] != {k:manifest[k] for k in ('git_head','source_set_sha256')}:
             raise TaskError('per-port source identity differs')

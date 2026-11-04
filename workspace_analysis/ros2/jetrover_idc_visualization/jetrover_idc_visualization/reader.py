@@ -12,7 +12,7 @@ from .research import use_workspace
 from .storage import ReadOnlyStore, json_object, relative_name, sha
 
 
-def bind_inputs(workspace: ReadOnlyStore, profile: dict, manifest: dict) -> dict[str, Path]:
+def bind_inputs(workspace: ReadOnlyStore, profile: dict, manifest: dict, run_store: ReadOnlyStore | None = None) -> dict[str, Path]:
     """Match explicit current files by ALL recorded input digests, never by old paths.
 
     The backend identity file is only hashed as provenance bytes; not executed or
@@ -29,7 +29,15 @@ def bind_inputs(workspace: ReadOnlyStore, profile: dict, manifest: dict) -> dict
         if h in by_hash: raise ReplayError('INPUT_PROFILE', 'ambiguous identical input files')
         by_hash[h] = workspace.path(name)
     bindings = {}
+    embedded=manifest.get('embedded_input_files',{})
+    if not isinstance(embedded,dict) or not set(embedded)<=set(manifest['input_hashes']):
+        raise ReplayError('INPUT_PROFILE','invalid embedded input binding')
     for old_name, expected in manifest['input_hashes'].items():
+        if old_name in embedded:
+            local=embedded[old_name]
+            if run_store is None or manifest['files'].get(local)!=expected:
+                raise ReplayError('INPUT_PROFILE','embedded input must be listed with original identity')
+            run_store.read(local,digest=expected);bindings[old_name]=run_store.path(local);continue
         if expected not in by_hash:
             raise ReplayBlocked('MISSING_PROVENANCE_INPUT', 'No declared file matches '+old_name+' SHA256 '+str(expected))
         bindings[old_name] = by_hash[expected]
@@ -56,12 +64,16 @@ def _trajectory(store: ReadOnlyStore, files: dict, name: str, phase: str) -> Tra
 
 
 def read_catalog(workspace_root: str | Path, benchmark_dir: str | Path,
-                 input_profile: str | Path, *, expected_manifest_sha256: str | None = None) -> Catalog:
+                 input_profile: str | Path, *, expected_manifest_sha256: str | None = None,
+                 allow_unanchored_development: bool = False) -> Catalog:
     """Full existing benchmark verification, then immutable exact-sample replay data.
 
     Only the declared run, explicit provenance profile and trusted model resources
     are read. Legacy absolute input names are metadata, never fallback read paths.
     """
+    if type(allow_unanchored_development) is not bool:raise ReplayError('TRUST_ANCHOR','development flag must be boolean')
+    if not expected_manifest_sha256 and not allow_unanchored_development:
+        raise ReplayError('TRUST_ANCHOR','formal replay requires an externally selected expected_manifest_sha256')
     root = use_workspace(workspace_root); store = ReadOnlyStore(benchmark_dir); workspace = ReadOnlyStore(root)
     original_manifest = store.read('manifest.json', digest=expected_manifest_sha256)
     manifest = json_object(original_manifest)
@@ -97,7 +109,7 @@ def read_catalog(workspace_root: str | Path, benchmark_dir: str | Path,
     # link. Resolve only this trusted profile, never artifact or provenance files.
     profile_path = Path(input_profile).expanduser().resolve(strict=True)
     profile_store = ReadOnlyStore(profile_path.parent)
-    bindings = bind_inputs(workspace, profile_store.object(profile_path.name), manifest)
+    bindings = bind_inputs(workspace, profile_store.object(profile_path.name), manifest, store)
     from workspace_analysis.robot.model import load_model
     from workspace_analysis.scene.schema import parse_scene
     from workspace_analysis.task.spec import parse_task
@@ -111,6 +123,12 @@ def read_catalog(workspace_root: str | Path, benchmark_dir: str | Path,
     if asset_check['status'] != 'PASS': raise ReplayError('MODEL_ASSETS', str(asset_check))
     full = verify_benchmark(store.root, model, input_bindings=bindings)
     scene = parse_scene(store.read('scene_snapshot.json', digest=files['scene_snapshot.json']).decode())
+    world_from_base=np.eye(4)
+    base_info={'base_pose':{'id':'b0','x_m':0.,'y_m':0.,'yaw_rad':0.},'world_cabinet_fixed':True}
+    if 'base_pose_context_file' in manifest:
+        from workspace_analysis.experiments.base_pose_context import verify_context
+        base_info=verify_context(obj(manifest['base_pose_context_file']),scene,model)
+        world_from_base=np.asarray(base_info['world_from_base'])
     start = obj('common_start.json')
     if start['q'] is None: raise ReplayBlocked('INVALID_START', 'no verified common simulation start')
     from workspace_analysis.robot.fk import ForwardKinematics
@@ -124,7 +142,6 @@ def read_catalog(workspace_root: str | Path, benchmark_dir: str | Path,
             raise ReplayError('START_TCP_IDENTITY','common start TCP differs from authoritative FK')
         targets[port] = build_targets(spec, scene); goals = []
         for goal in record['goals']:
-            if not goal['candidate']: continue
             paths = {}
             for trial in goal['paths']:
                 if not trial['success']: continue
@@ -134,7 +151,9 @@ def read_catalog(workspace_root: str | Path, benchmark_dir: str | Path,
             approach = None
             if goal['approach'].get('success') is True:
                 approach = _trajectory(store, files, 'ports/'+port+'/'+goal['approach']['trajectory_file'], 'Approach')
-            if paths: goals.append(Goal(goal['solution_id'], tuple(goal['q']), goal['status'], paths, approach))
+            goals.append(Goal(goal['solution_id'],tuple(goal['q']),goal['status'],paths,approach,
+                {t['method']:{'success':t['success'],'status':t['status']} for t in goal['paths']},
+                goal['candidate'],fk(goal['q'])@spec.T_ee_tcp))
         best = record['reachability'].get('ik',{}).get('best_attempt')
         detail = record['status']
         if best is not None:
@@ -145,13 +164,18 @@ def read_catalog(workspace_root: str | Path, benchmark_dir: str | Path,
     if store.read('manifest.json') != original_manifest: raise ReplayError('ARTIFACT_CHANGED', 'manifest')
     for name, h in files.items(): store.read(name, digest=h)
     for name, path in bindings.items():
-        rel = path.relative_to(root).as_posix(); workspace.read(rel, digest=manifest['input_hashes'][name])
+        if name in manifest.get('embedded_input_files',{}):
+            store.read(manifest['embedded_input_files'][name],digest=manifest['input_hashes'][name])
+        else:
+            rel = path.relative_to(root).as_posix(); workspace.read(rel, digest=manifest['input_hashes'][name])
     return Catalog(loaded, model, scene, targets, tuple(start['q']), np.asarray(start['T_base_tcp']),
         manifest['identity']['gripper_state_rad'], sha(original_manifest),
         {'status':'PASS','scope':'FULL_T5.1_VERIFIER_WITH_EXPLICIT_HASH_BOUND_INPUT_RELOCATION',
          'full_verification':full,'model_assets':asset_check,'manifest_sha256':sha(original_manifest),
          'input_bindings':{k:str(v) for k,v in bindings.items()},'native_backend_started':False,
-         'IK_or_path_search_executed':False,'original_data_modified':False,'source_git_head':manifest['git_head']})
+         'IK_or_path_search_executed':False,'original_data_modified':False,'source_git_head':manifest['git_head'],
+         'trusted_manifest_bound':bool(expected_manifest_sha256),'base_pose':base_info},
+        world_from_base,base_info)
 
 
 def main() -> int:
@@ -159,10 +183,12 @@ def main() -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--workspace-root',required=True); p.add_argument('--benchmark-dir',required=True)
     p.add_argument('--input-profile',required=True); p.add_argument('--expected-manifest-sha256')
+    p.add_argument('--allow-unanchored-development',action='store_true',help='Explicit development-only unanchored read')
     p.add_argument('--json-output',type=Path)
     a = p.parse_args()
     try:
-        catalog = read_catalog(a.workspace_root,a.benchmark_dir,a.input_profile,expected_manifest_sha256=a.expected_manifest_sha256)
+        catalog = read_catalog(a.workspace_root,a.benchmark_dir,a.input_profile,expected_manifest_sha256=a.expected_manifest_sha256,
+                               allow_unanchored_development=a.allow_unanchored_development)
         report = {**catalog.verification,'catalog':catalog.describe()}
     except FileNotFoundError as exc: report = ReplayBlocked('MISSING_INPUT',str(exc)).report()
     except ReplayError as exc: report = exc.report()
