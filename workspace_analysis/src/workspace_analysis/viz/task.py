@@ -17,7 +17,8 @@ def build_task_figure(scene,surfaces,row,targets,assessment):
         fig.add_trace(go.Cone(x=[end[0]],y=[end[1]],z=[end[2]],u=[d[0]],v=[d[1]],w=[d[2]],anchor='tip',sizemode='absolute',sizeref=.006,
             colorscale=[[0,color],[1,color]],showscale=False,showlegend=False,name=name,meta={'role':'task_axis_arrow'}))
     port=np.array(targets.base_to_port.position_m);pre=np.array(targets.pre_tcp.position_m)
-    point('P22 port',port,'#0891b2');point('Pre-insertion target TCP',pre,'#16a34a');point('Actual synthetic TCP',actual[:3,3],'#c026d3','cross')
+    port_id=targets.spec.data['target']['port_id']
+    point(port_id+' port',port,'#0891b2');point('Pre-insertion target TCP',pre,'#16a34a');point('Actual synthetic TCP',actual[:3,3],'#c026d3','cross')
     axis('Port insertion direction',port,targets.insertion_axis_base,'#ef4444')
     axis('Port key reference',port,targets.key_axis_base,'#2563eb')
     data=targets.spec.data['tcp']
@@ -26,7 +27,7 @@ def build_task_figure(scene,surfaces,row,targets,assessment):
     for i,color in enumerate(['#ef4444','#22c55e','#3b82f6']):axis('Target TCP '+['X','Y','Z'][i],pre,targets.T_base_pre_tcp[:3,i],color,.018)
     for name,ends,color in [('Geometric approach reference (not a planned path)',np.array([pre,port]),'#64748b'),('Synthetic EE to TCP offset',np.array([np.array(row['T_base_to_ee'])[:3,3],actual[:3,3]]),'#c026d3'),('TCP position residual',np.array([pre,actual[:3,3]]),'#f59e0b')]:
         fig.add_trace(go.Scatter3d(x=ends[:,0],y=ends[:,1],z=ends[:,2],mode='lines',line={'color':color,'width':4,'dash':'dash'},name=name,meta={'role':'task_reference_line'}))
-    e=assessment['errors'];fig.update_layout(title=f"P22 {assessment['status']} — position {e['position_mm']:.4f}mm / axis {e['insertion_axis_deg']:.4f}° / key {e['key_axis_deg']:.4f}°",
+    e=assessment['errors'];fig.update_layout(title=f"{port_id} {assessment['status']} — position {e['position_mm']:.4f}mm / axis {e['insertion_axis_deg']:.4f}° / key {e['key_axis_deg']:.4f}°",
         meta={**dict(fig.layout.meta),'task_targets':payload,'task_check':assessment,'actual_T_base_tcp':actual.tolist(),'usage':'RESEARCH_ONLY','stage':'T1_T2','viewer_stage':'T1_T2','tcp_geometry_modeled':False})
     fig.add_annotation(text='Synthetic, uncalibrated TCP / approach / tolerances. Bare-gripper collision only; no RJ45/cable body. Dashed approach is a target reference, not a planned or checked path.',xref='paper',yref='paper',x=0,y=1.04,showarrow=False)
     return fig

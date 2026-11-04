@@ -2029,6 +2029,129 @@
         "task_approach/p22_20261104_03/figures/q1_approach.html",
         "task_planning/p22_20261104_02/figures/q0_linear.html"
       ]
+    },
+    "test_task_benchmark.py::test_arbitrary_ports_use_framegraph_and_distinct_identity": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_task_benchmark.py::test_p22_exact_identity_and_rotated_translated_scene": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_task_benchmark.py::test_invalid_ports_rejected": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_task_benchmark.py::test_invalid_task_frame_targets_and_session_identity_rejected": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_task_benchmark.py::test_zero_one_multiple_ik_solutions_and_collision_screening": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_task_benchmark.py::test_common_start_once_original_index_and_invalid_start": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_task_benchmark.py::test_linear_blocked_rrt_succeeds_and_fresh_validation": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_task_benchmark.py::test_search_success_cannot_override_failed_final_check": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_task_benchmark.py::test_unknown_native_is_system_error_not_collision_failure": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_task_benchmark.py::test_one_failed_port_continues_but_backend_error_blocks_followers": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_task_benchmark.py::test_seed_reproducibility_and_explicit_parameter_rejection": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_task_benchmark.py::test_existing_output_rejected_before_loading_model": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_task_benchmark.py::test_summary_denominators_and_not_run_are_explicit": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_task_benchmark.py::test_actual_numerical_ik_through_generic_interface_is_deterministic": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_task_benchmark.py::test_generic_approach_rejects_interior_task_error": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "integration/test_task_benchmark_artifacts.py::test_generic_p22_full_precision_historical_equivalence": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "task_benchmark/t5_1_p22_equivalence_20261104_02",
+        "task_reachability/p22_20261104_02",
+        "task_planning/p22_20261104_02",
+        "task_approach/p22_20261104_03",
+        "g4_run01/experiments/workspace_n1000_seed42.npz",
+        "g4_run01/experiments/workspace_n1000_seed42.json",
+        "c3/assembly_build_20261104/build/collision_backend"
+      ]
+    },
+    "integration/test_task_benchmark_artifacts.py::test_nine_ports_evidence_hashes_counts_and_identity_tamper": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "task_benchmark/t5_1_s1_20261104_03",
+        "g4_run01/experiments/workspace_n1000_seed42.npz",
+        "g4_run01/experiments/workspace_n1000_seed42.json",
+        "c3/assembly_build_20261104/build/collision_backend"
+      ]
+    },
+    "integration/test_task_benchmark_artifacts.py::test_missing_historical_equivalence_is_blocked": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_task_benchmark_native.py::test_fresh_native_generic_roundtrip_and_same_seed_reproducibility": {
+      "level": "integration",
+      "requires": [
+        "model",
+        "native"
+      ],
+      "artifacts": []
+    },
+    "test_task_benchmark_native.py::test_actual_geometry_task_viewer_uses_selected_port_label": {
+      "level": "integration",
+      "requires": [
+        "model",
+        "native"
+      ],
+      "artifacts": []
     }
   }
 }

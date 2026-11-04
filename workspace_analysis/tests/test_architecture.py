@@ -19,9 +19,9 @@ PACKAGE = ROOT / 'src/workspace_analysis'
 SOURCE = Path(os.environ.get('G4_TEST_SOURCE_ROOT', ROOT))
 BASELINE = json.loads((ROOT / 'tests/fixtures/r1_numeric_baseline.json').read_text())
 PURE_MODULES = (
-    'geometry.se3', 'scene.frames', 'scene.model', 'scene.schema', 'task.spec', 'task.targets',
+    'geometry.se3', 'scene.frames', 'scene.model', 'scene.schema', 'task.spec', 'task.targets', 'task.template',
     'workspace.artifacts', 'workspace.sampling', 'workspace.results',
-    'viz.meshes', 'viz.scene', 'viz.workspace', 'viz.task', 'viz.joint_path', 'viz.approach',
+    'viz.meshes', 'viz.scene', 'viz.workspace', 'viz.task', 'viz.joint_path', 'viz.approach', 'viz.task_benchmark',
     'planning.joint_path', 'planning.rrt_connect',
     'experiments.statistics', 'experiments.reporting', 'experiments.tf_validation',
 )

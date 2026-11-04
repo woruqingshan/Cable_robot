@@ -17,8 +17,9 @@ def run():
     repo=Path(subprocess.check_output(['git','rev-parse','--show-toplevel'],cwd=ROOT,text=True).strip())
     tracked=subprocess.check_output(['git','ls-files','-z'],cwd=repo).decode().split('\0')
     paths={repo/p for p in tracked if p and (repo/p).is_relative_to(ROOT)}
-    # Include pending R2 changes/new test files without committing or making a branch.
-    for name in ['repro','tests']:
+    # Include pending implementation/test files without staging or committing.
+    # Restrict discovery to source/config/infrastructure, never arbitrary untracked data.
+    for name in ['repro','tests','src','scripts','config']:
         paths.update(p for p in (ROOT/name).rglob('*') if p.is_file())
     def allowed(p):
         relative=p.relative_to(ROOT)
@@ -42,7 +43,7 @@ def run():
         result=subprocess.run(command,cwd=isolated,env=env,capture_output=True,text=True,timeout=300)
         generated_results=(isolated/'results').exists()
         report={'status':'PASS' if result.returncode==0 and not generated_results else 'FAIL','exit_code':result.returncode or int(generated_results),
-            'method':'isolated copy of tracked workspace sources plus current R2 infrastructure; original dependencies reused',
+            'method':'isolated copy of tracked workspace and pending source/config/test infrastructure; original dependencies reused',
             'copied_source_sha256':hashes,'historical_results_copied':False,'original_history_read_guard':True,
             'official_ament_overlay_removed':True,'native_backend_removed':True,'results_created':generated_results,
             'python':sys.executable,'stdout':result.stdout,'stderr':result.stderr,'temporary_copy_removed':True}
