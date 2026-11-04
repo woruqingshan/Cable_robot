@@ -19,11 +19,11 @@ def run():
     paths={repo/p for p in tracked if p and (repo/p).is_relative_to(ROOT)}
     # Include pending implementation/test files without staging or committing.
     # Restrict discovery to source/config/infrastructure, never arbitrary untracked data.
-    for name in ['repro','tests','src','scripts','config']:
+    for name in ['repro','tests','src','scripts','config','ros2']:
         paths.update(p for p in (ROOT/name).rglob('*') if p.is_file())
     def allowed(p):
         relative=p.relative_to(ROOT)
-        return p.is_file() and not any(x in relative.parts for x in ['results','.venv','__pycache__','.pytest_cache','validation'])
+        return p.is_file() and not any(x in relative.parts for x in ['results','.venv','__pycache__','.pytest_cache','validation']) and not any(x.endswith('.egg-info') for x in relative.parts)
     paths={p for p in paths if allowed(p)};hashes={str(p.relative_to(ROOT)):sha256(p.read_bytes()).hexdigest() for p in paths}
     with tempfile.TemporaryDirectory(prefix='jetrover-r2-clean-') as temporary:
         isolated=Path(temporary)/'cable_vla_robot/workspace_analysis';isolated.mkdir(parents=True)

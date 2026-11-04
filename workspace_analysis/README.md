@@ -8,6 +8,10 @@ T5.1 通用任务规划与九网口 Benchmark 的 API、数据契约和复现命
 复用既有 IK、FCL、RRT 和 Cartesian Approach，原有 P22 CLI 保留。
 所有任务仍为 `RESEARCH_ONLY`，结果等待用户审核。
 
+T5.2-R1 的独立 ROS2/RViz2 交互式只读回放见
+[构建、启动及验收说明](docs/t5_2_r1_rviz_replay.md)。它读取已验证 T5.1 采样，
+不重新求解或规划，也不连接硬件控制接口。
+
 G1-A 已由用户运行并验收：三组 PyKDL/独立参考一致，pytest 为
 `48 passed, 1 warning`；本机 `results/g1a_fk.json` 的最大位置误差约
 `1.22e-16 m`，最大姿态误差约 `1.50e-16 rad`。

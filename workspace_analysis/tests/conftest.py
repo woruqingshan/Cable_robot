@@ -10,6 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "tests"))
+sys.path.insert(0, str(ROOT / 'ros2/jetrover_idc_visualization'))
 _active_level=None
 
 
@@ -42,12 +43,14 @@ def pytest_addoption(parser):
     parser.addoption('--artifact-root',default=None,help='Explicit historical results directory; missing inputs BLOCK with exit 4')
     parser.addoption('--native-backend',default=None,help='Explicit collision_backend executable')
     parser.addoption('--system-source',default=None,help='Official vendor source tree, separate from clone layout')
+    parser.addoption('--replay-install',default=None,help='Explicit built visualization install directory for launch tests')
 
 
 def pytest_configure(config):
     if config.getoption('--artifact-root'):os.environ['WORKSPACE_ARTIFACT_ROOT']=str(Path(config.getoption('--artifact-root')).resolve())
     if config.getoption('--native-backend'):os.environ['C1_BACKEND']=str(Path(config.getoption('--native-backend')).resolve())
     if config.getoption('--system-source'):os.environ['JETROVER_SYSTEM_SOURCE']=str(Path(config.getoption('--system-source')).resolve())
+    if config.getoption('--replay-install'):os.environ['IDC_REPLAY_INSTALL']=str(Path(config.getoption('--replay-install')).resolve())
 
 
 @pytest.hookimpl(tryfirst=True)
@@ -96,3 +99,15 @@ def pytest_collection_finish(session):
             if not (share/'urdf/jetrover.xacro').is_file():raise FileNotFoundError(str(share))
         except Exception as exc:raise pytest.UsageError('BLOCKED / MISSING_MODEL: '+str(exc))
     if 'vendor' in requires and not SYSTEM_SOURCE.is_dir():raise pytest.UsageError('BLOCKED / MISSING_VENDOR_SOURCE: '+str(SYSTEM_SOURCE))
+    if 'replay_install' in requires:
+        installed=Path(os.environ.get('IDC_REPLAY_INSTALL','/not/configured'))
+        if not (installed/'setup.bash').is_file():raise pytest.UsageError('BLOCKED / MISSING_REPLAY_INSTALL: build package and pass --replay-install')
+    optional = {'ros':['rclpy','sensor_msgs.msg','visualization_msgs.msg','tf2_ros','launch_ros'],
+                'qt':['PyQt5.QtWidgets']}
+    import importlib
+    for requirement, modules in optional.items():
+        if requirement in requires:
+            for module in modules:
+                try: importlib.import_module(module)
+                except (ImportError,OSError) as exc:
+                    raise pytest.UsageError('BLOCKED / MISSING_REPLAY_DEPENDENCY: '+module+': '+str(exc))

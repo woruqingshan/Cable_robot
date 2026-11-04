@@ -17,16 +17,24 @@ from ..planning.cartesian_approach import cartesian_waypoints, check_approach_sa
 from ..workspace.results import load_results
 
 
-def verify_benchmark(output: Path, model) -> dict:
-    """Read-only saved-evidence verification, NOT another collision-safety proof."""
+def verify_benchmark(output: Path, model, *, input_bindings: dict[str, Path] | None = None) -> dict:
+    """Read-only evidence verification; optional explicit relocation of ALL inputs.
+
+    Bindings map original manifest input names to caller-declared current files.
+    Every original SHA256 still must match. No legacy path is followed when a
+    mapping is supplied, and the saved Manifest/settings remain unchanged.
+    """
     out = Path(output).resolve(); manifest = json.loads((out/'manifest.json').read_text())
     if manifest.get('stage') != 'T5.1' or manifest.get('schema_version') != 1 or manifest.get('usage') != 'RESEARCH_ONLY':
         raise TaskError('not a T5.1 research benchmark')
     for name, h in manifest['files'].items():
         p = (out/name).resolve()
         if not p.is_relative_to(out) or _hash(p) != h: raise TaskError('artifact hash/path mismatch: '+name)
+    if input_bindings is not None and set(input_bindings) != set(manifest['input_hashes']):
+        raise TaskError('complete explicit input bindings required')
     for name, h in manifest['input_hashes'].items():
-        if _hash(name) != h: raise TaskError('input identity mismatch: '+name)
+        current = name if input_bindings is None else input_bindings[name]
+        if _hash(current) != h: raise TaskError('input identity mismatch: '+name)
     if model.metadata()['expanded_urdf_sha256'] != manifest['identity']['urdf_sha256']:
         raise TaskError('model identity mismatch')
     if sha256(canonical(manifest['source_sha256']).encode()).hexdigest() != manifest['source_set_sha256']:
@@ -40,7 +48,15 @@ def verify_benchmark(output: Path, model) -> dict:
         raise TaskError('scene identity mismatch')
     if _hash(out/'settings.json') != manifest['settings_sha256']: raise TaskError('settings identity mismatch')
     settings = json.loads((out/'settings.json').read_text())
-    arrays, _ = load_results(settings['seed_prefix'], model=model)
+    seed_prefix = settings['seed_prefix']
+    if input_bindings is not None:
+        names = [settings['seed_prefix']+ext for ext in ('.npz', '.json')]
+        if any(name not in input_bindings for name in names): raise TaskError('seed input bindings missing')
+        npz, metadata = (Path(input_bindings[name]) for name in names)
+        if npz.suffix != '.npz' or metadata != npz.with_suffix('.json'):
+            raise TaskError('relocated seed NPZ/JSON must retain a common prefix')
+        seed_prefix = npz.with_suffix('')
+    arrays, _ = load_results(seed_prefix, model=model)
     ledger = json.loads((out/'collision_queries.json').read_text()); queries = ledger['records']
     if ledger['identity'] != manifest['identity'] or ledger['statistics']['native_collision_queries'] != len(queries):
         raise TaskError('query ledger identity/count mismatch')

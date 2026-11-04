@@ -2152,6 +2152,134 @@
         "native"
       ],
       "artifacts": []
+    },
+    "test_replay_core.py::test_state_machine_original_samples_pause_resume_reset_and_end_restart": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_replay_core.py::test_phase_data_and_boundary_provenance": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_replay_core.py::test_task_switch_stops_old_playback_and_failed_ports_cannot_play": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_replay_core.py::test_invalid_selection_never_continues_old_animation": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_replay_core.py::test_joint_mapping_comes_from_model_and_excludes_mimic_publishers": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_replay_core.py::test_untrusted_trajectory_and_mismatched_join_rejected": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_replay_core.py::test_store_rejects_traversal_and_ambiguous_names": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_replay_core.py::test_store_missing_hash_lfs_symlinks_and_json_duplicates": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_replay_core.py::test_explicit_input_bindings_preserve_hashes_and_do_not_follow_original_paths": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_replay_core.py::test_scene_boxes_ports_and_rotated_cylinder_markers_use_framegraph": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_replay_core.py::test_protocol_rejects_stale_sessions_unknown_actions_and_noninteger_revision": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_replay_artifacts.py::test_real_ports_goals_planners_and_every_original_sample": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "task_benchmark/t5_1_s1_20261104_03",
+        "g4_run01/experiments/workspace_n1000_seed42.npz",
+        "g4_run01/experiments/workspace_n1000_seed42.json",
+        "c3/assembly_build_20261104/build/collision_backend"
+      ]
+    },
+    "test_replay_artifacts.py::test_relocated_run_never_reads_original_absolute_run_paths_and_never_plans": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "task_benchmark/t5_1_s1_20261104_03",
+        "g4_run01/experiments/workspace_n1000_seed42.npz",
+        "g4_run01/experiments/workspace_n1000_seed42.json",
+        "c3/assembly_build_20261104/build/collision_backend"
+      ]
+    },
+    "test_replay_artifacts.py::test_wrong_manifest_anchor_and_dynamic_path_reference_are_rejected": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "task_benchmark/t5_1_s1_20261104_03",
+        "g4_run01/experiments/workspace_n1000_seed42.npz",
+        "g4_run01/experiments/workspace_n1000_seed42.json",
+        "c3/assembly_build_20261104/build/collision_backend"
+      ]
+    },
+    "test_replay_ros.py::test_real_jointstate_rsp_tf_scene_markers_and_clean_shutdown": {
+      "level": "integration",
+      "requires": [
+        "ros",
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_replay_ros.py::test_real_qt_panel_selection_pause_resume_reset_and_protocol": {
+      "level": "integration",
+      "requires": [
+        "ros",
+        "qt"
+      ],
+      "artifacts": []
+    },
+    "test_replay_ros.py::test_installed_launch_actual_p12_p22_samples_mimic_tf_and_shutdown": {
+      "level": "artifact",
+      "requires": [
+        "ros",
+        "model",
+        "replay_install"
+      ],
+      "artifacts": [
+        "task_benchmark/t5_1_s1_20261104_03",
+        "g4_run01/experiments/workspace_n1000_seed42.npz",
+        "g4_run01/experiments/workspace_n1000_seed42.json",
+        "c3/assembly_build_20261104/build/collision_backend"
+      ]
+    },
+    "test_replay_ros.py::test_replay_explicitly_refuses_default_domain_and_nonloopback": {
+      "level": "integration",
+      "requires": [
+        "ros"
+      ],
+      "artifacts": []
     }
   }
 }

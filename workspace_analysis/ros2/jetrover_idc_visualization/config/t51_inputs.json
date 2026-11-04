@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "workspace_relative_files": [
+    "config/tasks/p22_research_v0.yaml",
+    "config/scenes/idc_prototype_v0.yaml",
+    "results/g4_run01/experiments/workspace_n1000_seed42.npz",
+    "results/g4_run01/experiments/workspace_n1000_seed42.json",
+    "results/c3/assembly_build_20261104/build/collision_backend"
+  ]
+}
