@@ -1,4 +1,6 @@
 """Native mesh fixtures exercise local changes and preserved dangerous collisions."""
+
+from test_resources import ARTIFACTS
 from dataclasses import replace
 import json,os
 from pathlib import Path
@@ -107,7 +109,7 @@ def test_jetrover_profiles_fk_mimic_environment_and_non_target_invariance(tmp_pa
     with CollisionClient(os.environ['C1_BACKEND']) as a,CollisionClient(os.environ['C1_BACKEND']) as b:
         ra=a.initialize(m,s,geometry_profile=o);rb=b.initialize(m,s,geometry_profile=p)
         policy=load_policy(ROOT/'config/collision/assembly_policy_v1.yaml',m);a.set_policy(*policy);b.set_policy(*policy)
-        with np.load(ROOT/'results/workspace_n100_seed42.npz') as data:qs=[data['q'][8],data['q'][73],[.35,-.6,.8,-.4,.2]]
+        with np.load(ARTIFACTS / 'workspace_n100_seed42.npz') as data:qs=[data['q'][8],data['q'][73],[.35,-.6,.8,-.4,.2]]
         for q in qs:
             for opening in [-.4,.3,.9]:
                 x=a.query(m,q,auxiliary_positions={'r_joint':opening});y=b.query(m,q,auxiliary_positions={'r_joint':opening})
@@ -155,8 +157,8 @@ def test_new_cli_help(script):
 
 def test_d1_paired_experiment_preserves_arrays_identity_and_robot_only(tmp_path):
     from workspace_analysis.experiments.geometry_workspace import run_comparison
-    out=tmp_path/'comparison';summary=run_comparison(ROOT,os.environ['C1_BACKEND'],ROOT/'results/workspace_n100_seed42',out)
-    with np.load(ROOT/'results/workspace_n100_seed42.npz',allow_pickle=False) as source,np.load(out/'workspace_results.npz',allow_pickle=False) as result:
+    out=tmp_path/'comparison';summary=run_comparison(ROOT,os.environ['C1_BACKEND'],ARTIFACTS / 'workspace_n100_seed42',out)
+    with np.load(ARTIFACTS / 'workspace_n100_seed42.npz',allow_pickle=False) as source,np.load(out/'workspace_results.npz',allow_pickle=False) as result:
         for key in source.files:np.testing.assert_array_equal(source[key],result[key])
     manifest=json.loads((out/'manifest.json').read_text())
     assert manifest['identities']['idc']['official']['geometry_profile']=='official_full'
@@ -165,4 +167,4 @@ def test_d1_paired_experiment_preserves_arrays_identity_and_robot_only(tmp_path)
     assert summary['robot_only']['official']['environment']==summary['robot_only']['refined']['environment']==0
     paired=summary['idc']['paired']
     assert len(paired['recovered_indices'])+len(paired['new_rejected_indices'])+paired['both_rejected_count']+paired['both_candidate_count']==100
-    with pytest.raises(ValueError):run_comparison(ROOT,os.environ['C1_BACKEND'],ROOT/'results/workspace_n100_seed42',out)
+    with pytest.raises(ValueError):run_comparison(ROOT,os.environ['C1_BACKEND'],ARTIFACTS / 'workspace_n100_seed42',out)

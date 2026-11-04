@@ -1,4 +1,6 @@
 """S1 fixture geometry checks only; no collision backend, IK or reachability claim."""
+
+from test_resources import ARTIFACTS
 from hashlib import sha256
 import json
 from pathlib import Path
@@ -141,7 +143,7 @@ def test_existing_100_points_overlay_without_resampling(monkeypatch):
     def forbidden(*args,**kwargs):
         pytest.fail('S1 must reuse accepted G2 data')
     monkeypatch.setattr(sampling,'sample_workspace',forbidden)
-    prefix = ROOT/'results/workspace_n100_seed42'
+    prefix = ARTIFACTS / 'workspace_n100_seed42'
     paths = [SCENE,Path(str(prefix)+'.npz'),Path(str(prefix)+'.json')]
     before = [sha256(p.read_bytes()).hexdigest() for p in paths]
     view = load_workspace(prefix,ROOT/'config/workspace.yaml')

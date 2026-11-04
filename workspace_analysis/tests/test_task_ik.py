@@ -1,4 +1,6 @@
 """T2 bounded numerical IK, independent thresholds, dedup and collision hierarchy."""
+
+from test_resources import ARTIFACTS
 from dataclasses import replace
 from pathlib import Path
 import os
@@ -56,7 +58,7 @@ def test_unreachable_target_returns_best_approximation_without_false_success():
 
 
 def test_seeds_use_tcp_positions_and_record_original_g4_indices_deterministically():
-    model,_,target=setup();arrays,_=load_results(ROOT/'results/g4_run01/experiments/workspace_n1000_seed42',model=model)
+    model,_,target=setup();arrays,_=load_results(ARTIFACTS / 'g4_run01/experiments/workspace_n1000_seed42',model=model)
     a=build_seeds(model,target,arrays);b=build_seeds(model,target,arrays)
     assert a==b and len(a)==41
     selected=[s for s in a if s['source']=='G4_nearest_virtual_TCP']
@@ -142,11 +144,11 @@ def test_complete_failure_run_keeps_best_viewer_and_skips_task_collision_screeni
     model,_,target=setup();data=target.spec.data
     data['solver'].update(workspace_nearest_seeds=0,extra_joint_seeds=0,include_midpoint_seed=True,max_nfev=1)
     path=tmp_path/'budget_limited_task.yaml';path.write_text(yaml.safe_dump(data,sort_keys=False));out=tmp_path/'failure_run'
-    summary=run_p22(ROOT,os.environ['C1_BACKEND'],path,ROOT/'results/g4_run01/experiments/workspace_n1000_seed42',out,allow_candidate=True)
+    summary=run_p22(ROOT,os.environ['C1_BACKEND'],path,ARTIFACTS / 'g4_run01/experiments/workspace_n1000_seed42',out,allow_candidate=True)
     assert summary['final_status']=='IK_FAILED' and summary['unique_task_pose_solutions']==0
     assert summary['collision_comparison']['candidate']['task_pose_solutions_checked']==0
     assert summary['collision_comparison']['candidate']['task_configuration_candidates']==0
     assert summary['no_solution_reason'] and not summary['mathematical_unreachability_proven']
     assert (out/'figures/best_approximation.html').is_file()
     assert verify_p22(out,model)['all_task_errors_rechecked']
-    with pytest.raises(TaskError,match='existing'):run_p22(ROOT,os.environ['C1_BACKEND'],path,ROOT/'results/g4_run01/experiments/workspace_n1000_seed42',out,allow_candidate=True)
+    with pytest.raises(TaskError,match='existing'):run_p22(ROOT,os.environ['C1_BACKEND'],path,ARTIFACTS / 'g4_run01/experiments/workspace_n1000_seed42',out,allow_candidate=True)

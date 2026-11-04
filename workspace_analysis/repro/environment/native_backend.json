@@ -1,0 +1,44 @@
+{
+  "note": "Observed binary and verified initialization, not a portable binary hash requirement. No configuration queries.",
+  "path": "/home/siyuen/Desktop/code/cable_robot/cable_vla_robot/workspace_analysis/results/c3/assembly_build_20261104/build/collision_backend",
+  "sha256": "f371ce85b75c4b24dc1e1d64254a70c57304d90c8ba21909b491911f89403670",
+  "audit": {
+    "identity": {
+      "backend_sha256": "f371ce85b75c4b24dc1e1d64254a70c57304d90c8ba21909b491911f89403670",
+      "backend_version": "cable_collision_backend/0.1.0",
+      "base_frame": "base_link",
+      "ee_frame": "end_effector_link",
+      "joint_order": [
+        "joint1",
+        "joint2",
+        "joint3",
+        "joint4",
+        "joint5"
+      ],
+      "policy_sha256": "90680596ea90eba52b3c216a1a1cf9b4ab4ece9919037b9e623dfd10644ea841",
+      "robot_geometry_sha256": "4858b34b1ff62f8af791809701888028637650c2372dc5f3978a1d5e606b216d",
+      "scene_sha256": "d83e76d09f7e69fa0c01e753f0cefb3128dd520fb0292f1fd0b4838f66a5ab3b",
+      "semantic_acm_sha256": "90b1e0d1291917377913efc51bc6d35164dfcd61c6d078e2867108e9efdbce87",
+      "semantic_review_sha256": "e65a8f953801b2c0e4e14a529da95d84727653d2eeabe1e41e560b13b3a4f2c1",
+      "semantic_review_status": "candidate_baseline_unverified",
+      "semantic_usage": "research_only",
+      "srdf_sha256": "cfd956aa2216c8b8d5cc247bafdb74800f90b12e9daa656a5c67acf68f983083",
+      "units": {
+        "angle": "rad",
+        "length": "m"
+      },
+      "urdf_sha256": "5ff0007d08a798ebe31bc4e243d457e0f463aa7b896c088a889c919571ccd72d"
+    },
+    "cleanup": {
+      "resources_released": true,
+      "exit_code": 0,
+      "exit_normal": true,
+      "graceful_shutdown": true,
+      "errors": [],
+      "stderr_tail": "[INFO] [1793787753.651058098] [moveit_robot_model.robot_model]: Loading robot model 'jetrover'...\n[INFO] [1793787753.651101157] [moveit_robot_model.robot_model]: No root/virtual joint specified in SRDF. Assuming fixed joint\n[WARN] [1793787753.666945423] [moveit_robot_model.robot_model]: Link lidar_link has visual geometry but no collision geometry. Collision geometry will be left empty. Fix your URDF file by explicitly specifying collision geometry.\n"
+    },
+    "detector": "FCL",
+    "loaded_shapes": 24,
+    "queries": 0
+  }
+}

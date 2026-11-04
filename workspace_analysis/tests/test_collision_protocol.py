@@ -1,4 +1,6 @@
 """Protocol and scene adapter tests; no Python collision implementation."""
+
+from test_resources import ARTIFACTS
 from pathlib import Path
 import json
 import numpy as np
@@ -66,7 +68,7 @@ def test_init_failure_retains_all_100_indices_and_refuses_overwrite(tmp_path):
         def initialize(self,*args):raise CollisionError('fixture model error')
         def close(self):return {'exit_normal':False,'exit_code':7,'resources_released':True}
     out=tmp_path/'run'
-    kwargs=dict(input_prefix=ROOT/'results/workspace_n100_seed42',client_factory=Broken)
+    kwargs=dict(input_prefix=ARTIFACTS / 'workspace_n100_seed42',client_factory=Broken)
     s=run_diagnostic(ROOT/'config/workspace.yaml',ROOT/'config/scenes/idc_prototype_v0.yaml','unused',out,**kwargs)
     assert s['total_samples']==s['error_count']==100 and s['status']=='ERROR'
     d=json.loads((out/'diagnostics.json').read_text())

@@ -1,4 +1,6 @@
 """C3 strict semantics and real native regressions. No weakened historical checks."""
+
+from test_resources import ARTIFACTS
 from copy import deepcopy
 from hashlib import sha256
 import json,os
@@ -91,7 +93,7 @@ def test_actual_acm_acknowledgement_not_assumed():
 
 def test_jetrover_semantics_preserves_raw_state_fk_mimic_and_known_rejections():
     m=load_model(ROOT/'config/workspace.yaml');s=load_scene(ROOT/'config/scenes/idc_prototype_v0.yaml');sem=SemanticConfig.load(ROOT/'config/collision/semantic/jetrover_semantic_v0.srdf',m)
-    arrays,_=load_results(ROOT/'results/workspace_n100_seed42',model=m)
+    arrays,_=load_results(ARTIFACTS / 'workspace_n100_seed42',model=m)
     from workspace_analysis.collision.policy import load_policy
     with CollisionClient(os.environ['C1_BACKEND']) as old,CollisionClient(os.environ['C1_BACKEND']) as new:
         old.initialize(m,s);old.set_policy(*load_policy(ROOT/'config/collision/assembly_policy_v1.yaml',m));ready=new.initialize(m,s,semantic=sem)

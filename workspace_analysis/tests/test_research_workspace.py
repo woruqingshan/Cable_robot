@@ -1,4 +1,8 @@
 """Research decision statistics, frozen indices and actual FCL review integration."""
+
+from test_resources import SYSTEM_SOURCE
+
+from test_resources import ARTIFACTS
 from copy import deepcopy
 import json,os
 from pathlib import Path
@@ -61,7 +65,7 @@ def test_candidate_selection_is_deterministic_without_resampling():
 
 
 def test_read_only_reference_records_are_not_upgraded_to_normal_truth():
-    m=load_model(ROOT/'config/workspace.yaml');result=recorded_pose_candidates(ROOT,m,ROOT.parents[1]/'system_source')
+    m=load_model(ROOT/'config/workspace.yaml');result=recorded_pose_candidates(ROOT,m,SYSTEM_SOURCE)
     assert result['candidates'] and result['selected_trusted_normal_pose'] is None and result['status']=='PENDING'
     ready=next(r for r in result['candidates'] if r['name']=='CABLE_HOLD_READY')
     assert ready['urdf_joint_limits_valid'] and ready['q_controller_jointstate_rad'][1]<0
@@ -81,7 +85,7 @@ def test_all29_relations_have_separate_kinematic_and_mechanical_status():
 
 def test_real_evaluator_semantic_stats_use_new_fields_not_legacy_raw():
     m=load_model(ROOT/'config/workspace.yaml');s=load_scene(ROOT/'config/scenes/idc_prototype_v0.yaml');c=SemanticConfig.load(CANDIDATE,m,allow_candidate=True)
-    arrays,_=load_results(ROOT/'results/workspace_n100_seed42',model=m)
+    arrays,_=load_results(ARTIFACTS / 'workspace_n100_seed42',model=m)
     with Evaluator(m,s,None,os.environ['C1_BACKEND'],semantic=c) as e:
         values=e.evaluate(arrays['q'][:4]);check_input_rows({k:v[:4] for k,v in arrays.items()},values)
     summary=summarize_semantic(values)
@@ -94,6 +98,6 @@ def test_real_evaluator_semantic_stats_use_new_fields_not_legacy_raw():
 
 def test_existing_output_and_large_dataset_are_rejected_before_evaluation(tmp_path):
     m=load_model(ROOT/'config/workspace.yaml');out=tmp_path/'exists';out.mkdir()
-    with pytest.raises(ValueError,match='existing'):run_research_workspace(ROOT,os.environ['C1_BACKEND'],out,[],source=ROOT.parents[1]/'system_source',candidate_srdf=CANDIDATE,allow_candidate=True)
-    with pytest.raises(ValueError,match='1,000'):run_research_workspace(ROOT,os.environ['C1_BACKEND'],tmp_path/'large',[ROOT/'results/workspace_n10000_seed42'],source=ROOT.parents[1]/'system_source',candidate_srdf=CANDIDATE,allow_candidate=True)
+    with pytest.raises(ValueError,match='existing'):run_research_workspace(ROOT,os.environ['C1_BACKEND'],out,[],source=SYSTEM_SOURCE,candidate_srdf=CANDIDATE,allow_candidate=True)
+    with pytest.raises(ValueError,match='1,000'):run_research_workspace(ROOT,os.environ['C1_BACKEND'],tmp_path/'large',[ARTIFACTS / 'workspace_n10000_seed42'],source=SYSTEM_SOURCE,candidate_srdf=CANDIDATE,allow_candidate=True)
     assert not (tmp_path/'large').exists()

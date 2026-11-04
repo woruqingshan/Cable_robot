@@ -1,4 +1,6 @@
 """T3 geometry, fail-closed semantic validity, real native checks and replay."""
+
+from test_resources import ARTIFACTS
 from copy import deepcopy
 import json
 import os
@@ -153,7 +155,7 @@ def test_real_native_semantics_limits_clearance_environment_and_full_mesh_replay
     from workspace_analysis.viz.joint_path import build_path_figure,export_path_viewer
     model=load_model(ROOT/'config/workspace.yaml');scene=load_scene(ROOT/'config/scenes/idc_prototype_v0.yaml')
     target=build_targets(load_task(ROOT/'config/tasks/p22_research_v0.yaml'),scene)
-    goals=json.loads((ROOT/'results/task_reachability/p22_20261104_02/ik_results.json').read_text())['unique_task_solutions']
+    goals=json.loads((ARTIFACTS / 'task_reachability/p22_20261104_02/ik_results.json').read_text())['unique_task_solutions']
     q=goals[0]['q'];candidate=SemanticConfig.load(ROOT/'config/collision/semantic/standard_moveit_candidate_v0/standard_moveit_candidate_v0.srdf',model,allow_candidate=True)
     strict=SemanticConfig.load(ROOT/'config/collision/semantic/jetrover_semantic_v0.srdf',model)
     with Evaluator(model,scene,None,os.environ['C1_BACKEND'],semantic=candidate) as e:
@@ -163,7 +165,7 @@ def test_real_native_semantics_limits_clearance_environment_and_full_mesh_replay
         path=v.path([q,bq],.01,fresh=True)
         assert path['complete'] and len(path['states'])>=4
         from workspace_analysis.workspace.results import load_results
-        arrays,_=load_results(ROOT/'results/workspace_n100_seed42',model=model)
+        arrays,_=load_results(ARTIFACTS / 'workspace_n100_seed42',model=model)
         assert 'ROBOT_ENVIRONMENT_COLLISION' in v.check(arrays['q'][8])['reasons']
         assert 'SEMANTIC_SELF_COLLISION' in v.check(arrays['q'][19])['reasons']
         v.check(q,fresh=True);native=deepcopy(e.last_native);native.update(q=q,sample_index='path_test')

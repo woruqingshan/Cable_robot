@@ -1,4 +1,6 @@
 """Rendering geometry and contact identity checks, separate from user visual acceptance."""
+
+from test_resources import ARTIFACTS
 import copy
 from hashlib import sha256
 import json
@@ -38,7 +40,7 @@ def test_nonzero_collision_origin_nonuniform_scale_and_native_link_transform(tmp
 def views():
     binary=os.environ.get('C1_BACKEND');assert binary
     model=load_model(ROOT/'config/workspace.yaml');scene=load_scene(ROOT/'config/scenes/idc_prototype_v0.yaml')
-    with np.load(ROOT/'results/workspace_n100_seed42.npz',allow_pickle=False) as a:qs=a['q']
+    with np.load(ARTIFACTS / 'workspace_n100_seed42.npz',allow_pickle=False) as a:qs=a['q']
     result=[]
     with CollisionClient(binary) as client:
         ready=client.initialize(model,scene)

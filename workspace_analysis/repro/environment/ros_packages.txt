@@ -1,0 +1,34 @@
+# Observed APT/ROS versions, not an installation script.
+cmake	3.22.1-1ubuntu1.22.04.2	installed
+g++	4:11.2.0-1ubuntu1	installed
+gcc	4:11.2.0-1ubuntu1	installed
+libeigen3-dev	3.4.0-2ubuntu2	installed
+libfcl-dev:amd64	0.7.0-3	installed
+libfcl0.7:amd64	0.7.0-3	installed
+libjavascriptcoregtk-4.0-18:amd64	2.50.4-0ubuntu0.22.04.1	installed
+liborocos-kdl-dev:amd64	1.5.1-2build1	installed
+liborocos-kdl1.5:amd64	1.5.1-2build1	installed
+libssl-dev:amd64	3.0.2-0ubuntu1.30	installed
+libtinyxml2-dev:amd64	9.0.0+dfsg-3	installed
+nlohmann-json3-dev	3.10.5-2	installed
+python3-numpy	1:1.21.5-1ubuntu22.04.1	installed
+python3-pykdl:amd64	1.5.1-2build1	installed
+python3-pytest	6.2.5-1ubuntu2	installed
+python3-scipy	1.8.0-1exp2ubuntu1	installed
+python3-yaml	5.4.1-1ubuntu1	installed
+ros-humble-ament-index-python	1.4.0-2jammy.20250718.231234	installed
+ros-humble-moveit-core	2.5.9-1jammy.20251119.004651	installed
+ros-humble-moveit-ros-planning	2.5.9-1jammy.20251119.012916	installed
+ros-humble-moveit-setup-framework	2.5.9-1jammy.20251119.025032	installed
+ros-humble-moveit-setup-srdf-plugins	2.5.9-1jammy.20251119.025513	installed
+ros-humble-rclpy	3.3.19-1jammy.20251118.151334	installed
+ros-humble-resource-retriever	3.1.3-1jammy.20250718.234149	installed
+ros-humble-robot-state-publisher	3.0.3-2jammy.20251118.234209	installed
+ros-humble-ros-base	0.10.0-1jammy.20251119.014616	installed
+ros-humble-srdfdom	2.0.7-1jammy.20251118.220411	installed
+ros-humble-tf2-ros	0.25.17-1jammy.20251118.224851	installed
+ros-humble-tf2-ros-py	0.25.17-1jammy.20251118.221142	installed
+ros-humble-urdf	2.6.1-1jammy.20251118.220208	installed
+ros-humble-xacro	2.1.1-1jammy.20250829.093455	installed
+# Unresolved/errors:
+dpkg-query: 没有找到与 ros-humble-urdf-parser-py 相匹配的软件包

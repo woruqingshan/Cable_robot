@@ -1,4 +1,8 @@
 """Opt-in research semantics must not masquerade as reviewed assembly permissions."""
+
+from test_resources import SYSTEM_SOURCE
+
+from test_resources import ARTIFACTS
 from copy import deepcopy
 from hashlib import sha256
 import json,os
@@ -55,7 +59,7 @@ def test_explicit_decision_cannot_approve_unverified_model(valid,status,expected
 def test_real_native_three_semantics_known_cases_and_geometry_unchanged(robot):
     strict=SemanticConfig.load(ROOT/'config/collision/semantic/jetrover_semantic_v0.srdf',robot)
     candidate=SemanticConfig.load(CANDIDATE,robot,allow_candidate=True)
-    s=load_scene(ROOT/'config/scenes/idc_prototype_v0.yaml');arrays,_=load_results(ROOT/'results/workspace_n100_seed42',model=robot)
+    s=load_scene(ROOT/'config/scenes/idc_prototype_v0.yaml');arrays,_=load_results(ARTIFACTS / 'workspace_n100_seed42',model=robot)
     with Evaluator(robot,s,None,os.environ['C1_BACKEND'],semantic=strict) as a,Evaluator(robot,s,None,os.environ['C1_BACKEND'],semantic=candidate) as b:
         for index,q in [('zero',[0]*5),(8,arrays['q'][8]),(19,arrays['q'][19]),(73,arrays['q'][73])]:
             old=a.evaluate(np.asarray(q).reshape(1,5))[0];old_native=deepcopy(a.last_native)
@@ -111,7 +115,7 @@ def test_invalid_configuration_keeps_explicit_error_decision(robot):
 
 def test_vendor_source_conventions_are_evidence_not_new_limits(robot):
     from workspace_analysis.experiments.assembly_semantics import audit_system_source
-    result=audit_system_source(robot,ROOT.parents[1]/'system_source')
+    result=audit_system_source(robot,SYSTEM_SOURCE)
     rows={r['joint']:r for r in result['angle_conventions']}
     assert rows['joint2']['source_mapping'][1]=={'pulse':500,'dh_degrees':-90.,'controller_jointstate_degrees':0.}
     assert rows['joint1']['source_mapping'][0]=={'pulse':0,'dh_degrees':-120.,'controller_jointstate_degrees':120.}

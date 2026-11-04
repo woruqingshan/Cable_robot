@@ -1,5 +1,7 @@
 """B2 analytic geometry, real small Plotly export and G2 loader integration."""
 
+from test_resources import ARTIFACTS
+
 from collections import Counter
 from dataclasses import replace
 from hashlib import sha256
@@ -31,7 +33,7 @@ def scene():
 
 @pytest.fixture
 def copied_pair(tmp_path):
-    source = Path(os.environ.get('G3_TEST_INPUT_PREFIX', ROOT / 'results/workspace_n100_seed42'))
+    source = Path(os.environ.get('G3_TEST_INPUT_PREFIX', ARTIFACTS / 'workspace_n100_seed42'))
     prefix = tmp_path / source.name
     for extension in ('.npz', '.json'):
         original = Path(str(source) + extension)

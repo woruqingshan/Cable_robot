@@ -1,5 +1,8 @@
 # JetRover Workspace Analysis — P2.2 / P2.3-R1
 
+R2-A/B 复现入口见 [repro/README.md](repro/README.md)。**默认 pytest 现在只运行 Core**；
+官方模型/Native 和历史 Artifact 测试必须分别显式选择。历史验收数字保留于下文，完整当前回归需按新入口运行三个分组。
+
 G1-A 已由用户运行并验收：三组 PyKDL/独立参考一致，pytest 为
 `48 passed, 1 warning`；本机 `results/g1a_fk.json` 的最大位置误差约
 `1.22e-16 m`，最大姿态误差约 `1.50e-16 rad`。

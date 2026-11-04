@@ -1,8 +1,10 @@
-"""G3 small-data tests; Plotly-dependent cases are explicit SKIPs if absent.
+"""G3 small-data tests; declared Plotly dependency must be available.
 
 File tests COPY an existing G2 100-row pair, never generate replacement data.
 G3_TEST_INPUT_PREFIX may point to that pair when testing a staging checkout.
 """
+
+from test_resources import ARTIFACTS
 
 import builtins
 from hashlib import sha256
@@ -44,7 +46,7 @@ def synthetic():
 
 @pytest.fixture
 def source_prefix():
-    prefix = Path(os.environ.get("G3_TEST_INPUT_PREFIX", ROOT / "results/workspace_n100_seed42"))
+    prefix = Path(os.environ.get("G3_TEST_INPUT_PREFIX", ARTIFACTS / "workspace_n100_seed42"))
     if not all(Path(str(prefix) + ext).is_file() for ext in (".npz", ".json")):
         pytest.fail(f"G3 needs the existing validated G2 100-row pair: {prefix}. "
                     "Supply G3_TEST_INPUT_PREFIX; tests do not silently resample missing inputs.")
@@ -61,7 +63,7 @@ def copied_pair(source_prefix, tmp_path):
 
 @pytest.fixture
 def plotly_ready():
-    return pytest.importorskip("plotly", reason="Plotly missing: figure/HTML generation has NOT been validated")
+    return __import__("plotly")
 
 
 def test_full_view_preserves_all_rows_negative_z_and_source_arrays(synthetic):

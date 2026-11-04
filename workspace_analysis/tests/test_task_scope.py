@@ -1,4 +1,6 @@
 """Real native scope positives/negatives; no contact-list inference or subtree blanket."""
+
+from test_resources import ARTIFACTS
 from copy import deepcopy
 from hashlib import sha256
 import json,os
@@ -97,7 +99,7 @@ def test_jetrover_scope_topology_gripper_scans_and_real_rejections():
     m=load_model(ROOT/'config/workspace.yaml');p=load_policy(ROOT/'config/collision/assembly_policy_v1.yaml',m);scope=load_scope(ROOT/'config/collision/task_scope_v0.yaml',m,p)
     data=json.loads(scope[0]);assert len(data['internal_diagnostic_pairs'])==7 and len(data['assembly_members'])==7
     s=load_scene(ROOT/'config/scenes/idc_prototype_v0.yaml')
-    with np.load(ROOT/'results/workspace_n100_seed42.npz') as f:qs=f['q'].copy()
+    with np.load(ARTIFACTS / 'workspace_n100_seed42.npz') as f:qs=f['q'].copy()
     with CollisionClient(os.environ['C1_BACKEND']) as c:
         c.initialize(m,s);c.set_policy(*p)
         for opening in [-1.5,0,.3,.9,1.5]:
@@ -137,9 +139,9 @@ def test_scope_viewer_real_contacts_have_distinct_diagnostic_and_blocking_layers
 
 def test_d2_original_arrays_statistical_conservation_and_no_overwrite(tmp_path):
     from workspace_analysis.experiments.task_scoped_workspace import run_task_pilot
-    out=tmp_path/'d2';s=run_task_pilot(ROOT,os.environ['C1_BACKEND'],ROOT/'results/workspace_n100_seed42',out)
-    with np.load(ROOT/'results/workspace_n100_seed42.npz',allow_pickle=False) as a,np.load(out/'workspace_results.npz',allow_pickle=False) as b:
+    out=tmp_path/'d2';s=run_task_pilot(ROOT,os.environ['C1_BACKEND'],ARTIFACTS / 'workspace_n100_seed42',out)
+    with np.load(ARTIFACTS / 'workspace_n100_seed42.npz',allow_pickle=False) as a,np.load(out/'workspace_results.npz',allow_pickle=False) as b:
         for key in a.files:np.testing.assert_array_equal(a[key],b[key])
     b=s['B_task_scope'];assert b['candidates']+b['rejected']+b['unknown']+b['errors']==100
     assert b['full_effective_self']==100 and b['gripper_internal']==100 and b['environment']==2
-    with pytest.raises(ValueError):run_task_pilot(ROOT,os.environ['C1_BACKEND'],ROOT/'results/workspace_n100_seed42',out)
+    with pytest.raises(ValueError):run_task_pilot(ROOT,os.environ['C1_BACKEND'],ARTIFACTS / 'workspace_n100_seed42',out)

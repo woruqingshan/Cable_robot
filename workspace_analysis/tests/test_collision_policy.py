@@ -1,4 +1,6 @@
 """C2 policy configuration and real-backend switch/recovery tests."""
+
+from test_resources import ARTIFACTS
 import copy
 import json
 import os
@@ -53,7 +55,7 @@ def test_real_policy_switch_baseline_restore_env_and_gripper(model):
     scene=load_scene(ROOT/'config/scenes/idc_prototype_v0.yaml')
     baseline=load_policy(ROOT/'config/collision/baseline.yaml',model)
     assembly=load_policy(ROOT/'config/collision/assembly_policy_v0.yaml',model)
-    prefix=ROOT/'results/workspace_n100_seed42.npz'
+    prefix=ARTIFACTS / 'workspace_n100_seed42.npz'
     with np.load(prefix,allow_pickle=False) as f:q=f['q']
     with CollisionClient(binary) as client:
         client.initialize(model,scene)

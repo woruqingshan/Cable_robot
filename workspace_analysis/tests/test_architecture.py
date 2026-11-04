@@ -1,5 +1,7 @@
 """R1 import boundaries, package DAG, and frozen pre-refactor numeric evidence."""
 
+from test_resources import ARTIFACTS
+
 import ast
 from hashlib import sha256
 import importlib.util
@@ -120,7 +122,7 @@ from workspace_analysis.scene.schema import load_scene
 from workspace_analysis.experiments.reporting import load_validation_bundle
 s = load_scene({str(ROOT / 'config/scenes/synthetic_dev.yaml')!r})
 assert s.canonical_scene_sha256 == {BASELINE['scene']['canonical']!r}
-r = load_validation_bundle({str(SOURCE / 'results/g4_run01')!r})
+r = load_validation_bundle({str(ARTIFACTS / 'g4_run01')!r})
 assert r['status'] == 'PASS' and len(r['experiments']) == 9
 '''
     result = subprocess.run([sys.executable, '-I', '-B', '-c', code], cwd=tmp_path,

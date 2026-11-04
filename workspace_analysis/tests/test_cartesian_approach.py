@@ -1,4 +1,6 @@
 """T4 derived targets, continuation, interior failures and real native replay."""
+
+from test_resources import ARTIFACTS
 from copy import deepcopy
 from dataclasses import replace
 import json
@@ -183,7 +185,7 @@ def test_real_both_branches_and_native_collision_failure_keep_complete_replay(tm
     from workspace_analysis.collision.assets import robot_surfaces
     from workspace_analysis.viz.approach import export_approach_viewer
     model,scene,targets=inputs();semantic=SemanticConfig.load(ROOT/'config/collision/semantic/standard_moveit_candidate_v0/standard_moveit_candidate_v0.srdf',model,allow_candidate=True)
-    goals=json.loads((ROOT/'results/task_reachability/p22_20261104_02/ik_results.json').read_text())['unique_task_solutions']
+    goals=json.loads((ARTIFACTS / 'task_reachability/p22_20261104_02/ik_results.json').read_text())['unique_task_solutions']
     with Evaluator(model,scene,None,os.environ['C1_BACKEND'],semantic=semantic) as e:
         checker=ConfigurationValidity(e)
         for goal in goals:
@@ -218,7 +220,7 @@ def test_real_both_branches_and_native_collision_failure_keep_complete_replay(tm
 def test_complete_continuity_failure_experiment_is_reproducible_and_verifiable(tmp_path):
     from workspace_analysis.experiments.p22_approach import run_p22_approach,verify_approach
     model,_,_=inputs();out=tmp_path/'failure_run'
-    args=(ROOT,os.environ['C1_BACKEND'],ROOT/'results/task_reachability/p22_20261104_02',ROOT/'results/task_planning/p22_20261104_02',out)
+    args=(ROOT,os.environ['C1_BACKEND'],ARTIFACTS / 'task_reachability/p22_20261104_02',ARTIFACTS / 'task_planning/p22_20261104_02',out)
     result=run_p22_approach(*args,allow_candidate=True,settings={'max_joint_delta_rad':1e-6,'backup_seeds':0})
     assert all(not r['success'] and r['first_failure']['kind']=='CONTINUITY' and r['viewer'] for r in result['comparison'])
     assert verify_approach(out,model)['branches']==2

@@ -1,4 +1,6 @@
 """Real native evaluator, identity, row preservation and statistical conservation."""
+
+from test_resources import ARTIFACTS
 import json
 import os
 from pathlib import Path
@@ -17,7 +19,7 @@ ROOT=Path(__file__).resolve().parents[1]
 
 @pytest.fixture(scope='module')
 def inputs():
-    m=load_model(ROOT/'config/workspace.yaml');s=load_scene(ROOT/'config/scenes/idc_prototype_v0.yaml');a,_=load_results(ROOT/'results/workspace_n100_seed42',model=m)
+    m=load_model(ROOT/'config/workspace.yaml');s=load_scene(ROOT/'config/scenes/idc_prototype_v0.yaml');a,_=load_results(ARTIFACTS / 'workspace_n100_seed42',model=m)
     return m,s,a
 
 
@@ -58,12 +60,12 @@ def test_invalid_threshold_rejected_before_backend(inputs,clearance):
 
 def test_pilot_no_overwrite_and_configuration_npz_roundtrip(inputs,tmp_path):
     m,_,a=inputs;out=tmp_path/'pilot'
-    summaries=run_pilot(ROOT,os.environ['C1_BACKEND'],ROOT/'results/workspace_n100_seed42',out,policies=['assembly_policy_v1'])
+    summaries=run_pilot(ROOT,os.environ['C1_BACKEND'],ARTIFACTS / 'workspace_n100_seed42',out,policies=['assembly_policy_v1'])
     assert summaries['assembly_policy_v1']['total']==100
     manifest=json.loads((out/'manifest.json').read_text());assert manifest['negative_z_retained']==14
     with np.load(out/'assembly_policy_v1_workspace_results.npz',allow_pickle=False) as f:
         np.testing.assert_array_equal(f['q'],a['q']);assert len(f['model_scope_free'])==100
-    with pytest.raises(ValueError,match='existing'):run_pilot(ROOT,os.environ['C1_BACKEND'],ROOT/'results/workspace_n100_seed42',out)
+    with pytest.raises(ValueError,match='existing'):run_pilot(ROOT,os.environ['C1_BACKEND'],ARTIFACTS / 'workspace_n100_seed42',out)
 
 
 def test_directed_native_motion_mimic_and_fixed_assembly(inputs):
@@ -88,7 +90,7 @@ def test_directed_native_motion_mimic_and_fixed_assembly(inputs):
 
 
 def test_thousand_source_rows_preserved(inputs):
-    m,s,_=inputs;a,_=load_results(ROOT/'results/g4_run01/experiments/workspace_n1000_seed42',model=m)
+    m,s,_=inputs;a,_=load_results(ARTIFACTS / 'g4_run01/experiments/workspace_n1000_seed42',model=m)
     with Evaluator(m,s,load_policy(ROOT/'config/collision/assembly_policy_v1.yaml',m),os.environ['C1_BACKEND']) as evaluator:
         rows=evaluator.evaluate(a['q'],batch_size=73)
     assert [r['sample_index'] for r in rows]==list(range(1000))
