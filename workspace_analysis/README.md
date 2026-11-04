@@ -1216,3 +1216,15 @@ Current model review is PARTIAL; normal-reference validation is PENDING. No10,00
 
 见 [100/1,000样本对照、装配审核及验收命令](docs/research_workspace_recovery.md)。
 使用 evaluate_research_workspace.py 显式选择候选基线；所有结果保持 RESEARCH_ONLY。
+
+## T1/T2 P22任务约束可达性
+
+见 [P22任务配置、IK结果与复现命令](docs/p22_task_reachability.md)。
+虚拟TCP、接近距离和容差独立配置；任务姿态满足与实验性碰撞通过分别记录，所有输出保持 RESEARCH_ONLY。
+
+## T3 — P22 discrete joint-space planning
+
+See [P22 path planning](docs/p22_path_planning.md) for the unchanged IK goals,
+deterministic G4 simulation start, semantic FCL linear/RRT-Connect comparison,
+full robot playback, result formats and reproducible commands. All results are
+`RESEARCH_ONLY`; discrete validation is not continuous collision or hardware safety.

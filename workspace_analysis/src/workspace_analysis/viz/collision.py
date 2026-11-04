@@ -100,7 +100,7 @@ def export_collision_viewer(figure,row,output):
             if p['kind']=='self' and key in internals:p['mode']='internal'
             elif p['kind']=='self' and key in blockers:p['mode']='blocking'
     payload=json.dumps({'pairs':pairs,'q':row['q'],'index':row['sample_index'],'decision':row['effective_decision'],
-                         'policy':row.get('applied_policy'),'identity':row['identity'],'task_scope':scoped,'semantic':{k:row[k] for k in ['raw_self_collision','semantic_self_collision','semantic_review_status','semantic_blocking_pairs','disabled_collision_pairs','semantic_clearance'] if k in row} if 'semantic_self_collision' in row else None},allow_nan=False).replace('<','\\u003c')
+                         'policy':row.get('applied_policy'),'identity':row['identity'],'task_scope':scoped,'task_check':row.get('task_check'),'semantic':{k:row[k] for k in ['raw_self_collision','semantic_self_collision','semantic_review_status','semantic_blocking_pairs','disabled_collision_pairs','semantic_clearance'] if k in row} if 'semantic_self_collision' in row else None},allow_nan=False).replace('<','\\u003c')
     script=r'''
 const root=document.getElementById('{plot_id}');
 const model=PAYLOAD;
@@ -115,6 +115,7 @@ const detail=document.createElement('pre');detail.style='white-space:pre-wrap';p
 const select=panel.querySelector('#pair-select'),filter=panel.querySelector('#pair-filter');
 if(model.task_scope){filter.add(new Option('Task Blocking Self','blocking'));filter.add(new Option('Internal Diagnostic (UNVERIFIED)','internal'));const note=document.createElement('b');note.textContent=' Task zero-clearance candidate: '+model.task_scope.zero_clearance_candidate+'; official full decision: '+model.decision+'; internal mechanics UNVERIFIED';panel.prepend(note);}
 if(model.semantic){filter.options[1].text='Semantic blocking';filter.options[2].text='SRDF disabled (contact not guaranteed)';const note=document.createElement('b');note.textContent=(model.semantic.semantic_review_status==='candidate_baseline_unverified'?' EXPERIMENTAL RESEARCH BASELINE; not approved assembly rules. ':'')+' Independent FCL semantic self: '+model.semantic.semantic_self_collision+'; hardware unvalidated. Legacy decision below is Raw.';panel.prepend(note);}
+if(model.task_check){const note=document.createElement('b');note.textContent=' P22 task: '+model.task_check.status+'; collision screening: '+model.task_check.collision_status+'; synthetic TCP, RESEARCH ONLY. ';panel.prepend(note);}
 function choices(){select.replaceChildren();let first=new Option('All objects; no pair selection','-1');select.add(first);
 model.pairs.forEach((p,i)=>{if(filter.value==='raw'||(filter.value==='effective'&&p.effective)||filter.value===p.mode)select.add(new Option(p.kind+' / '+p.mode+': '+p.first+' ↔ '+p.second,''+i));}); select.value=select.options.length>1?select.options[1].value:'-1';render();}
 const defaults=root.data.map(t=>({color:t.color,opacity:t.opacity,visible:t.visible!==false}));
@@ -139,7 +140,7 @@ function render(){const pair=model.pairs[+select.value];const selected=pair?[pai
  const meshes=root.data.map((t,i)=>t.type==='mesh3d'?i:-1).filter(i=>i>=0);
  Plotly.restyle(root,{visible:updates.visible});
  Plotly.restyle(root,{color:meshes.map(i=>updates.color[i]),opacity:meshes.map(i=>updates.opacity[i])},meshes);
- detail.textContent=JSON.stringify({sample_index:model.index,q:model.q,decision:model.decision,task_scope:model.task_scope,semantic:model.semantic,selected_pair:pair||null,policy:model.policy,identity:model.identity},null,2);
+ detail.textContent=JSON.stringify({sample_index:model.index,q:model.q,decision:model.decision,task_scope:model.task_scope,task_check:model.task_check,semantic:model.semantic,selected_pair:pair||null,policy:model.policy,identity:model.identity},null,2);
  root.dataset.selectedPair=pair?pair.first+'|'+pair.second:'none';
 }
 select.onchange=render;filter.onchange=choices;choices();

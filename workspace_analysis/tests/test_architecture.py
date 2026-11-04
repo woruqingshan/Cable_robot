@@ -17,9 +17,10 @@ PACKAGE = ROOT / 'src/workspace_analysis'
 SOURCE = Path(os.environ.get('G4_TEST_SOURCE_ROOT', ROOT))
 BASELINE = json.loads((ROOT / 'tests/fixtures/r1_numeric_baseline.json').read_text())
 PURE_MODULES = (
-    'geometry.se3', 'scene.frames', 'scene.model', 'scene.schema',
+    'geometry.se3', 'scene.frames', 'scene.model', 'scene.schema', 'task.spec', 'task.targets',
     'workspace.artifacts', 'workspace.sampling', 'workspace.results',
-    'viz.meshes', 'viz.scene', 'viz.workspace',
+    'viz.meshes', 'viz.scene', 'viz.workspace', 'viz.task', 'viz.joint_path',
+    'planning.joint_path', 'planning.rrt_connect',
     'experiments.statistics', 'experiments.reporting', 'experiments.tf_validation',
 )
 
@@ -38,8 +39,10 @@ def test_all_static_imports_including_lazy_imports_form_a_dag_and_obey_domain_bo
     allowed = {
         'geometry': {'geometry'}, 'robot': {'robot', 'geometry'},
         'scene': {'scene', 'geometry'}, 'workspace': {'workspace', 'robot', 'geometry'},
-        'viz': {'viz', 'workspace', 'scene', 'robot', 'geometry'},
-        'experiments': {'experiments', 'workspace', 'scene', 'robot', 'geometry', 'viz', 'collision'},
+        'task': {'task', 'scene', 'geometry'},
+        'planning': {'planning', 'task', 'robot', 'collision', 'geometry'},
+        'viz': {'viz', 'workspace', 'scene', 'robot', 'geometry', 'task'},
+        'experiments': {'experiments', 'workspace', 'scene', 'robot', 'geometry', 'viz', 'collision', 'task', 'planning'},
         'collision': {'collision', 'workspace', 'scene', 'robot', 'geometry'},
     }
     edges = {name: set() for name in paths}
