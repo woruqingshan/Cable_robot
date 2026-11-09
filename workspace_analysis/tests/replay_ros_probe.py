@@ -33,7 +33,7 @@ def run(mode, output):
     from replay_fixtures import catalog_fixture
     output=Path(output);output.mkdir(exist_ok=False)
     model=load_model(ROOT/'config/workspace.yaml') if mode!='panel' else None
-    artifact_mode=mode in ('artifact','world','restricted','multistart')
+    artifact_mode=mode in ('artifact','world','restricted','multistart','path_trial')
     fixture=None if artifact_mode else catalog_fixture(model)
     if mode=='panel':
         from dataclasses import replace
@@ -119,7 +119,7 @@ def run(mode, output):
             except Exception:pass
             return False
         wait(matches)
-        if mode in ('world','restricted','multistart'):
+        if mode in ('world','restricted','multistart','path_trial'):
             from workspace_analysis.scene.base_pose import BasePose,derive_scene
             from workspace_analysis.scene.schema import parse_scene
             from workspace_analysis.robot.root_frame import root_mount
@@ -146,7 +146,7 @@ def run(mode, output):
             root,_=root_mount(model)
             assert frames[root]['parent']=='world' and frames['base_link']['parent']==root
             from workspace_analysis.task.spec import parse_task
-            task_file=base/'task_spec.json' if mode in ('restricted','multistart') else base/'ports'/latest['status']['port_id']/'task_spec.json'
+            task_file=base/'task_spec.json' if mode in ('restricted','multistart','path_trial') else base/'ports'/latest['status']['port_id']/'task_spec.json'
             spec=parse_task(json.loads(task_file.read_text()))
             np.testing.assert_allclose(latest['status']['world_tcp'],w_b@ForwardKinematics(model)(latest['status']['q'])@spec.T_ee_tcp,atol=1e-9)
             report.update(world_base_tf_verified=True,world_fixed_scene_markers_checked=expected_objects,maximum_world_marker_error=max(errors),
@@ -158,7 +158,7 @@ def run(mode, output):
         wait(lambda:latest['scene'] is not None and latest['ports'] is not None and pub.get_subscription_count()>0)
         expected_objects=42 if mode=='restricted' else 38
         assert sum(m.action==m.ADD for m in latest['scene'].markers)==expected_objects
-        if mode in ('restricted','multistart'):
+        if mode in ('restricted','multistart','path_trial'):
             assert sum(m.type==m.TEXT_VIEW_FACING and m.ns=='idc_ports' for m in latest['ports'].markers)==9
             boundary=[m for m in latest['ports'].markers if m.ns=='workspace_boundary' and m.type==m.LINE_LIST]
             assert len(boundary)==1 and len(boundary[0].points)>0
@@ -205,8 +205,12 @@ def run(mode, output):
             if mode=='multistart':
                 record=json.loads((base/'result.json').read_text())
                 cases_to_run=[(record['target'],next(g['solution_id'] for g in record['goals'] if any(t['success'] and t['method']=='rrt_connect' for t in g['paths'])),'rrt_connect')]
+            if mode=='path_trial':
+                record=json.loads((base/'result.json').read_text())
+                inputs=json.loads((base/'inputs.json').read_text())
+                cases_to_run=[(inputs['target'],inputs['goal_id'],inputs['method'])]
             for port,goal,method in cases_to_run:
-                selected=send('select',port_id=port,goal_id=goal,planner=method,phase='Path' if mode in ('restricted','multistart') else 'Path + Approach')
+                selected=send('select',port_id=port,goal_id=goal,planner=method,phase='Path' if mode in ('restricted','multistart','path_trial') else 'Path + Approach')
                 assert selected['last_command_ok'];revision=selected['selection_revision'];total=selected['total_samples']
                 start_history=len(history);assert send('play')['last_command_ok']
                 wait(lambda:latest['status']['state']=='FINISHED',timeout=35)
@@ -218,10 +222,10 @@ def run(mode, output):
                         with np.load(base/source,allow_pickle=False) as arrays:
                             np.testing.assert_array_equal(state['q'],arrays['q'][index])
                     # Native saved gripper/mimic transforms must also match RSP TF.
-                    record_file=base/'result.json' if mode in ('restricted','multistart') else base/'ports'/port/'result.json'
+                    record_file=base/'result.json' if mode in ('restricted','multistart','path_trial') else base/'ports'/port/'result.json'
                     record=json.loads(record_file.read_text())
-                    g=next(g for g in record['goals'] if g['solution_id']==goal)
-                    if mode=='multistart':
+                    g={'q':inputs['goal_q']} if mode=='path_trial' else next(g for g in record['goals'] if g['solution_id']==goal)
+                    if mode in ('multistart','path_trial'):
                         from workspace_analysis.collision.evaluator import Evaluator
                         from workspace_analysis.collision.semantic import SemanticConfig
                         from workspace_analysis.scene.schema import load_scene
@@ -230,10 +234,11 @@ def run(mode, output):
                         with Evaluator(model,scene,None,Path(os.environ['C1_BACKEND']),semantic=semantic,gripper=.3,clearance={'self_m':0.,'environment_m':0.}) as evaluator:
                             evaluator.evaluate([g['q']]);saved=evaluator.last_native['link_transforms_base']
                         assert evaluator.client.cleanup['exit_normal']
-                        np.testing.assert_array_equal(played[0]['q'],record['start_q'])
+                        view=inputs if mode=='path_trial' else record
+                        np.testing.assert_array_equal(played[0]['q'],view['start_q'])
                         world_x=[s['world_tcp'][0][3] for s in played]
-                        if record['workspace_mode']=='local_only':assert min(world_x)>=.250
-                        report.update(start_id=record['start_id'],workspace_mode=record['workspace_mode'],minimum_world_tcp_x=min(world_x),actual_start_q_verified=True)
+                        if view['workspace_mode']=='local_only':assert min(world_x)>=.250
+                        report.update(start_id=view['start_id'],workspace_mode=view['workspace_mode'],minimum_world_tcp_x=min(world_x),actual_start_q_verified=True)
                     elif mode=='restricted':
                         trial=next(t for t in g['paths'] if t['method']==method)
                         saved=trial['validation']['states'][-1]['link_transforms_base']
@@ -251,8 +256,8 @@ def run(mode, output):
                         wait(mimic_matches)
                 check_tf();cases.append({'port':port,'goal':goal,'planner':method,'samples_observed':total,'all_original_indices_seen':True})
             failures=[p for p,v in latest['status']['catalog'].items() if not v['goals']]
-            if mode not in ('world','restricted','multistart') or failures:
-                failed=send('select',port_id=failures[0] if mode in ('world','restricted','multistart') else 'P11',goal_id=None,planner=None,phase='Path')
+            if mode not in ('world','restricted','multistart','path_trial') or failures:
+                failed=send('select',port_id=failures[0] if mode in ('world','restricted','multistart','path_trial') else 'P11',goal_id=None,planner=None,phase='Path')
                 assert not failed['playable'] and not send('play')['last_command_ok']
                 assert latest['status']['state']=='STOPPED'
         pubs=observer.get_topic_names_and_types()
@@ -287,7 +292,7 @@ def run(mode, output):
 
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('--mode',choices=['transport','panel','artifact','world','restricted','multistart'],required=True);p.add_argument('--output',required=True)
+    p=argparse.ArgumentParser();p.add_argument('--mode',choices=['transport','panel','artifact','world','restricted','multistart','path_trial'],required=True);p.add_argument('--output',required=True)
     args=p.parse_args()
     try:print(json.dumps(run(args.mode,args.output)))
     except Exception:

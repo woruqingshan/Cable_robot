@@ -1,3 +1,5 @@
+T5.3-C 多种子、标准 Shortcut 与准备动作复现见 [开发及验收说明](docs/t5_3_c_robustness_shortcut.md)。
+
 T5.3-B 多起点与 Local-only 复现实验见 [开发及验收说明](docs/t5_3_b_multistart_benchmark.md)。
 
 # JetRover Workspace Analysis — P2.2 / P2.3-R1

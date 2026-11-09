@@ -22,7 +22,8 @@ PURE_MODULES = (
     'geometry.se3', 'scene.frames', 'scene.model', 'scene.schema', 'task.spec', 'task.targets', 'task.template',
     'workspace.artifacts', 'workspace.sampling', 'workspace.results',
     'viz.meshes', 'viz.scene', 'viz.workspace', 'viz.task', 'viz.joint_path', 'viz.approach', 'viz.task_benchmark',
-    'planning.joint_path', 'planning.rrt_connect',
+    'planning.joint_path', 'planning.rrt_connect', 'planning.path_shortcut',
+    'experiments.robustness_reporting',
     'experiments.statistics', 'experiments.reporting', 'experiments.tf_validation',
 )
 

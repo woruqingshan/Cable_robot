@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "usage": "RESEARCH_ONLY",
+  "max_attempts": 20,
+  "random_seed": 20261114,
+  "reduction_epsilon_rad": 1e-12,
+  "resolution": "unchanged final verification resolution",
+  "selection_basis": "runtime-only audit of initial 100-attempt pilot; no outcome-based subset selection",
+  "pilot_trial": "/home/siyuen/Desktop/code/cable_robot/cable_vla_robot/workspace_analysis/results/robustness_benchmark/t53_c_shortcut_20261109_01/main_C1_S0_seed20261104",
+  "pilot_manifest_sha256": "f9443afc3f598283c3cf363f9109eadb82f19c2797235afcbdad42f64872ff87",
+  "pilot_postprocess_elapsed_s": 117.36465075800152,
+  "pilot_attempt_loop_s": 82.24424941399775,
+  "all_accepted_main_local_paths_included": true,
+  "candidate_and_final_precision_changed": false
+}

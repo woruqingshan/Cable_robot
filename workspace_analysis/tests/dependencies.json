@@ -2584,6 +2584,169 @@
       "level": "core",
       "requires": [],
       "artifacts": []
+    },
+    "test_path_shortcut.py::test_shortcut_preserves_input_endpoints_and_fresh_final_evidence": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_path_shortcut.py::test_blocked_direct_connection_is_not_accepted_and_no_improvement_keeps_raw": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_path_shortcut.py::test_fixed_seed_shortcut_decisions_are_reproducible": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_path_shortcut.py::test_shortcut_rejects_invalid_settings": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_path_shortcut.py::test_invalid_raw_input_or_backend_error_cannot_produce_playable_path": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_path_shortcut.py::test_zero_attempt_budget_and_direct_path_still_get_final_validation": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_path_shortcut.py::test_trial_termination_reasons_are_not_conflated": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_path_shortcut.py::test_distinct_rrt_seeds_are_forwarded_and_repeat_seed_preserves_path": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_path_shortcut.py::test_preregistered_matrix_has_ninety_main_trials_and_shared_ten_seed_list": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_path_shortcut.py::test_local_only_shortcut_uses_production_fk_and_unified_constraint": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_robustness_reporting.py::test_descriptive_distributions_reject_nonfinite_and_keep_missing_counts": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_robustness_reporting.py::test_failed_search_is_not_removed_from_seed_denominator": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_robustness_reporting.py::test_paired_comparison_preserves_failed_raw_and_reports_tcp_clearance_regression": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_robustness_artifacts.py::test_complete_ninety_main_and_ten_local_seeds_keep_inputs_and_failure_denominators": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "robustness_benchmark/t53_c_search_20261109_01",
+        "robustness_benchmark/t53_c_shortcut_20261109_03",
+        "robustness_benchmark/t53_c_preparation_20261109_01",
+        "multistart_benchmark/t53_b_20261109_01"
+      ]
+    },
+    "test_robustness_artifacts.py::test_all_eligible_raw_paths_have_uniform_reconstructible_shortcuts_and_preserve_raw_bytes": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "robustness_benchmark/t53_c_search_20261109_01",
+        "robustness_benchmark/t53_c_shortcut_20261109_03",
+        "robustness_benchmark/t53_c_preparation_20261109_01",
+        "multistart_benchmark/t53_b_20261109_01"
+      ]
+    },
+    "test_robustness_artifacts.py::test_preparation_is_reference_only_with_original_ready_q_and_conditional_mode": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "robustness_benchmark/t53_c_search_20261109_01",
+        "robustness_benchmark/t53_c_shortcut_20261109_03",
+        "robustness_benchmark/t53_c_preparation_20261109_01",
+        "multistart_benchmark/t53_b_20261109_01"
+      ]
+    },
+    "test_robustness_artifacts.py::test_c_raw_shortcut_and_preparation_replay_saved_npz_without_planning": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "robustness_benchmark/t53_c_search_20261109_01",
+        "robustness_benchmark/t53_c_shortcut_20261109_03",
+        "robustness_benchmark/t53_c_preparation_20261109_01",
+        "multistart_benchmark/t53_b_20261109_01"
+      ]
+    },
+    "test_robustness_artifacts.py::test_shortcut_tampering_cannot_pass_even_after_rehashing_changed_npz": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "robustness_benchmark/t53_c_search_20261109_01",
+        "robustness_benchmark/t53_c_shortcut_20261109_03",
+        "robustness_benchmark/t53_c_preparation_20261109_01",
+        "multistart_benchmark/t53_b_20261109_01"
+      ]
+    },
+    "test_robustness_artifacts.py::test_actual_ros_optimized_local_path_preserves_samples_and_world_tf": {
+      "level": "artifact",
+      "requires": [
+        "model",
+        "native",
+        "ros",
+        "qt",
+        "replay_install"
+      ],
+      "artifacts": [
+        "robustness_benchmark/t53_c_search_20261109_01",
+        "robustness_benchmark/t53_c_shortcut_20261109_03",
+        "robustness_benchmark/t53_c_preparation_20261109_01",
+        "multistart_benchmark/t53_b_20261109_01"
+      ]
+    },
+    "test_robustness_reporting.py::test_home_audit_does_not_execute_vendor_code_or_invent_joint_home": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_robustness_reporting.py::test_new_cli_help_and_existing_output_guards_do_not_start_native": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_path_shortcut.py::test_failed_fresh_candidate_can_only_fall_back_to_fresh_valid_raw": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_path_shortcut.py::test_failed_candidate_and_failed_fallback_never_return_a_path": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
     }
   }
 }

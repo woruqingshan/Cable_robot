@@ -61,6 +61,11 @@ def restriction_specs(info,goal_id=None):
         specs.append(MarkerSpec('ready_pose',0,'SPHERE',start,(0.,0.,0.,1.),(.012,)*3,(1.,.75,.1,1.)))
         specs.append(MarkerSpec('ready_pose',1,'TEXT_VIEW_FACING',tuple(np.asarray(start)+[0,0,.02]),
             (0.,0.,0.,1.),(0.,0.,.012),(1.,.85,.2,1.),text='Start '+info['start_id']+' / '+info['workspace_mode']))
+    if 'preparation_goal_world_tcp_xyz_m' in info:
+        goal=local(info['preparation_goal_world_tcp_xyz_m'])
+        specs.append(MarkerSpec('preparation_goal',0,'SPHERE',goal,(0.,0.,0.,1.),(.012,)*3,(.1,1.,1.,1.)))
+        specs.append(MarkerSpec('preparation_goal',1,'TEXT_VIEW_FACING',tuple(np.asarray(goal)+[0,0,.02]),
+            (0.,0.,0.,1.),(0.,0.,.012),(.1,1.,1.,1.),text='Ready '+info['ready_goal_id']+' (reference motion)'))
     failures=info.get('failure_diagnostics',{}).get(str(goal_id),[])
     for i,failure in enumerate(failures):
         specs.append(MarkerSpec('restriction_failure',i,'SPHERE',local(failure['world_tcp_xyz_m']),
