@@ -2477,6 +2477,113 @@
         "qt"
       ],
       "artifacts": []
+    },
+    "test_multistart.py::test_local_only_boundaries_and_original_semantics": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_multistart.py::test_local_only_rejects_bad_points": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_multistart.py::test_local_off_and_unknown_mode": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_multistart.py::test_quality_separates_waypoints_samples_exit_and_undefined_ratio": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_multistart.py::test_ready_region_and_non_goal_rule": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_multistart.py::test_ready_selection_is_deterministic_before_planning_and_exhaustion_is_explicit": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_multistart.py::test_local_composition_uses_same_search_and_fresh_validation": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_multistart.py::test_ready_marker_identifies_actual_start_and_local_mode": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_multistart_artifacts.py::test_all_trials_preserve_starts_goals_scene_and_planner_identity": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "multistart_benchmark/t53_b_20261109_01",
+        "restricted_benchmark/t53_a_20261109_02",
+        "base_pose_benchmark/t52_r2_s1_20261104_01"
+      ]
+    },
+    "test_multistart_artifacts.py::test_ready_poses_are_real_g4_samples_not_goals_and_independently_native_valid": {
+      "level": "artifact",
+      "requires": [
+        "model",
+        "native"
+      ],
+      "artifacts": [
+        "multistart_benchmark/t53_b_20261109_01",
+        "restricted_benchmark/t53_a_20261109_02",
+        "base_pose_benchmark/t52_r2_s1_20261104_01"
+      ]
+    },
+    "test_multistart_artifacts.py::test_multistart_replay_never_plans_and_preserves_actual_start_and_npz": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "multistart_benchmark/t53_b_20261109_01",
+        "restricted_benchmark/t53_a_20261109_02",
+        "base_pose_benchmark/t52_r2_s1_20261104_01"
+      ]
+    },
+    "test_multistart_artifacts.py::test_validator_rejects_corrupt_npz_even_with_updated_file_hash": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "multistart_benchmark/t53_b_20261109_01",
+        "restricted_benchmark/t53_a_20261109_02",
+        "base_pose_benchmark/t52_r2_s1_20261104_01"
+      ]
+    },
+    "test_multistart_artifacts.py::test_real_ros_multistart_local_only_exact_samples_start_tf_and_scene": {
+      "level": "artifact",
+      "requires": [
+        "model",
+        "native",
+        "ros",
+        "qt",
+        "replay_install"
+      ],
+      "artifacts": [
+        "multistart_benchmark/t53_b_20261109_01",
+        "restricted_benchmark/t53_a_20261109_02",
+        "base_pose_benchmark/t52_r2_s1_20261104_01"
+      ]
+    },
+    "test_multistart.py::test_cli_help_from_other_directory_and_no_overwrite": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
     }
   }
 }

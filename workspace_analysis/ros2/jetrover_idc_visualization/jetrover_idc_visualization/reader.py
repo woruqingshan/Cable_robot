@@ -77,6 +77,9 @@ def read_catalog(workspace_root: str | Path, benchmark_dir: str | Path,
     root = use_workspace(workspace_root); store = ReadOnlyStore(benchmark_dir); workspace = ReadOnlyStore(root)
     original_manifest = store.read('manifest.json', digest=expected_manifest_sha256)
     manifest = json_object(original_manifest)
+    if manifest.get('stage')=='T5.3-B':
+        from .multistart_reader import multistart_catalog
+        return multistart_catalog(root,store,manifest,input_profile,sha(original_manifest))
     if manifest.get('stage')=='T5.3-A':
         from .restricted_reader import restricted_catalog
         return restricted_catalog(root,store,manifest,input_profile,sha(original_manifest))

@@ -52,8 +52,15 @@ def restriction_specs(info,goal_id=None):
             edges.extend([a,b,a,(far,a[1],a[2]),(far,a[1],a[2]),(far,b[1],b[2])])
         specs.append(MarkerSpec('workspace_boundary',0,'LINE_LIST',(0.,0.,0.),(0.,0.,0.,1.),(.0015,0.,0.),
             (.9,.25,.9,.8),tuple(local(p) for p in edges)))
+        label=('TCP LOCAL-ONLY; must stay x >= 250 mm' if config.get('mode')=='local_only'
+               else 'TCP boundary ON; x >= 250 mm (display ends at 360 mm)')
         specs.append(MarkerSpec('workspace_boundary',1,'TEXT_VIEW_FACING',local((x,0,z1+.025)),(0.,0.,0.,1.),(0.,0.,.011),
-            (1.,.5,1.,1.),text='TCP boundary ON; x >= 250 mm (display ends at 360 mm)'))
+            (1.,.5,1.,1.),text=label))
+    if 'start_world_tcp_xyz_m' in info:
+        start=local(info['start_world_tcp_xyz_m'])
+        specs.append(MarkerSpec('ready_pose',0,'SPHERE',start,(0.,0.,0.,1.),(.012,)*3,(1.,.75,.1,1.)))
+        specs.append(MarkerSpec('ready_pose',1,'TEXT_VIEW_FACING',tuple(np.asarray(start)+[0,0,.02]),
+            (0.,0.,0.,1.),(0.,0.,.012),(1.,.85,.2,1.),text='Start '+info['start_id']+' / '+info['workspace_mode']))
     failures=info.get('failure_diagnostics',{}).get(str(goal_id),[])
     for i,failure in enumerate(failures):
         specs.append(MarkerSpec('restriction_failure',i,'SPHERE',local(failure['world_tcp_xyz_m']),

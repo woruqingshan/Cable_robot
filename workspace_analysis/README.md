@@ -1,3 +1,5 @@
+T5.3-B 多起点与 Local-only 复现实验见 [开发及验收说明](docs/t5_3_b_multistart_benchmark.md)。
+
 # JetRover Workspace Analysis — P2.2 / P2.3-R1
 
 R2-A/B 复现入口见 [repro/README.md](repro/README.md)。**默认 pytest 现在只运行 Core**；
