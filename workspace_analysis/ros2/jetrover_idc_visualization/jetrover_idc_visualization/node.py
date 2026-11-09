@@ -17,7 +17,7 @@ from tf2_ros import StaticTransformBroadcaster
 from .controller import ReplayController
 from .data import Catalog, joint_values
 from .errors import ReplayBlocked, ReplayError
-from .markers import scene_specs, port_specs, marker_array
+from .markers import scene_specs, port_specs, marker_array, restriction_specs
 from .protocol import NAMESPACE, JOINT_TOPIC, SCENE_TOPIC, PORT_TOPIC, COMMAND_TOPIC, STATUS_TOPIC, command
 
 
@@ -105,7 +105,9 @@ class ReplayNode(Node):
             world.transform.translation.x,world.transform.translation.y,world.transform.translation.z=transform[:3,3].tolist()
             q=matrix_to_quaternion(transform[:3,:3]);world.transform.rotation.x,world.transform.rotation.y,world.transform.rotation.z,world.transform.rotation.w=q.tolist()
             self.world_tf.sendTransform(world)
-            self.get_logger().info('Verified replay catalog '+value.manifest_sha256+' ports='+str(list(value.ports)))
+            self.get_logger().info('Verified replay catalog '+value.manifest_sha256+' ports='+str(list(value.ports))
+                +' objects='+str(len(value.scene.collision_objects))
+                +' workspace='+str(value.base_pose_info.get('workspace_config',{}).get('enabled','legacy')))
             self.scene_pub.publish(marker_array(scene_specs(value.scene),value.model.base_frame,self.get_clock().now().to_msg(),clear=True))
         if self.controller is None: return
         frame = self.controller.tick(); stamp = self.get_clock().now().to_msg()
@@ -114,7 +116,8 @@ class ReplayNode(Node):
         self.joints.publish(state)
         if self._port_tick % 4 == 0:
             self.ports_pub.publish(marker_array(port_specs(self.catalog.scene,self.controller.port_id,
-                self.catalog.targets[self.controller.port_id],tcp=frame['tcp'],trajectory=self.controller.sequence),
+                self.catalog.targets[self.controller.port_id],tcp=frame['tcp'],trajectory=self.controller.sequence)
+                +restriction_specs(self.catalog.base_pose_info,self.controller.goal_id),
                 self.catalog.model.base_frame,stamp,clear=True))
         self._port_tick += 1
         self.publish_status()

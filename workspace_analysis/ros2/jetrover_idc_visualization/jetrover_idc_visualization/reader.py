@@ -77,6 +77,9 @@ def read_catalog(workspace_root: str | Path, benchmark_dir: str | Path,
     root = use_workspace(workspace_root); store = ReadOnlyStore(benchmark_dir); workspace = ReadOnlyStore(root)
     original_manifest = store.read('manifest.json', digest=expected_manifest_sha256)
     manifest = json_object(original_manifest)
+    if manifest.get('stage')=='T5.3-A':
+        from .restricted_reader import restricted_catalog
+        return restricted_catalog(root,store,manifest,input_profile,sha(original_manifest))
     if manifest.get('stage') != 'T5.1' or manifest.get('schema_version') != 1 or manifest.get('status') != 'COMPLETED':
         raise ReplayBlocked('INCOMPLETE_EXPERIMENT', 'completed T5.1 run required')
     files = manifest.get('files')

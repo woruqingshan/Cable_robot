@@ -2391,6 +2391,92 @@
       "level": "core",
       "requires": [],
       "artifacts": []
+    },
+    "test_restricted.py::test_conditional_inclusive_boundaries": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_restricted.py::test_workspace_bad_positions_rejected": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_restricted.py::test_invalid_workspace_config": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_restricted.py::test_world_tcp_in_each_station": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_restricted.py::test_scene_exact_objects_and_world_invariance": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_restricted.py::test_composed_rule_cache_fresh_and_switch_refinement": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_restricted.py::test_restriction_marker_world_geometry_and_disabled_boundary": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_restricted_native.py::test_added_box_is_loaded_and_has_real_fcl_collision": {
+      "level": "artifact",
+      "requires": [
+        "model",
+        "native"
+      ],
+      "artifacts": [
+        "base_pose_benchmark/t52_r2_s1_20261104_01/stations/b0/benchmark"
+      ]
+    },
+    "test_restricted_artifacts.py::test_all_eleven_conditions_keep_original_goals_and_complete_fresh_evidence": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "restricted_benchmark/t53_a_20261109_02"
+      ]
+    },
+    "test_restricted_artifacts.py::test_restricted_reader_never_searches_and_plays_exact_saved_npz": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "restricted_benchmark/t53_a_20261109_02"
+      ]
+    },
+    "test_restricted.py::test_workspace_invalid_goal_never_enters_rrt_and_approach_uses_same_rule": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_replay_ros.py::test_restricted_d4_real_markers_workspace_and_replanned_npz": {
+      "level": "artifact",
+      "requires": [
+        "model",
+        "ros",
+        "replay_install"
+      ],
+      "artifacts": [
+        "restricted_benchmark/t53_a_20261109_02/b0_D4_workspace_on"
+      ]
+    },
+    "test_capture_image.py::test_capture_pixel_content_guard": {
+      "level": "integration",
+      "requires": [
+        "qt"
+      ],
+      "artifacts": []
     }
   }
 }

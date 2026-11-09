@@ -33,7 +33,7 @@ def run(mode, output):
     from replay_fixtures import catalog_fixture
     output=Path(output);output.mkdir(exist_ok=False)
     model=load_model(ROOT/'config/workspace.yaml') if mode!='panel' else None
-    artifact_mode=mode in ('artifact','world')
+    artifact_mode=mode in ('artifact','world','restricted')
     fixture=None if artifact_mode else catalog_fixture(model)
     if mode=='panel':
         from dataclasses import replace
@@ -119,7 +119,7 @@ def run(mode, output):
             except Exception:pass
             return False
         wait(matches)
-        if mode=='world':
+        if mode in ('world','restricted'):
             from workspace_analysis.scene.base_pose import BasePose,derive_scene
             from workspace_analysis.scene.schema import parse_scene
             from workspace_analysis.robot.root_frame import root_mount
@@ -140,22 +140,32 @@ def run(mode, output):
             for marker,source in zip(markers,scene_specs(world)):
                 p=marker.pose.position;actual=w_b@np.array([p.x,p.y,p.z,1.])
                 errors.append(float(np.max(np.abs(actual[:3]-source.position))))
-            assert len(errors)==38 and max(errors)<1e-9
+            expected_objects=42 if mode=='restricted' else 38
+            assert len(errors)==expected_objects and max(errors)<1e-9
             frames=yaml.safe_load(buffer.all_frames_as_yaml())
             root,_=root_mount(model)
             assert frames[root]['parent']=='world' and frames['base_link']['parent']==root
             from workspace_analysis.task.spec import parse_task
-            spec=parse_task(json.loads((base/'ports'/latest['status']['port_id']/'task_spec.json').read_text()))
+            task_file=base/'task_spec.json' if mode=='restricted' else base/'ports'/latest['status']['port_id']/'task_spec.json'
+            spec=parse_task(json.loads(task_file.read_text()))
             np.testing.assert_allclose(latest['status']['world_tcp'],w_b@ForwardKinematics(model)(latest['status']['q'])@spec.T_ee_tcp,atol=1e-9)
-            report.update(world_base_tf_verified=True,world_fixed_scene_markers_checked=38,maximum_world_marker_error=max(errors),
+            report.update(world_base_tf_verified=True,world_fixed_scene_markers_checked=expected_objects,maximum_world_marker_error=max(errors),
                 urdf_root=root,base_link_single_parent=True,base_pose=provenance['base_pose'])
         names,values=joint_values(model,q,.3)
         wait(lambda:latest['joint'] is not None and latest['joint'].name==list(names) and list(latest['joint'].position)==list(values))
     try:
         wait(lambda:latest['status'] is not None and latest['status']['stage']=='READY',timeout=65)
         wait(lambda:latest['scene'] is not None and latest['ports'] is not None and pub.get_subscription_count()>0)
-        assert sum(m.action==m.ADD for m in latest['scene'].markers)==38
-        assert sum(m.type==m.TEXT_VIEW_FACING for m in latest['ports'].markers)==9
+        expected_objects=42 if mode=='restricted' else 38
+        assert sum(m.action==m.ADD for m in latest['scene'].markers)==expected_objects
+        if mode=='restricted':
+            assert sum(m.type==m.TEXT_VIEW_FACING and m.ns=='idc_ports' for m in latest['ports'].markers)==9
+            boundary=[m for m in latest['ports'].markers if m.ns=='workspace_boundary' and m.type==m.LINE_LIST]
+            assert len(boundary)==1 and len(boundary[0].points)>0
+            assert min(p.x for p in boundary[0].points)==.25
+            report['workspace_boundary_marker_verified']=True
+        else:
+            assert sum(m.type==m.TEXT_VIEW_FACING for m in latest['ports'].markers)==9
         if mode=='panel':
             def select_widget(widget,value):
                 widget.setCurrentIndex(widget.findData(value));wait(lambda:panel.pending is None)
@@ -190,8 +200,10 @@ def run(mode, output):
                             cases_to_run.append((port,goal['solution_id'],goal['playable_planners'][0]));break
                     if cases_to_run:break
                 assert cases_to_run,'new station must have a real playable goal for this probe'
+            if mode=='restricted':
+                cases_to_run=[('P22',1,'rrt_connect')]
             for port,goal,method in cases_to_run:
-                selected=send('select',port_id=port,goal_id=goal,planner=method,phase='Path + Approach')
+                selected=send('select',port_id=port,goal_id=goal,planner=method,phase='Path' if mode=='restricted' else 'Path + Approach')
                 assert selected['last_command_ok'];revision=selected['selection_revision'];total=selected['total_samples']
                 start_history=len(history);assert send('play')['last_command_ok']
                 wait(lambda:latest['status']['state']=='FINISHED',timeout=35)
@@ -203,9 +215,14 @@ def run(mode, output):
                         with np.load(base/source,allow_pickle=False) as arrays:
                             np.testing.assert_array_equal(state['q'],arrays['q'][index])
                     # Native saved gripper/mimic transforms must also match RSP TF.
-                    record=json.loads((base/'ports'/port/'result.json').read_text())
+                    record_file=base/'result.json' if mode=='restricted' else base/'ports'/port/'result.json'
+                    record=json.loads(record_file.read_text())
                     g=next(g for g in record['goals'] if g['solution_id']==goal)
-                    saved=g['approach']['samples'][-1]['link_transforms_base']
+                    if mode=='restricted':
+                        trial=next(t for t in g['paths'] if t['method']==method)
+                        saved=trial['validation']['states'][-1]['link_transforms_base']
+                    else:
+                        saved=g['approach']['samples'][-1]['link_transforms_base']
                     for link in ('l_link','r_link','l_in_link','r_out_link'):
                         expected=np.array(saved[link])
                         def mimic_matches(link=link,expected=expected):
@@ -218,14 +235,14 @@ def run(mode, output):
                         wait(mimic_matches)
                 check_tf();cases.append({'port':port,'goal':goal,'planner':method,'samples_observed':total,'all_original_indices_seen':True})
             failures=[p for p,v in latest['status']['catalog'].items() if not v['goals']]
-            if mode!='world' or failures:
-                failed=send('select',port_id=failures[0] if mode=='world' else 'P11',goal_id=None,planner=None,phase='Path')
+            if mode not in ('world','restricted') or failures:
+                failed=send('select',port_id=failures[0] if mode in ('world','restricted') else 'P11',goal_id=None,planner=None,phase='Path')
                 assert not failed['playable'] and not send('play')['last_command_ok']
                 assert latest['status']['state']=='STOPPED'
         pubs=observer.get_topic_names_and_types()
         assert not any(name in ('/cmd_vel','/servo_controller','/ros_robot_controller/bus_servo/set_state') for name,_ in pubs)
         report.update(status='PASS',mode=mode,cases=cases,max_ee_tf_error= max(tf_errors,default=0.),
-            scene_object_markers=38,port_labels=9,private_domain=os.environ['ROS_DOMAIN_ID'],
+            scene_object_markers=expected_objects,port_labels=9,private_domain=os.environ['ROS_DOMAIN_ID'],
             hardware_control=False,usage='RESEARCH_ONLY')
     finally:
         if panel is not None:panel.timer.stop();panel.close();app.processEvents()
@@ -254,7 +271,7 @@ def run(mode, output):
 
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('--mode',choices=['transport','panel','artifact','world'],required=True);p.add_argument('--output',required=True)
+    p=argparse.ArgumentParser();p.add_argument('--mode',choices=['transport','panel','artifact','world','restricted'],required=True);p.add_argument('--output',required=True)
     args=p.parse_args()
     try:print(json.dumps(run(args.mode,args.output)))
     except Exception:

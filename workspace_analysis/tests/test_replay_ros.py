@@ -57,3 +57,13 @@ def test_new_station_world_tf_fixed_cabinet_and_original_saved_samples(tmp_path)
     assert report['world_base_tf_verified'] and report['base_link_single_parent']
     assert report['world_fixed_scene_markers_checked']==38 and report['maximum_world_marker_error']<1e-9
     assert report['base_pose']['x_m']==-.03 and all(c['all_original_indices_seen'] for c in report['cases'])
+
+
+def test_restricted_d4_real_markers_workspace_and_replanned_npz(tmp_path):
+    report=probe('restricted',tmp_path,95,
+        benchmark=ARTIFACTS/'restricted_benchmark/t53_a_20261109_02/b0_D4_workspace_on',
+        anchor='b0ee3d3c078f64852396187618f46c5f6151b9748249c3d9fb3c3a70e61ca423')
+    assert report['scene_object_markers']==42
+    assert report['workspace_boundary_marker_verified'] and report['base_link_single_parent']
+    assert report['maximum_world_marker_error']<=1e-9 and report['max_ee_tf_error']<=1e-9
+    assert report['cases'][0]['all_original_indices_seen'] and report['cases'][0]['samples_observed']==426

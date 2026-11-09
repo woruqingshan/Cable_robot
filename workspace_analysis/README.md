@@ -17,6 +17,11 @@ World RViz 回放见 [开发与验收说明](docs/t5_2_r2_base_pose.md)。本轮
 无路径 IK Goal 的查看、正式回放 Manifest SHA256 必填及 JSON 指数溢出。
 正式 Launch 必须传入已选定实验的可信 SHA256；RViz Fixed Frame 现在为 `world`。
 
+T5.3-A 的条件式 World TCP 边界、D0–D4 邻近网口 Box、固定历史 IK Goal
+重验证及 Linear/RRT 对照入口见
+[受限实验说明](docs/t5_3_a_restricted_benchmark.md)。实验通过同一有效性接口
+检查工作空间和语义碰撞，历史路径、重新规划和 Approach 分阶段保存。
+
 G1-A 已由用户运行并验收：三组 PyKDL/独立参考一致，pytest 为
 `48 passed, 1 warning`；本机 `results/g1a_fk.json` 的最大位置误差约
 `1.22e-16 m`，最大姿态误差约 `1.50e-16 rad`。

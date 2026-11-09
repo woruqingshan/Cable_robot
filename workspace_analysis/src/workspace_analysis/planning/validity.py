@@ -79,11 +79,13 @@ class ConfigurationValidity:
     the cache. Every real query retains the native RobotState transforms for replay.
     This object does not own/close the caller's evaluator and is not thread-safe.
     """
-    def __init__(self, evaluator):
+    def __init__(self, evaluator, *, workspace_check=None):
         if evaluator.semantic is None:
             raise PathError('path validity requires explicit semantic SRDF')
         self.evaluator = evaluator
         self.model = evaluator.model
+        self.workspace_check = workspace_check
+        self.workspace_fk = ForwardKinematics(self.model) if workspace_check is not None else None
         self.cache = {}
         self.queries = []
         self.requests = 0
@@ -140,6 +142,15 @@ class ConfigurationValidity:
         if native is not None:
             record.update(T_base_to_ee=native['T_base_to_ee'], link_transforms_base=native['link_transforms_base'],
                           contacts_base=native.get('contacts_base', []), joint_positions_used=native['joint_positions_used'])
+        if self.workspace_check is not None:
+            record['fcl_valid']=record['valid']
+            # Use the same authoritative FK for boundary decisions and readback.
+            # Native RobotState remains the independent collision pose evidence.
+            record['workspace']=self.workspace_check.assess(self.workspace_fk(q))
+            record['reasons'].extend(record['workspace']['reasons'])
+            record['valid']=record['fcl_valid'] and record['workspace']['valid']
+            if not record['valid'] and record['status']!='ERROR':
+                record['status']='REJECTED'
         self.queries.append(deepcopy(record))
         # Query failures are never cached, so a stale error cannot masquerade as a fresh check.
         if record['status'] != 'ERROR': self.cache[key] = deepcopy(record)
@@ -152,6 +163,8 @@ class ConfigurationValidity:
         """Check sampled states, including both endpoints; no continuous guarantee."""
         begin = perf_counter(); before = self.statistics()
         states, provenance = sample_path(waypoints, resolution_rad)
+        if self.workspace_check is not None:
+            states,provenance=self.workspace_check.refine(states,provenance,self.workspace_fk)
         records = []; first_failure = None
         for index, q in enumerate(states):
             record = self.check(q, fresh=fresh, deadline=deadline)

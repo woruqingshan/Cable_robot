@@ -24,9 +24,41 @@ def scene_specs(scene: Any) -> tuple[MarkerSpec, ...]:
         t = scene.object_transform(obj['id'], scene.reference_frame)
         scale = tuple(obj['size_m']) if obj['type'] == 'box' else (2*obj['radius_m'],2*obj['radius_m'],obj['length_m'])
         color = (.53,.60,.66,.32) if obj['id'].startswith('cab_') else (.22,.42,.57,.52)
+        if obj['id'].startswith('restricted_'):
+            color=(1.,.52,.05,.85)
         result.append(MarkerSpec('idc_geometry',i,'CUBE' if obj['type'] == 'box' else 'CYLINDER',
             tuple(t[:3,3]),tuple(matrix_to_quaternion(t[:3,:3])),scale,color))
     return tuple(result)
+
+
+def restriction_specs(info,goal_id=None):
+    """World boundary markers converted into base coordinates; finite display extent."""
+    config=info.get('workspace_config')
+    if config is None:
+        return ()
+    world_from_base=np.asarray(info['world_from_base'])
+    rotation=world_from_base[:3,:3]
+    translation=world_from_base[:3,3]
+    def local(point):
+        return tuple((np.asarray(point)-translation)@rotation)
+    specs=[]
+    if config['enabled']:
+        x=config['x_trigger_m'];far=x+.11
+        y0,y1=config['y_min_m'],config['y_max_m'];z0,z1=config['z_min_m'],config['z_max_m']
+        corners=[(x,y0,z0),(x,y1,z0),(x,y1,z1),(x,y0,z1)]
+        edges=[]
+        for i in range(4):
+            a,b=corners[i],corners[(i+1)%4]
+            edges.extend([a,b,a,(far,a[1],a[2]),(far,a[1],a[2]),(far,b[1],b[2])])
+        specs.append(MarkerSpec('workspace_boundary',0,'LINE_LIST',(0.,0.,0.),(0.,0.,0.,1.),(.0015,0.,0.),
+            (.9,.25,.9,.8),tuple(local(p) for p in edges)))
+        specs.append(MarkerSpec('workspace_boundary',1,'TEXT_VIEW_FACING',local((x,0,z1+.025)),(0.,0.,0.,1.),(0.,0.,.011),
+            (1.,.5,1.,1.),text='TCP boundary ON; x >= 250 mm (display ends at 360 mm)'))
+    failures=info.get('failure_diagnostics',{}).get(str(goal_id),[])
+    for i,failure in enumerate(failures):
+        specs.append(MarkerSpec('restriction_failure',i,'SPHERE',local(failure['world_tcp_xyz_m']),
+            (0.,0.,0.,1.),(.013,)*3,(1.,.1,.1,.95)))
+    return tuple(specs)
 
 
 def port_specs(scene: Any, selected_port: str, targets: Any, *, tcp: Any = None,
