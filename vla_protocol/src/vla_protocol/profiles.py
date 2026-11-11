@@ -9,6 +9,7 @@ MAX_IMAGE_BYTES = 1_048_576
 MAX_IMAGE_PIXELS = 1_048_576
 MAX_BODY_BYTES = 6_000_000
 MAX_HORIZON = 32
+MAX_NATIVE_HORIZON = 256
 MAX_DURATION_S = 10.0
 Identifier = Annotated[str, Field(min_length=1, max_length=128, pattern=r"^[A-Za-z0-9_./:-]+$")]
 Finite = Annotated[float, Field(allow_inf_nan=False)]
@@ -35,8 +36,9 @@ class StrictModel(BaseModel):
 class RuntimeLimits(StrictModel):
     max_body_bytes: int = Field(default=MAX_BODY_BYTES, ge=1024, le=MAX_BODY_BYTES)
     max_image_bytes: int = Field(default=MAX_IMAGE_BYTES, ge=64, le=MAX_IMAGE_BYTES)
-    max_horizon: int = Field(default=MAX_HORIZON, ge=1, le=MAX_HORIZON)
-    request_timeout_s: float = Field(default=2.0, gt=0, le=30)
+    max_horizon: int = Field(default=MAX_HORIZON, ge=1, le=MAX_NATIVE_HORIZON)
+    max_response_bytes: int = Field(default=MAX_BODY_BYTES, ge=1024, le=MAX_BODY_BYTES)
+    request_timeout_s: float = Field(default=2.0, gt=0, le=300)
     max_observation_age_s: float = Field(default=0.5, gt=0, le=10)
     max_sync_skew_s: float = Field(default=0.02, ge=0, le=0.5)
-    max_action_age_s: float = Field(default=5.0, gt=0, le=30)
+    max_action_age_s: float = Field(default=5.0, gt=0, le=300)

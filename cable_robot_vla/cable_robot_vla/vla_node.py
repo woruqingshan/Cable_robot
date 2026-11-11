@@ -17,6 +17,7 @@ from vla_protocol.png import encode_rgb
 from vla_protocol.profiles import RuntimeLimits
 from .adapters.p2 import P2Adapter, P2Config
 from .mock_executor import MockExecutor
+from .action_adapter import ExecutionSelection
 from .observation_node import ObservationAdapter, StateMetadata
 from .policy_client import PolicyClient
 from .recording import LoopRecorder
@@ -31,6 +32,7 @@ class VLANode(Node):
         default = RuntimeLimits()
         self.limits = RuntimeLimits(**{name: parameter(self, name, value) for name, value in default.model_dump().items()})
         self.collector = ObservationAdapter(self.limits)
+        self.native_extensions = parameter(self, "enable_native_protocol", False)
         p2_file = parameter(self, "p2_config_path", "")
         mode = parameter(self, "validation_mode", "disabled")
         p2 = {}
@@ -42,7 +44,9 @@ class VLANode(Node):
         p2["mode"] = mode
         self.mock_executor = MockExecutor(P2Adapter(P2Config.model_validate(p2)),
             advance_simulation=parameter(self, "advance_simulation", False),
-            allow_unvalidated=parameter(self, "allow_unvalidated_simulation", False))
+            allow_unvalidated=parameter(self, "allow_unvalidated_simulation", False),
+            selection=ExecutionSelection(mode=parameter(self, "execution_selection", "full"),
+                steps=(parameter(self, "execution_steps", 0) or None)))
         self.client = PolicyClient(parameter(self, "server_url", "http://127.0.0.1:8000"), limits=self.limits)
         self.interval = parameter(self, "inference_interval_s", 0.25)
         if not 0.05 <= self.interval <= 60:
@@ -175,6 +179,8 @@ class VLANode(Node):
             if self.client.busy or self.validation_future is not None or monotonic() < self.next_inference:
                 return
             observation = self.collector.snapshot(self.sequence, self.get_clock().now().nanoseconds)
+            if self.native_extensions:
+                observation = observation.model_copy(update={"capabilities": ["native_actions_v1", "session_state_v1"]})
             self.client.submit(observation)
             self.recorder.observation(observation)
             self.sequence += 1

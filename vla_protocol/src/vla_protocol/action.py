@@ -2,7 +2,7 @@
 from typing import Literal, Any
 from pydantic import Field, model_validator
 from .observation import Identity, JointPositions, GripperState
-from .profiles import StrictModel, Identifier, Finite, MAX_HORIZON, MAX_DURATION_S, JOINT_NAMES, ROBOT_PROFILE
+from .profiles import StrictModel, Identifier, Finite, MAX_HORIZON, MAX_NATIVE_HORIZON, MAX_DURATION_S, JOINT_NAMES, ROBOT_PROFILE
 from .errors import VLAError
 
 
@@ -15,6 +15,34 @@ class PolicyIdentity(StrictModel):
     normalization_id: Identifier
 
 
+class NativeHorizon(StrictModel):
+    """No server truncation/resampling is implemented in Stage 1.5."""
+    generated: int = Field(ge=1, le=MAX_NATIVE_HORIZON)
+    transmitted: int = Field(ge=1, le=MAX_NATIVE_HORIZON)
+    transmission: Literal["full"] = "full"
+
+    @model_validator(mode="after")
+    def complete(self):
+        if self.generated != self.transmitted:
+            raise VLAError("IMPLICIT_HORIZON_CHANGE", "full transmission requires generated == transmitted")
+        return self
+
+
+class ExecutionHorizon(StrictModel):
+    generated: int = Field(ge=1, le=MAX_NATIVE_HORIZON)
+    transmitted: int = Field(ge=1, le=MAX_NATIVE_HORIZON)
+    selected: int = Field(ge=1, le=MAX_HORIZON)
+    selection: Literal["full", "prefix"]
+
+    @model_validator(mode="after")
+    def explicit_selection(self):
+        if self.generated != self.transmitted or self.selected > self.transmitted:
+            raise VLAError("IMPLICIT_HORIZON_CHANGE", "invalid horizon provenance")
+        if self.selection == "full" and self.selected != self.transmitted:
+            raise VLAError("IMPLICIT_HORIZON_CHANGE", "full execution cannot truncate")
+        return self
+
+
 class PolicyActionChunk(Identity):
     action_id: Identifier
     policy: PolicyIdentity
@@ -23,15 +51,21 @@ class PolicyActionChunk(Identity):
     units: list[Identifier] = Field(min_length=1, max_length=256)
     semantics: Literal["absolute", "delta"]
     shape: list[int] = Field(min_length=2, max_length=2)
-    values: list[list[Finite]] = Field(min_length=1, max_length=MAX_HORIZON)
-    time_offsets_s: list[Finite] = Field(min_length=1, max_length=MAX_HORIZON)
+    values: list[list[Finite]] = Field(min_length=1, max_length=MAX_NATIVE_HORIZON)
+    time_offsets_s: list[Finite] = Field(min_length=1, max_length=MAX_NATIVE_HORIZON)
     inference_duration_s: float = Field(ge=0, le=3600)
     synthetic: bool
+    horizon: NativeHorizon | None = None
+    session_generation: int | None = Field(default=None, ge=0)
 
     @model_validator(mode="after")
     def dimensions_and_timing(self):
         h, d = self.shape
-        if not 1 <= h <= MAX_HORIZON or not 1 <= d <= 256 or len(self.values) != h:
+        if self.horizon is None and h > MAX_HORIZON:
+            raise VLAError("INVALID_SCHEMA", "legacy profile permits at most 32 steps; explicit native horizon metadata required")
+        if self.horizon is not None and self.horizon.transmitted != h:
+            raise VLAError("ACTION_SHAPE_MISMATCH", "horizon metadata differs from tensor")
+        if not 1 <= h <= MAX_NATIVE_HORIZON or not 1 <= d <= 256 or len(self.values) != h:
             raise VLAError("ACTION_SHAPE_MISMATCH", "invalid action horizon/dimension")
         if any(len(row) != d for row in self.values) or len(self.channel_names) != d or len(self.units) != d:
             raise VLAError("ACTION_SHAPE_MISMATCH", "tensor/channels/units differ")
@@ -55,9 +89,12 @@ class RobotActionChunk(Identity):
     time_offsets_s: list[Finite] = Field(min_length=1, max_length=MAX_HORIZON)
     mapping_id: Literal["synthetic_identity_v1"]
     calibration_status: Literal["synthetic_uncalibrated"]
+    horizon: ExecutionHorizon | None = None
 
     @model_validator(mode="after")
     def robot_profile(self):
+        if self.horizon is not None and self.horizon.selected != len(self.values):
+            raise VLAError("ACTION_SHAPE_MISMATCH", "selected execution horizon differs from tensor")
         if self.channel_names != JOINT_NAMES or self.units != ["rad"] * 5 or self.shape != [len(self.values), 5]:
             raise VLAError("UNSUPPORTED_ACTION_PROFILE", "robot profile requires exact five-joint absolute radians")
         if any(len(row) != 5 for row in self.values):
@@ -91,6 +128,8 @@ class ValidatedTrajectory(StrictModel):
         if rejected != (self.trajectory is None) or rejected != bool(self.failure_reasons):
             raise VLAError("INVALID_VALIDATION_RESULT", "verdict/trajectory/reasons inconsistent")
         if self.trajectory is not None:
+            if not self.starting_gripper.simulated or self.starting_gripper.calibrated:
+                raise VLAError("CALIBRATION_PROFILE_MISMATCH", "current robot mapping only permits synthetic uncalibrated execution")
             a = self.trajectory
             if (a.action_id, a.scene_id, a.scene_sha256, a.model_id) != (self.source_action_id, self.scene_id, self.scene_sha256, self.model_id):
                 raise VLAError("IDENTITY_MISMATCH", "validation source/context differs from trajectory")

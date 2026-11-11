@@ -16,14 +16,17 @@ def assert_current(action, source, current):
 
 
 class MockExecutor:
-    def __init__(self, validator, *, advance_simulation=False, allow_unvalidated=False):
+    def __init__(self, validator, *, advance_simulation=False, allow_unvalidated=False, selection=None):
         self.validator = validator
         self.advance_simulation = advance_simulation
         self.allow_unvalidated = allow_unvalidated
+        self.selection = selection
         self.consumed = deque(maxlen=1024)
 
     def prepare(self, inference):
-        action = adapt_action(inference.candidate)
+        action = adapt_action(inference.candidate, selection=self.selection)
+        if not inference.observation.simulated:
+            raise VLAError("REAL_OBSERVATION_EXECUTION_DISABLED", "this executor accepts only synthetic observations")
         assert_current(action, inference.observation, inference.observation)
         result = self.validator.validate(action, inference.observation)
         result = codec.validate(result.model_dump(), ValidatedTrajectory)
@@ -32,7 +35,8 @@ class MockExecutor:
         data = result.model_dump()
         data["provenance"]["adaptation"] = {"mapping_id": action.mapping_id,
             "source_policy_action_id": action.source_policy_action_id, "robot_action_id": action.action_id,
-            "action_profile": action.action_profile}
+            "action_profile": action.action_profile,
+            "horizon": action.horizon.model_dump() if action.horizon is not None else None}
         return codec.validate(data, ValidatedTrajectory)
 
     def consume(self, validated, inference, current, now, max_age_s):

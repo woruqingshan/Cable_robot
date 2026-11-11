@@ -68,8 +68,29 @@ def validate(value, model, limits: RuntimeLimits | None = None):
     return result
 
 
+def wire_value(value):
+    """Keep default v1 messages readable by strict Stage 1 peers.
+
+    Required nullable identity fields remain present. Only newly optional
+    extension fields are omitted when inactive; opt-in extensions are explicit.
+    """
+    from .observation import Observation
+    from .action import PolicyActionChunk, RobotActionChunk, ValidatedTrajectory
+    data = value.model_dump(mode="json")
+    if isinstance(value, Observation):
+        if value.source_profile is None: data.pop("source_profile", None)
+        if not value.capabilities: data.pop("capabilities", None)
+    if isinstance(value, (PolicyActionChunk, RobotActionChunk)) and value.horizon is None:
+        data.pop("horizon", None)
+    if isinstance(value, PolicyActionChunk) and value.session_generation is None:
+        data.pop("session_generation", None)
+    if isinstance(value, ValidatedTrajectory) and value.trajectory is not None:
+        data["trajectory"] = wire_value(value.trajectory)
+    return data
+
+
 def dumps(value, limits: RuntimeLimits | None = None) -> bytes:
-    result = json.dumps(value.model_dump(mode="json"), allow_nan=False, separators=(",", ":")).encode()
+    result = json.dumps(wire_value(value), allow_nan=False, separators=(",", ":")).encode()
     if len(result) > (limits or RuntimeLimits()).max_body_bytes:
         raise VLAError("PAYLOAD_TOO_LARGE", "encoded JSON exceeds body limit")
     return result

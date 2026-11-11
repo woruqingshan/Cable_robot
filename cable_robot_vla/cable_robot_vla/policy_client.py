@@ -64,7 +64,7 @@ class PolicyClient:
                 declared = response.headers.get("content-length")
                 if declared is not None:
                     try:
-                        if not 0 <= int(declared) <= self.limits.max_body_bytes:
+                        if not 0 <= int(declared) <= self.limits.max_response_bytes:
                             raise VLAError("PAYLOAD_TOO_LARGE", "declared response exceeds limit", request_id=request_id)
                     except ValueError as exc:
                         if isinstance(exc, VLAError):
@@ -73,7 +73,7 @@ class PolicyClient:
                 blocks, total = [], 0
                 for block in response.iter_bytes(chunk_size=65536):
                     total += len(block)
-                    if total > self.limits.max_body_bytes:
+                    if total > self.limits.max_response_bytes:
                         raise VLAError("PAYLOAD_TOO_LARGE", "response exceeds configured limit", request_id=request_id)
                     if self.clock() - submitted > self.limits.request_timeout_s:
                         raise VLAError("TIMEOUT", "total response deadline exceeded", request_id=request_id)
@@ -85,7 +85,8 @@ class PolicyClient:
                     raise VLAError("SERVER_ERROR", error.code + ": " + error.message, request_id=request_id)
                 if response.headers.get("content-type", "").split(";")[0] != "application/json":
                     raise VLAError("MALFORMED_RESPONSE", "server did not return JSON", request_id=request_id)
-                candidate = codec.loads(raw, PolicyActionChunk, self.limits)
+                response_limits = self.limits.model_copy(update={"max_body_bytes": self.limits.max_response_bytes})
+                candidate = codec.loads(raw, PolicyActionChunk, response_limits)
                 return InferenceResult(observation, candidate, submitted, encoding_s, perf_counter() - begin)
         except httpx.TimeoutException as exc:
             raise VLAError("TIMEOUT", "HTTP operation timed out", request_id=request_id) from exc

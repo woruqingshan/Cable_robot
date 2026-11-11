@@ -46,8 +46,24 @@ class GripperState(StrictModel):
     position: Finite
     unit: Literal["rad"]
     stamp: SourceStamp
-    simulated: Literal[True]
-    calibrated: Literal[False]
+    simulated: bool
+    calibrated: bool
+
+
+class ObservationSource(StrictModel):
+    profile_id: Literal["synthetic_uncalibrated_v1", "real_uncalibrated_v1", "real_calibrated_v1"]
+    calibration_id: Identifier | None = None
+    calibration_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+
+    @model_validator(mode="after")
+    def calibration_evidence(self):
+        supplied = self.calibration_id is not None and self.calibration_sha256 is not None
+        if self.profile_id == "real_calibrated_v1":
+            if not supplied:
+                raise VLAError("CALIBRATION_REQUIRED", "calibrated input needs an explicit calibration ID and content hash")
+        elif self.calibration_id is not None or self.calibration_sha256 is not None:
+            raise VLAError("CALIBRATION_PROFILE_MISMATCH", "uncalibrated profile cannot carry calibrated status")
+        return self
 
 
 class ImagePayload(StrictModel):
@@ -83,11 +99,30 @@ class Observation(Identity):
     joints: JointPositions
     gripper: GripperState
     images: list[ImagePayload] = Field(min_length=1, max_length=4)
-    simulated: Literal[True]
-    calibration_status: Literal["synthetic_uncalibrated"]
+    simulated: bool
+    calibration_status: Literal["synthetic_uncalibrated", "real_uncalibrated", "real_calibrated"]
+    source_profile: ObservationSource | None = None
+    capabilities: list[Literal["native_actions_v1", "source_profiles_v1", "session_state_v1"]] = Field(default_factory=list, max_length=3)
 
     @model_validator(mode="after")
     def camera_identity(self):
+        source = self.source_profile
+        if len(set(self.capabilities)) != len(self.capabilities):
+            raise VLAError("INVALID_PROTOCOL_CAPABILITIES", "duplicate protocol capability")
+        if source is not None and "source_profiles_v1" not in self.capabilities:
+            raise VLAError("PROTOCOL_EXTENSION_REQUIRED", "explicit source profile requires source_profiles_v1")
+        if source is None:
+            if not self.simulated or self.calibration_status != "synthetic_uncalibrated":
+                raise VLAError("SOURCE_PROFILE_REQUIRED", "non-synthetic observations require an explicit source profile")
+            expected_simulated, expected_calibrated = True, False
+        else:
+            expected_simulated = source.profile_id == "synthetic_uncalibrated_v1"
+            expected_calibrated = source.profile_id == "real_calibrated_v1"
+            expected_status = source.profile_id.removesuffix("_v1")
+            if self.simulated != expected_simulated or self.calibration_status != expected_status:
+                raise VLAError("CALIBRATION_PROFILE_MISMATCH", "source profile and legacy status fields disagree")
+        if self.gripper.simulated != expected_simulated or self.gripper.calibrated != expected_calibrated:
+            raise VLAError("CALIBRATION_PROFILE_MISMATCH", "gripper source/calibration disagrees with observation profile")
         if len({i.camera_id for i in self.images}) != len(self.images):
             raise VLAError("INVALID_IMAGE", "duplicate camera IDs")
         stamps = [self.joints.stamp, self.gripper.stamp, *(i.stamp for i in self.images)]
