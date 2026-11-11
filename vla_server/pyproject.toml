@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools==75.8.2", "wheel==0.45.1"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vla-server"
+version = "0.1.0"
+description = "IDC VLA model-independent HTTP service and deterministic mock policy"
+requires-python = ">=3.10"
+dependencies = ["vla-protocol==0.1.0", "fastapi==0.115.12", "starlette==0.46.2", "uvicorn==0.34.2"]
+
+[project.scripts]
+idc-vla-server = "vla_server.app:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
