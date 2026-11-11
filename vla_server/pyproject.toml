@@ -7,7 +7,7 @@ name = "vla-server"
 version = "0.1.0"
 description = "IDC VLA model-independent HTTP service and deterministic mock policy"
 requires-python = ">=3.10"
-dependencies = ["vla-protocol==0.1.0", "fastapi==0.115.12", "starlette==0.46.2", "uvicorn==0.34.2"]
+dependencies = ["vla-protocol==0.1.0", "fastapi==0.115.12", "starlette==0.46.2", "uvicorn==0.34.2", "PyYAML==6.0.2", "Pillow==11.2.1"]
 
 [project.scripts]
 idc-vla-server = "vla_server.app:main"

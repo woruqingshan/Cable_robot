@@ -7,11 +7,19 @@ from vla_protocol.observation import Observation
 class Policy(ABC):
     identity: PolicyIdentity
     native_action_spaces: list[str]
+    model_type = "mock"
+    model_loaded = False
+    gpu_loaded = False
+    genuine_inference_verified = False
 
     def start(self) -> None:
         pass
 
     def close(self) -> None:
+        pass
+
+    def reset(self, context=None, reason="session_change") -> None:
+        """Clear model temporal state/action queues; server calls this serially."""
         pass
 
     @abstractmethod
