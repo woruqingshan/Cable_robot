@@ -1,0 +1,4 @@
+# Public path-only template; actual environment/secrets stay ignored.
+.env
+.env.*
+!.env.example

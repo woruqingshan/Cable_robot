@@ -1,0 +1,17 @@
+schema_version: 1
+host: 127.0.0.1
+port: 8000
+source_revision: null
+policy:
+  type: fake
+  fake_horizon: 50
+  fake_dimension: 7
+  fake_delay_s: 0.0
+  fake_normalization_id: fake_native_stats_v1
+limits:
+  max_horizon: 64
+  request_timeout_s: 2.0
+  max_action_age_s: 5.0
+timing:
+  inference_timeout_s: 2.0
+  startup_timeout_s: 10.0

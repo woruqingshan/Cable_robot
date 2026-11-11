@@ -1,0 +1,20 @@
+# UNRESOLVED TEMPLATE — GPU deployment intentionally fails until pins are verified.
+schema_version: 1
+cable_robot_revision: null
+lerobot:
+  repository: https://github.com/huggingface/lerobot
+  revision: null
+  checkout: /workspace/third_party/lerobot
+checkpoint:
+  repository: lerobot/smolvla_base
+  revision: null
+  directory: /data/models/smolvla_base
+  inventory_sha256: null
+environment:
+  python_version: null
+  torch_version: null
+  cuda_runtime: null
+  requirements_lock: null
+  requirements_sha256: null
+  base_image_digest: null
+server_config: config/smolvla.example.yaml
