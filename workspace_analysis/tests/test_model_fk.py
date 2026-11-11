@@ -6,8 +6,8 @@ import os
 import numpy as np
 import pytest
 
-from workspace_analysis.model import JOINT_ORDER, ModelError, load_model, model_from_xml
-from workspace_analysis.fk import ForwardKinematics
+from workspace_analysis.robot.model import JOINT_ORDER, ModelError, load_model, model_from_xml
+from workspace_analysis.robot.fk import ForwardKinematics
 from reference_fk import pose_errors, reference_fk
 
 

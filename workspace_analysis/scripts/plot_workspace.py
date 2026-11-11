@@ -17,7 +17,7 @@ def main():
     parser.add_argument("--max-points", type=int, help="Optional deterministic display limit; default shows every row")
     args = parser.parse_args()
     try:
-        from workspace_analysis.visualization import check_html_available, export_workspace, load_workspace
+        from workspace_analysis.viz.workspace import check_html_available, export_workspace, load_workspace
         output = args.output_prefix or args.input_prefix
         check_html_available(output)
         view = load_workspace(args.input_prefix, args.config, max_points=args.max_points)

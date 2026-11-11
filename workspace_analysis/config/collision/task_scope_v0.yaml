@@ -1,0 +1,108 @@
+version: 1
+id: task_scope_v0
+source_model_sha256: 5ff0007d08a798ebe31bc4e243d457e0f463aa7b896c088a889c919571ccd72d
+existing_acm_policy_sha256: 6ab2ee4349389d711c633b567abebc6355b7499c7866286fc8c74a64ac3310b7
+assembly_root: gripper_link
+assembly_members:
+- gripper_link
+- l_in_link
+- l_link
+- l_out_link
+- r_in_link
+- r_link
+- r_out_link
+internal_diagnostic_pairs:
+- links:
+  - gripper_link
+  - r_in_link
+  mechanism: unresolved_internal_contact
+  urdf_joint_path:
+  - r_in_joint
+  evidence: Official gripper.urdf.xacro tree + C2.7 source mesh/axis audit; docs/c28_gripper_assembly_modeling.md
+  unverified_factors:
+  - Physical assembly and closure not calibrated
+  - Possible interference inside this pair remains a mechanical diagnostic, not safe/allowed
+    contact
+- links:
+  - gripper_link
+  - l_in_link
+  mechanism: joint_bearing_candidate
+  urdf_joint_path:
+  - l_in_joint
+  evidence: Official gripper.urdf.xacro tree + C2.7 source mesh/axis audit; docs/c28_gripper_assembly_modeling.md
+  unverified_factors:
+  - Physical assembly and closure not calibrated
+  - Possible interference inside this pair remains a mechanical diagnostic, not safe/allowed
+    contact
+- links:
+  - l_in_link
+  - l_out_link
+  mechanism: unresolved_internal_contact
+  urdf_joint_path:
+  - l_out_joint
+  evidence: Official gripper.urdf.xacro tree + C2.7 source mesh/axis audit; docs/c28_gripper_assembly_modeling.md
+  unverified_factors:
+  - Physical assembly and closure not calibrated
+  - Possible interference inside this pair remains a mechanical diagnostic, not safe/allowed
+    contact
+- links:
+  - l_link
+  - l_out_link
+  mechanism: linkage_assembly_candidate
+  urdf_joint_path:
+  - l_in_joint
+  - l_joint
+  - l_out_joint
+  evidence: Official gripper.urdf.xacro tree + C2.7 source mesh/axis audit; docs/c28_gripper_assembly_modeling.md
+  unverified_factors:
+  - Physical assembly and closure not calibrated
+  - Possible interference inside this pair remains a mechanical diagnostic, not safe/allowed
+    contact
+- links:
+  - l_link
+  - r_link
+  mechanism: gear_meshing_candidate
+  urdf_joint_path:
+  - l_joint
+  - r_joint
+  evidence: Official gripper.urdf.xacro tree + C2.7 source mesh/axis audit; docs/c28_gripper_assembly_modeling.md
+  unverified_factors:
+  - Physical assembly and closure not calibrated
+  - Possible interference inside this pair remains a mechanical diagnostic, not safe/allowed
+    contact
+- links:
+  - r_in_link
+  - r_out_link
+  mechanism: unresolved_internal_contact
+  urdf_joint_path:
+  - r_out_joint
+  evidence: Official gripper.urdf.xacro tree + C2.7 source mesh/axis audit; docs/c28_gripper_assembly_modeling.md
+  unverified_factors:
+  - Physical assembly and closure not calibrated
+  - Possible interference inside this pair remains a mechanical diagnostic, not safe/allowed
+    contact
+- links:
+  - r_link
+  - r_out_link
+  mechanism: linkage_assembly_candidate
+  urdf_joint_path:
+  - r_in_joint
+  - r_joint
+  - r_out_joint
+  evidence: Official gripper.urdf.xacro tree + C2.7 source mesh/axis audit; docs/c28_gripper_assembly_modeling.md
+  unverified_factors:
+  - Physical assembly and closure not calibrated
+  - Possible interference inside this pair remains a mechanical diagnostic, not safe/allowed
+    contact
+blocking_rule: all_other_self_pairs_with_existing_acm
+environment_rule: official_full_all_scene_objects
+geometry_rule: official_full_only
+missing_coverage:
+- LiDAR collision missing
+- RJ45/tool/TCP/cable missing
+- Internal gear/linkage interference and closure unvalidated
+- Hardware and gripper calibration missing
+verification_status: task_scoped_unverified
+evidence_references:
+- docs/c27_collision_geometry_refinement.md
+- docs/c28_gripper_assembly_modeling.md

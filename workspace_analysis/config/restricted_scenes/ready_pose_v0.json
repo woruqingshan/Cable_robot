@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "usage": "RESEARCH_ONLY",
+  "pools": ["results/g4_run01/experiments/workspace_n1000_seed42", "results/workspace_n10000_seed42"],
+  "selection_scene": {"b0": "b0_D0_workspace_on", "ym70": "ym70_D1_workspace_on"},
+  "minimum_joint_margin_rad": 0.15,
+  "maximum_abs_joint1_rad": 1.0,
+  "S1": {"x_m": [0.180, 0.240], "y_offset_m": 0.040, "z_offset_m": 0.070},
+  "S2": {"x_m": [0.255, 0.280], "y_offset_m": 0.040, "z_offset_m": 0.070, "pre_distance_m": [0.025, 0.070], "minimum_goal_joint_distance_rad": 0.15},
+  "ranking": ["joint_margin_desc", "environment_clearance_desc", "abs_joint1_asc", "original_sample_index_asc"],
+  "exhaustion": "NO_QUALIFIED_READY_POSE; no range relaxation or planner-informed selection"
+}

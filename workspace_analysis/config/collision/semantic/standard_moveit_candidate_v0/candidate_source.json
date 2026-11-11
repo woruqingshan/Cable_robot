@@ -1,0 +1,2811 @@
+{
+  "result": {
+    "always_fraction": 0.95,
+    "backend_status": "CANDIDATES",
+    "candidate_pairs": [
+      {
+        "applied": false,
+        "candidate_class": "Default",
+        "generator_disable_recommendation": true,
+        "links": [
+          "back_shell_black_link",
+          "back_shell_green_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Adjacent",
+        "generator_disable_recommendation": true,
+        "links": [
+          "back_shell_black_link",
+          "base_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "back_shell_black_link",
+          "camera_connect_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "back_shell_black_link",
+          "depth_cam_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "back_shell_black_link",
+          "gripper_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "back_shell_black_link",
+          "imu_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "back_shell_black_link",
+          "l_in_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "back_shell_black_link",
+          "l_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "back_shell_black_link",
+          "l_out_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "back_shell_black_link",
+          "link1"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "back_shell_black_link",
+          "link2"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "back_shell_black_link",
+          "link3"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "back_shell_black_link",
+          "link4"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "back_shell_black_link",
+          "link5"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "back_shell_black_link",
+          "r_in_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "back_shell_black_link",
+          "r_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "back_shell_black_link",
+          "r_out_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "back_shell_black_link",
+          "servo_link1"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "back_shell_black_link",
+          "servo_link2"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "back_shell_black_link",
+          "wheel_left_back_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "back_shell_black_link",
+          "wheel_left_front_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "back_shell_black_link",
+          "wheel_right_back_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "back_shell_black_link",
+          "wheel_right_front_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Adjacent",
+        "generator_disable_recommendation": true,
+        "links": [
+          "back_shell_green_link",
+          "base_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "back_shell_green_link",
+          "camera_connect_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "back_shell_green_link",
+          "depth_cam_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "back_shell_green_link",
+          "gripper_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "back_shell_green_link",
+          "imu_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "back_shell_green_link",
+          "l_in_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "back_shell_green_link",
+          "l_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "back_shell_green_link",
+          "l_out_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Default",
+        "generator_disable_recommendation": true,
+        "links": [
+          "back_shell_green_link",
+          "link1"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "back_shell_green_link",
+          "link2"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "back_shell_green_link",
+          "link3"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "back_shell_green_link",
+          "link4"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "back_shell_green_link",
+          "link5"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "back_shell_green_link",
+          "r_in_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "back_shell_green_link",
+          "r_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "back_shell_green_link",
+          "r_out_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "back_shell_green_link",
+          "servo_link1"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "back_shell_green_link",
+          "servo_link2"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "back_shell_green_link",
+          "wheel_left_back_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "back_shell_green_link",
+          "wheel_left_front_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "back_shell_green_link",
+          "wheel_right_back_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "back_shell_green_link",
+          "wheel_right_front_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "base_link",
+          "camera_connect_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "base_link",
+          "depth_cam_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "base_link",
+          "gripper_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Adjacent",
+        "generator_disable_recommendation": true,
+        "links": [
+          "base_link",
+          "imu_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "base_link",
+          "l_in_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "base_link",
+          "l_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "base_link",
+          "l_out_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Adjacent",
+        "generator_disable_recommendation": true,
+        "links": [
+          "base_link",
+          "link1"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "base_link",
+          "link2"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "base_link",
+          "link3"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "base_link",
+          "link4"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "base_link",
+          "link5"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "base_link",
+          "r_in_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "base_link",
+          "r_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "base_link",
+          "r_out_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "base_link",
+          "servo_link1"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "base_link",
+          "servo_link2"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Adjacent",
+        "generator_disable_recommendation": true,
+        "links": [
+          "base_link",
+          "wheel_left_back_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Adjacent",
+        "generator_disable_recommendation": true,
+        "links": [
+          "base_link",
+          "wheel_left_front_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Adjacent",
+        "generator_disable_recommendation": true,
+        "links": [
+          "base_link",
+          "wheel_right_back_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Adjacent",
+        "generator_disable_recommendation": true,
+        "links": [
+          "base_link",
+          "wheel_right_front_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Adjacent",
+        "generator_disable_recommendation": true,
+        "links": [
+          "camera_connect_link",
+          "depth_cam_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "camera_connect_link",
+          "gripper_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "camera_connect_link",
+          "imu_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "camera_connect_link",
+          "l_in_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "camera_connect_link",
+          "l_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "camera_connect_link",
+          "l_out_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "camera_connect_link",
+          "link1"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "camera_connect_link",
+          "link2"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "camera_connect_link",
+          "link3"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Adjacent",
+        "generator_disable_recommendation": true,
+        "links": [
+          "camera_connect_link",
+          "link4"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "camera_connect_link",
+          "link5"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "camera_connect_link",
+          "r_in_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "camera_connect_link",
+          "r_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "camera_connect_link",
+          "r_out_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "camera_connect_link",
+          "servo_link1"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "camera_connect_link",
+          "servo_link2"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "camera_connect_link",
+          "wheel_left_back_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "camera_connect_link",
+          "wheel_left_front_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "camera_connect_link",
+          "wheel_right_back_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "camera_connect_link",
+          "wheel_right_front_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "depth_cam_link",
+          "gripper_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "depth_cam_link",
+          "imu_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "depth_cam_link",
+          "l_in_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "depth_cam_link",
+          "l_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "depth_cam_link",
+          "l_out_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "depth_cam_link",
+          "link1"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "depth_cam_link",
+          "link2"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "depth_cam_link",
+          "link3"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "depth_cam_link",
+          "link4"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "depth_cam_link",
+          "link5"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "depth_cam_link",
+          "r_in_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "depth_cam_link",
+          "r_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "depth_cam_link",
+          "r_out_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "depth_cam_link",
+          "servo_link1"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "depth_cam_link",
+          "servo_link2"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "depth_cam_link",
+          "wheel_left_back_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "depth_cam_link",
+          "wheel_left_front_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "depth_cam_link",
+          "wheel_right_back_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "depth_cam_link",
+          "wheel_right_front_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "gripper_link",
+          "imu_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Adjacent",
+        "generator_disable_recommendation": true,
+        "links": [
+          "gripper_link",
+          "l_in_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Adjacent",
+        "generator_disable_recommendation": true,
+        "links": [
+          "gripper_link",
+          "l_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "gripper_link",
+          "l_out_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "gripper_link",
+          "link1"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "gripper_link",
+          "link2"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "gripper_link",
+          "link3"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "gripper_link",
+          "link4"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Adjacent",
+        "generator_disable_recommendation": true,
+        "links": [
+          "gripper_link",
+          "link5"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Adjacent",
+        "generator_disable_recommendation": true,
+        "links": [
+          "gripper_link",
+          "r_in_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Adjacent",
+        "generator_disable_recommendation": true,
+        "links": [
+          "gripper_link",
+          "r_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "gripper_link",
+          "r_out_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "gripper_link",
+          "servo_link1"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "gripper_link",
+          "servo_link2"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "gripper_link",
+          "wheel_left_back_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "gripper_link",
+          "wheel_left_front_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "gripper_link",
+          "wheel_right_back_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "gripper_link",
+          "wheel_right_front_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "imu_link",
+          "l_in_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "imu_link",
+          "l_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "imu_link",
+          "l_out_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "imu_link",
+          "link1"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "imu_link",
+          "link2"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "imu_link",
+          "link3"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "imu_link",
+          "link4"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "imu_link",
+          "link5"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "imu_link",
+          "r_in_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "imu_link",
+          "r_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "imu_link",
+          "r_out_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "imu_link",
+          "servo_link1"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "imu_link",
+          "servo_link2"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "imu_link",
+          "wheel_left_back_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "imu_link",
+          "wheel_left_front_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "imu_link",
+          "wheel_right_back_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "imu_link",
+          "wheel_right_front_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "l_in_link",
+          "l_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Adjacent",
+        "generator_disable_recommendation": true,
+        "links": [
+          "l_in_link",
+          "l_out_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "l_in_link",
+          "link1"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "l_in_link",
+          "link2"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "l_in_link",
+          "link3"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "l_in_link",
+          "link4"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "l_in_link",
+          "link5"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "l_in_link",
+          "r_in_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "l_in_link",
+          "r_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "l_in_link",
+          "r_out_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "l_in_link",
+          "servo_link1"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "l_in_link",
+          "servo_link2"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "l_in_link",
+          "wheel_left_back_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "l_in_link",
+          "wheel_left_front_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "l_in_link",
+          "wheel_right_back_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "l_in_link",
+          "wheel_right_front_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Default",
+        "generator_disable_recommendation": true,
+        "links": [
+          "l_link",
+          "l_out_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "l_link",
+          "link1"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "l_link",
+          "link2"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "l_link",
+          "link3"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "l_link",
+          "link4"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "l_link",
+          "link5"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "l_link",
+          "r_in_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Default",
+        "generator_disable_recommendation": true,
+        "links": [
+          "l_link",
+          "r_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "l_link",
+          "r_out_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "l_link",
+          "servo_link1"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "l_link",
+          "servo_link2"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "l_link",
+          "wheel_left_back_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "l_link",
+          "wheel_left_front_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "l_link",
+          "wheel_right_back_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "l_link",
+          "wheel_right_front_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "l_out_link",
+          "link1"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "l_out_link",
+          "link2"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "l_out_link",
+          "link3"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "l_out_link",
+          "link4"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "l_out_link",
+          "link5"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "l_out_link",
+          "r_in_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "l_out_link",
+          "r_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Default",
+        "generator_disable_recommendation": true,
+        "links": [
+          "l_out_link",
+          "r_out_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "l_out_link",
+          "servo_link1"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "l_out_link",
+          "servo_link2"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "l_out_link",
+          "wheel_left_back_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "l_out_link",
+          "wheel_left_front_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "l_out_link",
+          "wheel_right_back_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "l_out_link",
+          "wheel_right_front_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "link1",
+          "link2"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "link1",
+          "link3"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "link1",
+          "link4"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "link1",
+          "link5"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "link1",
+          "r_in_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "link1",
+          "r_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "link1",
+          "r_out_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Adjacent",
+        "generator_disable_recommendation": true,
+        "links": [
+          "link1",
+          "servo_link1"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "link1",
+          "servo_link2"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "link1",
+          "wheel_left_back_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "link1",
+          "wheel_left_front_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "link1",
+          "wheel_right_back_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "link1",
+          "wheel_right_front_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Adjacent",
+        "generator_disable_recommendation": true,
+        "links": [
+          "link2",
+          "link3"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "link2",
+          "link4"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "link2",
+          "link5"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "link2",
+          "r_in_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "link2",
+          "r_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "link2",
+          "r_out_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Adjacent",
+        "generator_disable_recommendation": true,
+        "links": [
+          "link2",
+          "servo_link1"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "link2",
+          "servo_link2"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "link2",
+          "wheel_left_back_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "link2",
+          "wheel_left_front_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "link2",
+          "wheel_right_back_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "link2",
+          "wheel_right_front_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Adjacent",
+        "generator_disable_recommendation": true,
+        "links": [
+          "link3",
+          "link4"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "link3",
+          "link5"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "link3",
+          "r_in_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "link3",
+          "r_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "link3",
+          "r_out_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "link3",
+          "servo_link1"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "link3",
+          "servo_link2"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "link3",
+          "wheel_left_back_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "link3",
+          "wheel_left_front_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "link3",
+          "wheel_right_back_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "link3",
+          "wheel_right_front_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "link4",
+          "link5"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "link4",
+          "r_in_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "link4",
+          "r_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "link4",
+          "r_out_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "link4",
+          "servo_link1"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Adjacent",
+        "generator_disable_recommendation": true,
+        "links": [
+          "link4",
+          "servo_link2"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "link4",
+          "wheel_left_back_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "link4",
+          "wheel_left_front_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "link4",
+          "wheel_right_back_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "link4",
+          "wheel_right_front_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "link5",
+          "r_in_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "link5",
+          "r_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "link5",
+          "r_out_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "link5",
+          "servo_link1"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Adjacent",
+        "generator_disable_recommendation": true,
+        "links": [
+          "link5",
+          "servo_link2"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "link5",
+          "wheel_left_back_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "link5",
+          "wheel_left_front_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "link5",
+          "wheel_right_back_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "link5",
+          "wheel_right_front_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "r_in_link",
+          "r_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Adjacent",
+        "generator_disable_recommendation": true,
+        "links": [
+          "r_in_link",
+          "r_out_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "r_in_link",
+          "servo_link1"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "r_in_link",
+          "servo_link2"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "r_in_link",
+          "wheel_left_back_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "r_in_link",
+          "wheel_left_front_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "r_in_link",
+          "wheel_right_back_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "r_in_link",
+          "wheel_right_front_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Default",
+        "generator_disable_recommendation": true,
+        "links": [
+          "r_link",
+          "r_out_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "r_link",
+          "servo_link1"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "r_link",
+          "servo_link2"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "r_link",
+          "wheel_left_back_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "r_link",
+          "wheel_left_front_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "r_link",
+          "wheel_right_back_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "r_link",
+          "wheel_right_front_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "r_out_link",
+          "servo_link1"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "r_out_link",
+          "servo_link2"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "r_out_link",
+          "wheel_left_back_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "r_out_link",
+          "wheel_left_front_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "r_out_link",
+          "wheel_right_back_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "r_out_link",
+          "wheel_right_front_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "servo_link1",
+          "servo_link2"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "servo_link1",
+          "wheel_left_back_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "servo_link1",
+          "wheel_left_front_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "servo_link1",
+          "wheel_right_back_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "servo_link1",
+          "wheel_right_front_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "servo_link2",
+          "wheel_left_back_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "servo_link2",
+          "wheel_left_front_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "servo_link2",
+          "wheel_right_back_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Not Disabled",
+        "generator_disable_recommendation": false,
+        "links": [
+          "servo_link2",
+          "wheel_right_front_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "wheel_left_back_link",
+          "wheel_left_front_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "wheel_left_back_link",
+          "wheel_right_back_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "wheel_left_back_link",
+          "wheel_right_front_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "wheel_left_front_link",
+          "wheel_right_back_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "wheel_left_front_link",
+          "wheel_right_front_link"
+        ],
+        "review_status": "UNREVIEWED"
+      },
+      {
+        "applied": false,
+        "candidate_class": "Never",
+        "generator_disable_recommendation": true,
+        "links": [
+          "wheel_right_back_link",
+          "wheel_right_front_link"
+        ],
+        "review_status": "UNREVIEWED"
+      }
+    ],
+    "finite_sampling_is_safety_proof": false,
+    "hardware_threads": 20,
+    "id": "591b9009e3824d758c0479e83d79bb1b",
+    "identity": {
+      "backend_sha256": "34cbcdedc89e60db72042651ebfc3c4c4e0ff45a189f7a0ec94d5add8b24ce9f",
+      "backend_version": "cable_collision_backend/0.1.0",
+      "base_frame": "base_link",
+      "ee_frame": "end_effector_link",
+      "joint_order": [
+        "joint1",
+        "joint2",
+        "joint3",
+        "joint4",
+        "joint5"
+      ],
+      "policy_sha256": "90680596ea90eba52b3c216a1a1cf9b4ab4ece9919037b9e623dfd10644ea841",
+      "robot_geometry_sha256": "4858b34b1ff62f8af791809701888028637650c2372dc5f3978a1d5e606b216d",
+      "scene_sha256": "d83e76d09f7e69fa0c01e753f0cefb3128dd520fb0292f1fd0b4838f66a5ab3b",
+      "semantic_acm_sha256": "58be16b9ec5dd4b5d46e39be64c362ba3b34bb5d7371017c79b1ade6c468fc11",
+      "semantic_review_sha256": "dee3126af7c0bedc108dabeb471a12a764f7704bf72cbc6941debb3c59f0a38f",
+      "srdf_sha256": "5bf9ddcf8167da5f5e448b9f8f84ca7cd1353b161a45d96eece87e014fac5df7",
+      "units": {
+        "angle": "rad",
+        "length": "m"
+      },
+      "urdf_sha256": "5ff0007d08a798ebe31bc4e243d457e0f463aa7b896c088a889c919571ccd72d"
+    },
+    "method": "MoveIt Setup Assistant computeDefaultCollisions",
+    "minimum_trials": 2000,
+    "protocol_version": 1,
+    "random_seed_controlled": false,
+    "requested_trials": 0,
+    "semantic_acm_modified": false,
+    "status": "OK",
+    "trials": 2000
+  },
+  "cleanup": {
+    "resources_released": true,
+    "exit_code": 0,
+    "exit_normal": true,
+    "graceful_shutdown": true,
+    "errors": [],
+    "stderr_tail": "[INFO] [1793721799.380866491] [moveit_robot_model.robot_model]: Loading robot model 'jetrover'...\n[INFO] [1793721799.380905856] [moveit_robot_model.robot_model]: No root/virtual joint specified in SRDF. Assuming fixed joint\n[WARN] [1793721799.397020182] [moveit_robot_model.robot_model]: Link lidar_link has visual geometry but no collision geometry. Collision geometry will be left empty. Fix your URDF file by explicitly specifying collision geometry.\n"
+  }
+}

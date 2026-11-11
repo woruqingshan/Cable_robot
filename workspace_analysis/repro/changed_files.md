@@ -1,0 +1,43 @@
+# R2-A/B changed-file inventory
+
+Production G1–T4 algorithms/config/outputs are unchanged.
+
+- `.gitignore`
+- `README.md`
+- `pytest.ini`
+- `tests/conftest.py`
+- `tests/test_architecture.py`
+- `tests/test_candidate_baseline.py`
+- `tests/test_cartesian_approach.py`
+- `tests/test_collision_policy.py`
+- `tests/test_collision_protocol.py`
+- `tests/test_collision_visualization.py`
+- `tests/test_constrained_evaluator.py`
+- `tests/test_geometry_profile.py`
+- `tests/test_idc_prototype.py`
+- `tests/test_path_planning.py`
+- `tests/test_research_workspace.py`
+- `tests/test_scene_visualization.py`
+- `tests/test_semantic.py`
+- `tests/test_task_ik.py`
+- `tests/test_task_scope.py`
+- `tests/test_viewer_replay.py`
+- `tests/test_visualization.py`
+- `tests/test_workspace_validation.py`
+- `repro/README.md`
+- `repro/__init__.py`
+- `repro/doctor.py`
+- `repro/environment/model_assets.json`
+- `repro/environment/native_backend.json`
+- `repro/environment/observed_environment.json`
+- `repro/environment/python_requirements.txt`
+- `repro/environment/ros_packages.txt`
+- `repro/scripts/check_clean_checkout.py`
+- `repro/scripts/doctor.py`
+- `repro/test_dependency_audit.md`
+- `tests/dependencies.json`
+- `tests/integration/test_saved_viewer_artifacts.py`
+- `tests/test_repro_doctor.py`
+- `tests/test_repro_groups.py`
+- `tests/test_resources.py`
+- `repro/changed_files.md` (this inventory)

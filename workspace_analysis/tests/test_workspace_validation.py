@@ -1,5 +1,7 @@
 """G4 small offline tests; never run the formal nine-experiment matrix."""
 
+from test_resources import ARTIFACTS
+
 from dataclasses import replace
 import json
 import os
@@ -11,11 +13,11 @@ import sys
 import numpy as np
 import pytest
 
-from workspace_analysis.model import load_model
-from workspace_analysis.results import file_sha256, save_results
-from workspace_analysis.sampling import sample_workspace
-from workspace_analysis import validation as validation
-from workspace_analysis import validation_report as reporting
+from workspace_analysis.robot.model import load_model
+from workspace_analysis.workspace.results import file_sha256, save_results
+from workspace_analysis.workspace.sampling import sample_workspace
+from workspace_analysis.experiments import workspace_validation as validation
+from workspace_analysis.experiments import reporting as reporting
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -315,7 +317,7 @@ def test_existing_markdown_template_is_never_overwritten(tmp_path):
 def test_prior_evidence_is_cited_without_tf_rerun(model):
     digest = model.metadata()['expanded_urdf_sha256']
     for name, stage in [('g1a_fk.json', 'G1-A'), ('g1b_tf_v3.json', 'G1-B')]:
-        result = validation.prior_evidence(SOURCE / 'results' / name, stage, digest)
+        result = validation.prior_evidence(ARTIFACTS / name, stage, digest)
         assert result['available'] and not result['rerun_in_g4'] and len(result['cases']) == 3
 
 
@@ -324,8 +326,8 @@ def test_cli_small_diagnostic_from_other_cwd_and_error_exit(tmp_path):
     output = tmp_path / 'cli_run'
     command = [sys.executable, str(script), '--config', str(CONFIG), '--output-dir', str(output),
                '--sample-counts', '3', '--seeds', '42', '43', '--repro-samples', '4',
-               '--g1a-report', str(SOURCE / 'results/g1a_fk.json'),
-               '--g1b-report', str(SOURCE / 'results/g1b_tf_v3.json')]
+               '--g1a-report', str(ARTIFACTS / 'g1a_fk.json'),
+               '--g1b-report', str(ARTIFACTS / 'g1b_tf_v3.json')]
     result = subprocess.run(command, cwd=tmp_path, text=True, capture_output=True, timeout=30)
     assert result.returncode == 0, result.stderr
     assert 'profile: diagnostic' in result.stdout and 'status: PASS' in result.stdout

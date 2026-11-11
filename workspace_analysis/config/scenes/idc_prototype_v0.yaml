@@ -1,0 +1,1026 @@
+# Synthetic Prototype Parameters only; not measured IDC/RJ45 geometry.
+# Base +X toward cabinet; observer-left = Base +Y. First target: P22.
+# Explicit Schema v1 expansion: dimensions and derivation documented in docs/s1_idc_prototype.md.
+schema_version: 1
+scene:
+  id: idc_prototype_v0
+  provenance:
+    kind: synthetic
+    hardware_verified: false
+  reference_frame: base_link
+  units:
+    length: m
+    angle: rad
+  coverage: partial_synthetic_front_facing_cabinet_three_hollow_devices_nine_openings
+  frames:
+  - id: idc_prototype_v0/cabinet
+    parent: base_link
+    pose:
+      position_m:
+      - 0.43
+      - 0
+      - 0.22
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+  - id: idc_prototype_v0/router_1
+    parent: idc_prototype_v0/cabinet
+    pose:
+      position_m:
+      - -0.1
+      - 0
+      - 0.1
+      quaternion_xyzw:
+      - 0
+      - -0.7071067811865476
+      - 0
+      - 0.7071067811865476
+  - id: idc_prototype_v0/P11
+    parent: idc_prototype_v0/router_1
+    pose:
+      position_m:
+      - 0
+      - 0.07
+      - 0
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+  - id: idc_prototype_v0/P12
+    parent: idc_prototype_v0/router_1
+    pose:
+      position_m:
+      - 0
+      - 0
+      - 0
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+  - id: idc_prototype_v0/P13
+    parent: idc_prototype_v0/router_1
+    pose:
+      position_m:
+      - 0
+      - -0.07
+      - 0
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+  - id: idc_prototype_v0/router_2
+    parent: idc_prototype_v0/cabinet
+    pose:
+      position_m:
+      - -0.1
+      - 0
+      - 0
+      quaternion_xyzw:
+      - 0
+      - -0.7071067811865476
+      - 0
+      - 0.7071067811865476
+  - id: idc_prototype_v0/P21
+    parent: idc_prototype_v0/router_2
+    pose:
+      position_m:
+      - 0
+      - 0.07
+      - 0
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+  - id: idc_prototype_v0/P22
+    parent: idc_prototype_v0/router_2
+    pose:
+      position_m:
+      - 0
+      - 0
+      - 0
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+  - id: idc_prototype_v0/P23
+    parent: idc_prototype_v0/router_2
+    pose:
+      position_m:
+      - 0
+      - -0.07
+      - 0
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+  - id: idc_prototype_v0/router_3
+    parent: idc_prototype_v0/cabinet
+    pose:
+      position_m:
+      - -0.1
+      - 0
+      - -0.1
+      quaternion_xyzw:
+      - 0
+      - -0.7071067811865476
+      - 0
+      - 0.7071067811865476
+  - id: idc_prototype_v0/P31
+    parent: idc_prototype_v0/router_3
+    pose:
+      position_m:
+      - 0
+      - 0.07
+      - 0
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+  - id: idc_prototype_v0/P32
+    parent: idc_prototype_v0/router_3
+    pose:
+      position_m:
+      - 0
+      - 0
+      - 0
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+  - id: idc_prototype_v0/P33
+    parent: idc_prototype_v0/router_3
+    pose:
+      position_m:
+      - 0
+      - -0.07
+      - 0
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+  entities:
+  - id: cabinet
+    kind: cabinet
+    frame: idc_prototype_v0/cabinet
+    components:
+    - cab_left
+    - cab_right
+    - cab_top
+    - cab_bottom
+    - cab_back
+  - id: router_1
+    kind: patch_panel
+    frame: idc_prototype_v0/router_1
+    components:
+    - router_1_front_top
+    - router_1_front_bottom
+    - router_1_front_bar_1
+    - router_1_front_bar_2
+    - router_1_front_bar_3
+    - router_1_front_bar_4
+    - router_1_shell_top
+    - router_1_shell_bottom
+    - router_1_shell_left
+    - router_1_shell_right
+    - router_1_back
+  - id: router_2
+    kind: patch_panel
+    frame: idc_prototype_v0/router_2
+    components:
+    - router_2_front_top
+    - router_2_front_bottom
+    - router_2_front_bar_1
+    - router_2_front_bar_2
+    - router_2_front_bar_3
+    - router_2_front_bar_4
+    - router_2_shell_top
+    - router_2_shell_bottom
+    - router_2_shell_left
+    - router_2_shell_right
+    - router_2_back
+  - id: router_3
+    kind: patch_panel
+    frame: idc_prototype_v0/router_3
+    components:
+    - router_3_front_top
+    - router_3_front_bottom
+    - router_3_front_bar_1
+    - router_3_front_bar_2
+    - router_3_front_bar_3
+    - router_3_front_bar_4
+    - router_3_shell_top
+    - router_3_shell_bottom
+    - router_3_shell_left
+    - router_3_shell_right
+    - router_3_back
+  collision_objects:
+  - id: cab_left
+    type: box
+    parent_frame: idc_prototype_v0/cabinet
+    pose:
+      position_m:
+      - 0
+      - 0.145
+      - 0
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+    size_m:
+    - 0.2
+    - 0.01
+    - 0.34
+  - id: cab_right
+    type: box
+    parent_frame: idc_prototype_v0/cabinet
+    pose:
+      position_m:
+      - 0
+      - -0.145
+      - 0
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+    size_m:
+    - 0.2
+    - 0.01
+    - 0.34
+  - id: cab_top
+    type: box
+    parent_frame: idc_prototype_v0/cabinet
+    pose:
+      position_m:
+      - 0
+      - 0
+      - 0.175
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+    size_m:
+    - 0.2
+    - 0.3
+    - 0.01
+  - id: cab_bottom
+    type: box
+    parent_frame: idc_prototype_v0/cabinet
+    pose:
+      position_m:
+      - 0
+      - 0
+      - -0.175
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+    size_m:
+    - 0.2
+    - 0.3
+    - 0.01
+  - id: cab_back
+    type: box
+    parent_frame: idc_prototype_v0/cabinet
+    pose:
+      position_m:
+      - 0.095
+      - 0
+      - 0
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+    size_m:
+    - 0.01
+    - 0.28
+    - 0.34
+  - id: router_1_front_top
+    type: box
+    parent_frame: idc_prototype_v0/router_1
+    pose:
+      position_m:
+      - 0.019
+      - 0
+      - -0.0025
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+    size_m:
+    - 0.022
+    - 0.26
+    - 0.005
+  - id: router_1_front_bottom
+    type: box
+    parent_frame: idc_prototype_v0/router_1
+    pose:
+      position_m:
+      - -0.019
+      - 0
+      - -0.0025
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+    size_m:
+    - 0.022
+    - 0.26
+    - 0.005
+  - id: router_1_front_bar_1
+    type: box
+    parent_frame: idc_prototype_v0/router_1
+    pose:
+      position_m:
+      - 0
+      - -0.10450000000000001
+      - -0.0025
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+    size_m:
+    - 0.016
+    - 0.051000000000000004
+    - 0.005
+  - id: router_1_front_bar_2
+    type: box
+    parent_frame: idc_prototype_v0/router_1
+    pose:
+      position_m:
+      - 0
+      - -0.034999999999999996
+      - -0.0025
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+    size_m:
+    - 0.016
+    - 0.052
+    - 0.005
+  - id: router_1_front_bar_3
+    type: box
+    parent_frame: idc_prototype_v0/router_1
+    pose:
+      position_m:
+      - 0
+      - 0.034999999999999996
+      - -0.0025
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+    size_m:
+    - 0.016
+    - 0.052
+    - 0.005
+  - id: router_1_front_bar_4
+    type: box
+    parent_frame: idc_prototype_v0/router_1
+    pose:
+      position_m:
+      - 0
+      - 0.10450000000000001
+      - -0.0025
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+    size_m:
+    - 0.016
+    - 0.051000000000000004
+    - 0.005
+  - id: router_1_shell_top
+    type: box
+    parent_frame: idc_prototype_v0/router_1
+    pose:
+      position_m:
+      - 0.028
+      - 0
+      - -0.0725
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+    size_m:
+    - 0.004
+    - 0.26
+    - 0.135
+  - id: router_1_shell_bottom
+    type: box
+    parent_frame: idc_prototype_v0/router_1
+    pose:
+      position_m:
+      - -0.028
+      - 0
+      - -0.0725
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+    size_m:
+    - 0.004
+    - 0.26
+    - 0.135
+  - id: router_1_shell_left
+    type: box
+    parent_frame: idc_prototype_v0/router_1
+    pose:
+      position_m:
+      - 0
+      - 0.128
+      - -0.0725
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+    size_m:
+    - 0.052
+    - 0.004
+    - 0.135
+  - id: router_1_shell_right
+    type: box
+    parent_frame: idc_prototype_v0/router_1
+    pose:
+      position_m:
+      - 0
+      - -0.128
+      - -0.0725
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+    size_m:
+    - 0.052
+    - 0.004
+    - 0.135
+  - id: router_1_back
+    type: box
+    parent_frame: idc_prototype_v0/router_1
+    pose:
+      position_m:
+      - 0
+      - 0
+      - -0.1375
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+    size_m:
+    - 0.052
+    - 0.252
+    - 0.005
+  - id: router_2_front_top
+    type: box
+    parent_frame: idc_prototype_v0/router_2
+    pose:
+      position_m:
+      - 0.019
+      - 0
+      - -0.0025
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+    size_m:
+    - 0.022
+    - 0.26
+    - 0.005
+  - id: router_2_front_bottom
+    type: box
+    parent_frame: idc_prototype_v0/router_2
+    pose:
+      position_m:
+      - -0.019
+      - 0
+      - -0.0025
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+    size_m:
+    - 0.022
+    - 0.26
+    - 0.005
+  - id: router_2_front_bar_1
+    type: box
+    parent_frame: idc_prototype_v0/router_2
+    pose:
+      position_m:
+      - 0
+      - -0.10450000000000001
+      - -0.0025
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+    size_m:
+    - 0.016
+    - 0.051000000000000004
+    - 0.005
+  - id: router_2_front_bar_2
+    type: box
+    parent_frame: idc_prototype_v0/router_2
+    pose:
+      position_m:
+      - 0
+      - -0.034999999999999996
+      - -0.0025
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+    size_m:
+    - 0.016
+    - 0.052
+    - 0.005
+  - id: router_2_front_bar_3
+    type: box
+    parent_frame: idc_prototype_v0/router_2
+    pose:
+      position_m:
+      - 0
+      - 0.034999999999999996
+      - -0.0025
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+    size_m:
+    - 0.016
+    - 0.052
+    - 0.005
+  - id: router_2_front_bar_4
+    type: box
+    parent_frame: idc_prototype_v0/router_2
+    pose:
+      position_m:
+      - 0
+      - 0.10450000000000001
+      - -0.0025
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+    size_m:
+    - 0.016
+    - 0.051000000000000004
+    - 0.005
+  - id: router_2_shell_top
+    type: box
+    parent_frame: idc_prototype_v0/router_2
+    pose:
+      position_m:
+      - 0.028
+      - 0
+      - -0.0725
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+    size_m:
+    - 0.004
+    - 0.26
+    - 0.135
+  - id: router_2_shell_bottom
+    type: box
+    parent_frame: idc_prototype_v0/router_2
+    pose:
+      position_m:
+      - -0.028
+      - 0
+      - -0.0725
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+    size_m:
+    - 0.004
+    - 0.26
+    - 0.135
+  - id: router_2_shell_left
+    type: box
+    parent_frame: idc_prototype_v0/router_2
+    pose:
+      position_m:
+      - 0
+      - 0.128
+      - -0.0725
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+    size_m:
+    - 0.052
+    - 0.004
+    - 0.135
+  - id: router_2_shell_right
+    type: box
+    parent_frame: idc_prototype_v0/router_2
+    pose:
+      position_m:
+      - 0
+      - -0.128
+      - -0.0725
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+    size_m:
+    - 0.052
+    - 0.004
+    - 0.135
+  - id: router_2_back
+    type: box
+    parent_frame: idc_prototype_v0/router_2
+    pose:
+      position_m:
+      - 0
+      - 0
+      - -0.1375
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+    size_m:
+    - 0.052
+    - 0.252
+    - 0.005
+  - id: router_3_front_top
+    type: box
+    parent_frame: idc_prototype_v0/router_3
+    pose:
+      position_m:
+      - 0.019
+      - 0
+      - -0.0025
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+    size_m:
+    - 0.022
+    - 0.26
+    - 0.005
+  - id: router_3_front_bottom
+    type: box
+    parent_frame: idc_prototype_v0/router_3
+    pose:
+      position_m:
+      - -0.019
+      - 0
+      - -0.0025
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+    size_m:
+    - 0.022
+    - 0.26
+    - 0.005
+  - id: router_3_front_bar_1
+    type: box
+    parent_frame: idc_prototype_v0/router_3
+    pose:
+      position_m:
+      - 0
+      - -0.10450000000000001
+      - -0.0025
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+    size_m:
+    - 0.016
+    - 0.051000000000000004
+    - 0.005
+  - id: router_3_front_bar_2
+    type: box
+    parent_frame: idc_prototype_v0/router_3
+    pose:
+      position_m:
+      - 0
+      - -0.034999999999999996
+      - -0.0025
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+    size_m:
+    - 0.016
+    - 0.052
+    - 0.005
+  - id: router_3_front_bar_3
+    type: box
+    parent_frame: idc_prototype_v0/router_3
+    pose:
+      position_m:
+      - 0
+      - 0.034999999999999996
+      - -0.0025
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+    size_m:
+    - 0.016
+    - 0.052
+    - 0.005
+  - id: router_3_front_bar_4
+    type: box
+    parent_frame: idc_prototype_v0/router_3
+    pose:
+      position_m:
+      - 0
+      - 0.10450000000000001
+      - -0.0025
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+    size_m:
+    - 0.016
+    - 0.051000000000000004
+    - 0.005
+  - id: router_3_shell_top
+    type: box
+    parent_frame: idc_prototype_v0/router_3
+    pose:
+      position_m:
+      - 0.028
+      - 0
+      - -0.0725
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+    size_m:
+    - 0.004
+    - 0.26
+    - 0.135
+  - id: router_3_shell_bottom
+    type: box
+    parent_frame: idc_prototype_v0/router_3
+    pose:
+      position_m:
+      - -0.028
+      - 0
+      - -0.0725
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+    size_m:
+    - 0.004
+    - 0.26
+    - 0.135
+  - id: router_3_shell_left
+    type: box
+    parent_frame: idc_prototype_v0/router_3
+    pose:
+      position_m:
+      - 0
+      - 0.128
+      - -0.0725
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+    size_m:
+    - 0.052
+    - 0.004
+    - 0.135
+  - id: router_3_shell_right
+    type: box
+    parent_frame: idc_prototype_v0/router_3
+    pose:
+      position_m:
+      - 0
+      - -0.128
+      - -0.0725
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+    size_m:
+    - 0.052
+    - 0.004
+    - 0.135
+  - id: router_3_back
+    type: box
+    parent_frame: idc_prototype_v0/router_3
+    pose:
+      position_m:
+      - 0
+      - 0
+      - -0.1375
+      quaternion_xyzw:
+      - 0
+      - 0
+      - 0
+      - 1
+    size_m:
+    - 0.052
+    - 0.252
+    - 0.005
+  ports:
+  - id: P11
+    entity: router_1
+    frame: idc_prototype_v0/P11
+    outward_axis_local:
+    - 0
+    - 0
+    - 1
+    insertion_axis_local:
+    - 0
+    - 0
+    - -1
+    key_axis_local:
+    - 1
+    - 0
+    - 0
+    task_parameters_status: unmeasured
+  - id: P12
+    entity: router_1
+    frame: idc_prototype_v0/P12
+    outward_axis_local:
+    - 0
+    - 0
+    - 1
+    insertion_axis_local:
+    - 0
+    - 0
+    - -1
+    key_axis_local:
+    - 1
+    - 0
+    - 0
+    task_parameters_status: unmeasured
+  - id: P13
+    entity: router_1
+    frame: idc_prototype_v0/P13
+    outward_axis_local:
+    - 0
+    - 0
+    - 1
+    insertion_axis_local:
+    - 0
+    - 0
+    - -1
+    key_axis_local:
+    - 1
+    - 0
+    - 0
+    task_parameters_status: unmeasured
+  - id: P21
+    entity: router_2
+    frame: idc_prototype_v0/P21
+    outward_axis_local:
+    - 0
+    - 0
+    - 1
+    insertion_axis_local:
+    - 0
+    - 0
+    - -1
+    key_axis_local:
+    - 1
+    - 0
+    - 0
+    task_parameters_status: unmeasured
+  - id: P22
+    entity: router_2
+    frame: idc_prototype_v0/P22
+    outward_axis_local:
+    - 0
+    - 0
+    - 1
+    insertion_axis_local:
+    - 0
+    - 0
+    - -1
+    key_axis_local:
+    - 1
+    - 0
+    - 0
+    task_parameters_status: unmeasured
+  - id: P23
+    entity: router_2
+    frame: idc_prototype_v0/P23
+    outward_axis_local:
+    - 0
+    - 0
+    - 1
+    insertion_axis_local:
+    - 0
+    - 0
+    - -1
+    key_axis_local:
+    - 1
+    - 0
+    - 0
+    task_parameters_status: unmeasured
+  - id: P31
+    entity: router_3
+    frame: idc_prototype_v0/P31
+    outward_axis_local:
+    - 0
+    - 0
+    - 1
+    insertion_axis_local:
+    - 0
+    - 0
+    - -1
+    key_axis_local:
+    - 1
+    - 0
+    - 0
+    task_parameters_status: unmeasured
+  - id: P32
+    entity: router_3
+    frame: idc_prototype_v0/P32
+    outward_axis_local:
+    - 0
+    - 0
+    - 1
+    insertion_axis_local:
+    - 0
+    - 0
+    - -1
+    key_axis_local:
+    - 1
+    - 0
+    - 0
+    task_parameters_status: unmeasured
+  - id: P33
+    entity: router_3
+    frame: idc_prototype_v0/P33
+    outward_axis_local:
+    - 0
+    - 0
+    - 1
+    insertion_axis_local:
+    - 0
+    - 0
+    - -1
+    key_axis_local:
+    - 1
+    - 0
+    - 0
+    task_parameters_status: unmeasured
+  clearance:
+    robot_environment_m: 0.0
+    self_m: 0.0
+    contact_epsilon_m: 1.0e-07
+  tool:
+    status: uncalibrated
+    ee_frame: end_effector_link
+    tcp_frame: null

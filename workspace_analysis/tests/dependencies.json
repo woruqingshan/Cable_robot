@@ -1,0 +1,2752 @@
+{
+  "schema_version": 1,
+  "tests": {
+    "test_architecture.py::test_root_has_only_public_entrypoint_and_subpackages_do_not_eagerly_load_features": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_architecture.py::test_all_static_imports_including_lazy_imports_form_a_dag_and_obey_domain_boundaries": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_architecture.py::test_import_with_optional_dependencies_blocked_and_no_process_network_or_environment_side_effects": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_architecture.py::test_pure_scene_load_and_existing_report_read_work_without_robot_or_plotly": {
+      "level": "artifact",
+      "requires": [],
+      "artifacts": [
+        "g4_run01"
+      ]
+    },
+    "test_architecture.py::test_frozen_scene_frame_port_mesh_baseline": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_architecture.py::test_frozen_three_pose_and_small_sampling_baseline": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_architecture.py::test_code_provenance_covers_all_nested_package_sources": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_architecture.py::test_default_scene_overlay_config_still_resolves_to_workspace_root": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_architecture.py::test_all_cli_help_from_another_working_directory": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_architecture.py::test_fk_cli_reference_output_matches_pre_refactor_baseline": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_architecture.py::test_tf_cli_invalid_timeout_fails_before_creating_report_or_starting_ros": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_candidate_baseline.py::test_frozen_selection_is_exactly_adjacent_default_not_never": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_candidate_baseline.py::test_candidate_provenance_and_review_claims_reject_tampering": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_candidate_baseline.py::test_explicit_decision_cannot_approve_unverified_model": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_candidate_baseline.py::test_real_native_three_semantics_known_cases_and_geometry_unchanged": {
+      "level": "artifact",
+      "requires": [
+        "model",
+        "native"
+      ],
+      "artifacts": [
+        "workspace_n100_seed42.npz",
+        "workspace_n100_seed42.json"
+      ]
+    },
+    "test_candidate_baseline.py::test_native_enforces_candidate_rules_when_python_is_bypassed": {
+      "level": "integration",
+      "requires": [
+        "model",
+        "native"
+      ],
+      "artifacts": []
+    },
+    "test_candidate_baseline.py::test_candidate_builder_refuses_overwrite_and_is_reproducible": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_candidate_baseline.py::test_invalid_configuration_keeps_explicit_error_decision": {
+      "level": "integration",
+      "requires": [
+        "model",
+        "native"
+      ],
+      "artifacts": []
+    },
+    "test_candidate_baseline.py::test_vendor_source_conventions_are_evidence_not_new_limits": {
+      "level": "integration",
+      "requires": [
+        "model",
+        "vendor"
+      ],
+      "artifacts": []
+    },
+    "test_candidate_baseline.py::test_strict_old_reply_status_compatibility_does_not_enable_candidates": {
+      "level": "integration",
+      "requires": [
+        "model",
+        "native"
+      ],
+      "artifacts": []
+    },
+    "test_cartesian_approach.py::test_default_targets_and_finer_nondivisible_grid_preserve_task_and_scene": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_cartesian_approach.py::test_target_generation_follows_rotated_port_not_hardcoded_world_x": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_cartesian_approach.py::test_invalid_settings_are_rejected": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_cartesian_approach.py::test_generator_rejects_reversed_and_unbounded_grid": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_cartesian_approach.py::test_collision_session_must_match_declared_scene_gripper_and_clearance": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_cartesian_approach.py::test_valid_endpoint_iks_do_not_hide_interior_cartesian_or_orientation_failure": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_cartesian_approach.py::test_continuation_uses_previous_success_and_deterministic_bounded_backups": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_cartesian_approach.py::test_branch_jump_is_rejected_even_when_all_task_errors_pass": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_cartesian_approach.py::test_solver_exception_is_reported_with_bounded_retries_not_false_unreachable": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_cartesian_approach.py::test_toy_success_checks_all_samples_and_native_fk_mismatch_fails_closed": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_cartesian_approach.py::test_real_both_branches_and_native_collision_failure_keep_complete_replay": {
+      "level": "artifact",
+      "requires": [
+        "model",
+        "native"
+      ],
+      "artifacts": [
+        "workspace_n100_seed42.npz",
+        "workspace_n100_seed42.json",
+        "task_reachability/p22_20261104_02/ik_results.json",
+        "task_reachability/p22_20261104_02",
+        "task_planning/p22_20261104_02"
+      ]
+    },
+    "test_cartesian_approach.py::test_complete_continuity_failure_experiment_is_reproducible_and_verifiable": {
+      "level": "artifact",
+      "requires": [
+        "model",
+        "native"
+      ],
+      "artifacts": [
+        "workspace_n100_seed42.npz",
+        "workspace_n100_seed42.json",
+        "task_reachability/p22_20261104_02/ik_results.json",
+        "task_reachability/p22_20261104_02",
+        "task_planning/p22_20261104_02"
+      ]
+    },
+    "test_cartesian_approach.py::test_cli_from_other_cwd_and_near_port_scope_rejection_do_not_write": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_collision_client.py::test_owned_process_failures_never_clear_and_are_reaped": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_collision_client.py::test_normal_shutdown_and_unique_requests": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_collision_client.py::test_real_native_robot_model_fk_full_tree_meshes_and_s1": {
+      "level": "integration",
+      "requires": [
+        "model",
+        "native"
+      ],
+      "artifacts": []
+    },
+    "test_collision_client.py::test_native_invalid_full_state_is_error": {
+      "level": "integration",
+      "requires": [
+        "model",
+        "native"
+      ],
+      "artifacts": []
+    },
+    "test_collision_client.py::test_native_missing_resource_cannot_be_ready": {
+      "level": "integration",
+      "requires": [
+        "model",
+        "native"
+      ],
+      "artifacts": []
+    },
+    "test_collision_client.py::test_real_native_rotated_parent_and_cylinder_dimensions": {
+      "level": "integration",
+      "requires": [
+        "model",
+        "native"
+      ],
+      "artifacts": []
+    },
+    "test_collision_client.py::test_native_rejects_canonical_and_flat_geometry_disagreement": {
+      "level": "integration",
+      "requires": [
+        "model",
+        "native"
+      ],
+      "artifacts": []
+    },
+    "test_collision_policy.py::test_normalized_duplicates_reverse_pairs_and_identity": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_collision_policy.py::test_invalid_and_unverified_policy_claims_rejected": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_collision_policy.py::test_lidar_visual_bounds_are_only_candidate_not_coverage": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_collision_policy.py::test_real_policy_switch_baseline_restore_env_and_gripper": {
+      "level": "artifact",
+      "requires": [
+        "model",
+        "native"
+      ],
+      "artifacts": [
+        "workspace_n100_seed42.npz",
+        "workspace_n100_seed42.json"
+      ]
+    },
+    "test_collision_protocol.py::test_malformed_json_is_error": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_collision_protocol.py::test_reply_envelope_rejects_mismatch": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_collision_protocol.py::test_valid_envelope_and_unverified_decision_preserved": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_collision_protocol.py::test_s1_adapter_exact_38_objects_and_full_parent_rotations": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_collision_protocol.py::test_summary_union_and_error_denominator": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_collision_protocol.py::test_init_failure_retains_all_100_indices_and_refuses_overwrite": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "workspace_n100_seed42.npz",
+        "workspace_n100_seed42.json"
+      ]
+    },
+    "test_collision_visualization.py::test_nonzero_collision_origin_nonuniform_scale_and_native_link_transform": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_collision_visualization.py::test_all_robot_surfaces_poses_distinct_and_cabinet_fixed": {
+      "level": "artifact",
+      "requires": [
+        "model",
+        "native"
+      ],
+      "artifacts": [
+        "workspace_n100_seed42.npz",
+        "workspace_n100_seed42.json"
+      ]
+    },
+    "test_collision_visualization.py::test_real_contacts_and_pairs_correspond_to_displayed_objects": {
+      "level": "artifact",
+      "requires": [
+        "model",
+        "native"
+      ],
+      "artifacts": [
+        "workspace_n100_seed42.npz",
+        "workspace_n100_seed42.json"
+      ]
+    },
+    "test_collision_visualization.py::test_offline_pair_selector_and_export_refuses_overwrite": {
+      "level": "artifact",
+      "requires": [
+        "model",
+        "native"
+      ],
+      "artifacts": [
+        "workspace_n100_seed42.npz",
+        "workspace_n100_seed42.json"
+      ]
+    },
+    "test_constrained_evaluator.py::test_v1_only_adds_two_fixed_pairs_and_preserves_unresolved": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "workspace_n100_seed42.npz",
+        "workspace_n100_seed42.json"
+      ]
+    },
+    "test_constrained_evaluator.py::test_batch_size_order_consistency_clearance_and_scope": {
+      "level": "artifact",
+      "requires": [
+        "model",
+        "native"
+      ],
+      "artifacts": [
+        "workspace_n100_seed42.npz",
+        "workspace_n100_seed42.json"
+      ]
+    },
+    "test_constrained_evaluator.py::test_invalid_threshold_rejected_before_backend": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "workspace_n100_seed42.npz",
+        "workspace_n100_seed42.json"
+      ]
+    },
+    "test_constrained_evaluator.py::test_pilot_no_overwrite_and_configuration_npz_roundtrip": {
+      "level": "artifact",
+      "requires": [
+        "model",
+        "native"
+      ],
+      "artifacts": [
+        "workspace_n100_seed42.npz",
+        "workspace_n100_seed42.json"
+      ]
+    },
+    "test_constrained_evaluator.py::test_directed_native_motion_mimic_and_fixed_assembly": {
+      "level": "artifact",
+      "requires": [
+        "model",
+        "native"
+      ],
+      "artifacts": [
+        "workspace_n100_seed42.npz",
+        "workspace_n100_seed42.json"
+      ]
+    },
+    "test_constrained_evaluator.py::test_thousand_source_rows_preserved": {
+      "level": "artifact",
+      "requires": [
+        "model",
+        "native"
+      ],
+      "artifacts": [
+        "workspace_n100_seed42.npz",
+        "workspace_n100_seed42.json",
+        "g4_run01/experiments/workspace_n1000_seed42.npz",
+        "g4_run01/experiments/workspace_n1000_seed42.json"
+      ]
+    },
+    "test_constrained_evaluator.py::test_positive_clearance_model_scope_remains_physically_unverified": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "workspace_n100_seed42.npz",
+        "workspace_n100_seed42.json"
+      ]
+    },
+    "test_geometry_profile.py::test_triangle_cylinder_keeps_boundary_and_outside_faces": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_geometry_profile.py::test_local_model_removes_only_proximal_interference_and_keeps_distal_positive": {
+      "level": "integration",
+      "requires": [
+        "native"
+      ],
+      "artifacts": []
+    },
+    "test_geometry_profile.py::test_nonadjacent_positive_and_removed_region_environment_coverage": {
+      "level": "integration",
+      "requires": [
+        "native"
+      ],
+      "artifacts": []
+    },
+    "test_geometry_profile.py::test_geometry_audit_bounds_locals_and_partial_surface": {
+      "level": "integration",
+      "requires": [
+        "native"
+      ],
+      "artifacts": []
+    },
+    "test_geometry_profile.py::test_native_rejects_changed_kinematics_and_profile_hash": {
+      "level": "integration",
+      "requires": [
+        "native"
+      ],
+      "artifacts": []
+    },
+    "test_geometry_profile.py::test_jetrover_profiles_fk_mimic_environment_and_non_target_invariance": {
+      "level": "artifact",
+      "requires": [
+        "model",
+        "native"
+      ],
+      "artifacts": [
+        "workspace_n100_seed42.npz",
+        "workspace_n100_seed42.json"
+      ]
+    },
+    "test_geometry_profile.py::test_nonzero_origin_scale_retained_vertices_and_native_render": {
+      "level": "integration",
+      "requires": [
+        "native"
+      ],
+      "artifacts": []
+    },
+    "test_geometry_profile.py::test_undeclared_mesh_change_and_incomplete_composition_rejected": {
+      "level": "integration",
+      "requires": [
+        "native"
+      ],
+      "artifacts": []
+    },
+    "test_geometry_profile.py::test_new_cli_help": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_geometry_profile.py::test_d1_paired_experiment_preserves_arrays_identity_and_robot_only": {
+      "level": "artifact",
+      "requires": [
+        "native",
+        "model"
+      ],
+      "artifacts": [
+        "workspace_n100_seed42.npz",
+        "workspace_n100_seed42.json"
+      ]
+    },
+    "test_idc_prototype.py::test_schema_entities_frames_and_unique_references": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_idc_prototype.py::test_port_hand_truth_order_plane_axes_and_open_tunnel": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_idc_prototype.py::test_p22_complete_matrix_and_parent_transform": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_idc_prototype.py::test_box_dimensions_shell_coverage_and_empty_cabinet": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_idc_prototype.py::test_canonical_hash_reproducibility_and_synthetic_dev_unchanged": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_idc_prototype.py::test_scene_only_uses_actual_solids_and_all_semantic_ports": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_idc_prototype.py::test_existing_100_points_overlay_without_resampling": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "workspace_n100_seed42.npz",
+        "workspace_n100_seed42.json"
+      ]
+    },
+    "test_model_fk.py::test_official_chain_and_dynamic_limits": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_model_fk.py::test_official_three_poses": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_model_fk.py::test_deterministic": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_model_fk.py::test_limits_and_out_of_range": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_model_fk.py::test_bad_joint_vectors": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_model_fk.py::test_joint5_position_invariance": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_model_fk.py::test_gripper_and_mimic_invariance": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_model_fk.py::test_fixed_segments_and_zero_pose": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_model_fk.py::test_rotated_origins_and_oblique_axes": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_model_fk.py::test_invalid_models": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_model_fk.py::test_missing_frames_order_and_mimic_cycle": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_model_fk.py::test_loader_from_another_cwd_without_need_compile": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_model_fk.py::test_plain_urdf_and_relative_config_path": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_model_fk.py::test_urdf_default_axis_and_origin": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_model_fk.py::test_xacro_failure_restores_environment": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_model_fk.py::test_invalid_config": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_path_planning.py::test_interpolation_preserves_endpoints_resolution_no_wrap_and_length": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_path_planning.py::test_bad_resolution_is_rejected": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_path_planning.py::test_bad_configurations_are_rejected": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_path_planning.py::test_edge_checks_interior_and_reports_first_failure_not_just_endpoints": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_path_planning.py::test_cache_is_exact_fresh_bypasses_and_out_of_limits_never_queries": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_path_planning.py::test_unknown_errors_and_nonzero_clearance_fail_closed": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_path_planning.py::test_missing_semantic_and_optimistic_result_are_rejected": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_path_planning.py::test_rrt_connect_deterministic_detour_and_full_independent_recheck": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_path_planning.py::test_rrt_invalid_endpoint_iteration_budget_and_time_budget": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_path_planning.py::test_settings_reject_unsafe_or_undeclared_values": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_path_planning.py::test_real_native_semantics_limits_clearance_environment_and_full_mesh_replay": {
+      "level": "artifact",
+      "requires": [
+        "model",
+        "native"
+      ],
+      "artifacts": [
+        "workspace_n100_seed42.npz",
+        "workspace_n100_seed42.json",
+        "task_reachability/p22_20261104_02/ik_results.json"
+      ]
+    },
+    "test_path_planning.py::test_t3_cli_help_and_bad_settings_from_other_cwd_do_not_write": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_path_planning.py::test_t3_refuses_overwrite_and_requires_explicit_candidate_before_work": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_research_workspace.py::test_disjoint_decisions_do_not_double_count_overlapping_collision_causes": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_research_workspace.py::test_paired_comparison_fails_on_unexplained_or_incomplete_changes": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_research_workspace.py::test_pair_recovery_records_exact_indices_and_changed_pairs": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_research_workspace.py::test_candidate_selection_is_deterministic_without_resampling": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_research_workspace.py::test_read_only_reference_records_are_not_upgraded_to_normal_truth": {
+      "level": "integration",
+      "requires": [
+        "model",
+        "vendor"
+      ],
+      "artifacts": []
+    },
+    "test_research_workspace.py::test_all29_relations_have_separate_kinematic_and_mechanical_status": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_research_workspace.py::test_real_evaluator_semantic_stats_use_new_fields_not_legacy_raw": {
+      "level": "artifact",
+      "requires": [
+        "model",
+        "native"
+      ],
+      "artifacts": [
+        "workspace_n100_seed42.npz",
+        "workspace_n100_seed42.json"
+      ]
+    },
+    "test_research_workspace.py::test_existing_output_and_large_dataset_are_rejected_before_evaluation": {
+      "level": "artifact",
+      "requires": [
+        "model",
+        "native",
+        "vendor"
+      ],
+      "artifacts": [
+        "workspace_n100_seed42.npz",
+        "workspace_n100_seed42.json",
+        "workspace_n10000_seed42.npz",
+        "workspace_n10000_seed42.json"
+      ]
+    },
+    "test_sampling_results.py::test_sampling_shape_dtype_finite_limits_and_dynamic_joint_count": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_sampling_results.py::test_invalid_sample_counts": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_sampling_results.py::test_invalid_seed": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_sampling_results.py::test_invalid_limits": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_sampling_results.py::test_fixed_seed_reproduces_all_arrays_and_specific_other_seed_differs": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_sampling_results.py::test_all_poses_valid_and_reference_checks": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_sampling_results.py::test_zero_and_joint5_geometry_use_explicit_inputs": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_sampling_results.py::test_fk_exception_identifies_sample_and_does_not_return_partial_run": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_sampling_results.py::test_invalid_fk_pose_identifies_sample": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_sampling_results.py::test_nonfinite_array_row_is_rejected": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_sampling_results.py::test_invalid_quaternion_dtype_shape_and_row_correspondence": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_sampling_results.py::test_npz_json_roundtrip_metadata_statistics_and_hash": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_sampling_results.py::test_existing_targets_not_overwritten": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_sampling_results.py::test_second_commit_failure_rolls_back_npz_and_temporaries": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_sampling_results.py::test_both_staging_paths_checked_before_any_publication": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_sampling_results.py::test_target_appearing_during_commit_is_not_overwritten": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_sampling_results.py::test_configuration_change_or_bad_fk_data_refuses_publication": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_sampling_results.py::test_incomplete_pair_rejected": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_sampling_results.py::test_lock_and_corrupt_npz_rejected": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_sampling_results.py::test_inconsistent_json_rejected": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_sampling_results.py::test_invalid_npz_even_with_updated_file_hash_is_rejected": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_sampling_results.py::test_wrong_model_identity_rejected": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_sampling_results.py::test_cli_from_other_cwd_small_dataset_only": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_sampling_results.py::test_statistics_overflow_is_not_silently_saved": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_sampling_results.py::test_invalid_prefixes_do_not_resolve_to_unintended_sibling_files": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_sampling_results.py::test_keyboard_interrupt_during_second_commit_also_rolls_back": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_sampling_results.py::test_incomplete_fk_evidence_and_rng_provenance_rejected": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_sampling_results.py::test_bad_completion_metadata_never_gets_committed": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_scene_model.py::test_synthetic_scene_geometry_and_hand_computed_base_transforms": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_scene_model.py::test_raw_and_canonical_hash_definitions_and_reload_determinism": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_scene_model.py::test_mapping_key_and_collection_order_do_not_change_canonical_hash": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_scene_model.py::test_semantic_change_changes_canonical_hash": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_scene_model.py::test_quaternion_sign_and_negative_zero_do_not_change_canonical_hash": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_scene_model.py::test_scientific_numeric_tokens_roundtrip_but_quoted_numbers_are_rejected": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_scene_model.py::test_snapshot_is_deeply_immutable_and_export_is_detached": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_scene_model.py::test_illegal_fields_rejected_with_location": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_scene_model.py::test_duplicate_ids_rejected": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_scene_model.py::test_unknown_fields_are_never_ignored": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_scene_model.py::test_invalid_or_disconnected_frames_rejected": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_scene_model.py::test_component_references_rejected": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_scene_model.py::test_port_must_belong_to_its_declared_panel": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_scene_model.py::test_yaml_duplicates_aliases_tags_merge_and_syntax_errors": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_scene_model.py::test_duplicate_nested_pose_key_reports_path": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_scene_model.py::test_missing_fields_bad_utf8_size_depth_and_missing_file": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_scene_model.py::test_scene_only_import_and_loading_without_ros_or_backend": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_scene_visualization.py::test_box_eight_vertices_full_dimensions_and_closed_twelve_triangle_surface": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_scene_visualization.py::test_rotated_box_and_parent_frame_rotation_have_analytic_world_vertices": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_scene_visualization.py::test_cylinder_radius_length_caps_and_rotated_world_axis": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_scene_visualization.py::test_frame_axes_and_port_directions_are_dynamic_not_world_constants": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_scene_visualization.py::test_scene_figure_has_exactly_nine_solids_semantic_colors_and_frame_groups": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_scene_visualization.py::test_workspace_uses_g3_loader_without_resampling_and_preserves_all_rows": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "workspace_n100_seed42.npz",
+        "workspace_n100_seed42.json"
+      ]
+    },
+    "test_scene_visualization.py::test_display_limit_keeps_deterministic_original_indices": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "workspace_n100_seed42.npz",
+        "workspace_n100_seed42.json"
+      ]
+    },
+    "test_scene_visualization.py::test_reference_frame_mismatch_is_rejected": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "workspace_n100_seed42.npz",
+        "workspace_n100_seed42.json"
+      ]
+    },
+    "test_scene_visualization.py::test_corrupt_or_incompatible_g2_inputs_rejected": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "workspace_n100_seed42.npz",
+        "workspace_n100_seed42.json"
+      ]
+    },
+    "test_scene_visualization.py::test_bad_display_options_rejected": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_scene_visualization.py::test_real_html_offline_export_and_existing_output_protection": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_scene_visualization.py::test_scene_only_cli_works_in_isolated_python_without_ros_or_g2": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_scene_visualization.py::test_cli_100_point_overlay_preserves_yaml_npz_json_and_errors_nonzero": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "workspace_n100_seed42.npz",
+        "workspace_n100_seed42.json"
+      ]
+    },
+    "test_scene_visualization.py::test_publication_failure_and_racing_writer_do_not_overwrite_or_leave_partial_files": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_scene_visualization.py::test_render_failure_is_not_success_and_dangling_symlink_is_protected": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_scene_visualization.py::test_cli_export_failure_returns_nonzero_without_printing_pass": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_semantic.py::test_invalid_srdf_strict": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_semantic.py::test_named_states_groups_and_review_binding": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_semantic.py::test_real_fcl_semantic_vs_raw_external_positive_and_state_reset": {
+      "level": "integration",
+      "requires": [
+        "native"
+      ],
+      "artifacts": []
+    },
+    "test_semantic.py::test_native_rejects_bypassed_python_invalid_semantic_wire": {
+      "level": "integration",
+      "requires": [
+        "native"
+      ],
+      "artifacts": []
+    },
+    "test_semantic.py::test_actual_acm_acknowledgement_not_assumed": {
+      "level": "integration",
+      "requires": [
+        "native"
+      ],
+      "artifacts": []
+    },
+    "test_semantic.py::test_jetrover_semantics_preserves_raw_state_fk_mimic_and_known_rejections": {
+      "level": "artifact",
+      "requires": [
+        "model",
+        "native"
+      ],
+      "artifacts": [
+        "workspace_n100_seed42.npz",
+        "workspace_n100_seed42.json"
+      ]
+    },
+    "test_semantic.py::test_candidates_are_not_permissions": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_semantic.py::test_standard_moveit_candidates_are_isolated_not_installed_permissions": {
+      "level": "integration",
+      "requires": [
+        "native"
+      ],
+      "artifacts": []
+    },
+    "test_semantic.py::test_semantic_scene_hash_and_unknown_query_result_fail_closed": {
+      "level": "integration",
+      "requires": [
+        "native"
+      ],
+      "artifacts": []
+    },
+    "test_semantic.py::test_semantic_viewer_contains_full_mesh_and_explicit_semantic_identity": {
+      "level": "integration",
+      "requires": [
+        "model",
+        "native"
+      ],
+      "artifacts": []
+    },
+    "test_task_ik.py::test_threshold_hierarchy_is_cumulative_not_optimizer_success": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_task_ik.py::test_staged_multistart_recovers_known_fk_pose_and_deduplicates": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_task_ik.py::test_unreachable_target_returns_best_approximation_without_false_success": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_task_ik.py::test_seeds_use_tcp_positions_and_record_original_g4_indices_deterministically": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "g4_run01/experiments/workspace_n1000_seed42.npz",
+        "g4_run01/experiments/workspace_n1000_seed42.json"
+      ]
+    },
+    "test_task_ik.py::test_antipodal_key_residual_is_nonzero": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_task_ik.py::test_task_pose_and_collision_are_separate_and_legacy_decision_is_ignored": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_task_ik.py::test_no_pose_feasible_solutions_means_no_backend_is_started": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_task_ik.py::test_optimizer_success_alone_never_overrides_task_errors": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_task_ik.py::test_p22_real_native_screening_strict_vs_candidate_and_environment_positive": {
+      "level": "integration",
+      "requires": [
+        "model",
+        "native"
+      ],
+      "artifacts": []
+    },
+    "test_task_ik.py::test_complete_failure_run_keeps_best_viewer_and_skips_task_collision_screening": {
+      "level": "artifact",
+      "requires": [
+        "model",
+        "native"
+      ],
+      "artifacts": [
+        "g4_run01/experiments/workspace_n1000_seed42.npz",
+        "g4_run01/experiments/workspace_n1000_seed42.json"
+      ]
+    },
+    "test_task_scope.py::test_native_candidate_retains_full_collision_and_internal_diagnostic_and_reset": {
+      "level": "integration",
+      "requires": [
+        "native"
+      ],
+      "artifacts": []
+    },
+    "test_task_scope.py::test_external_collisions_and_unlisted_internal_pairs_remain_rejected": {
+      "level": "integration",
+      "requires": [
+        "native"
+      ],
+      "artifacts": []
+    },
+    "test_task_scope.py::test_illegal_scope_rejected_in_python_and_native": {
+      "level": "integration",
+      "requires": [
+        "native"
+      ],
+      "artifacts": []
+    },
+    "test_task_scope.py::test_scene_binding_mismatch_rejected": {
+      "level": "integration",
+      "requires": [
+        "native"
+      ],
+      "artifacts": []
+    },
+    "test_task_scope.py::test_jetrover_scope_topology_gripper_scans_and_real_rejections": {
+      "level": "artifact",
+      "requires": [
+        "model",
+        "native"
+      ],
+      "artifacts": [
+        "workspace_n100_seed42.npz",
+        "workspace_n100_seed42.json"
+      ]
+    },
+    "test_task_scope.py::test_diagnostic_geometry_not_silently_used_for_task_scope": {
+      "level": "integration",
+      "requires": [
+        "model",
+        "native"
+      ],
+      "artifacts": []
+    },
+    "test_task_scope.py::test_scope_viewer_real_contacts_have_distinct_diagnostic_and_blocking_layers": {
+      "level": "integration",
+      "requires": [
+        "model",
+        "native"
+      ],
+      "artifacts": []
+    },
+    "test_task_scope.py::test_d2_original_arrays_statistical_conservation_and_no_overwrite": {
+      "level": "artifact",
+      "requires": [
+        "native",
+        "model"
+      ],
+      "artifacts": [
+        "workspace_n100_seed42.npz",
+        "workspace_n100_seed42.json"
+      ]
+    },
+    "test_task_targets.py::test_real_p22_port_pre_tcp_and_frame_axes": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_task_targets.py::test_independent_tcp_and_approach_edits_do_not_mutate_scene_or_prior_spec": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_task_targets.py::test_nonstandard_local_tool_axes_are_mapped_without_hardcoding_tcp_basis": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_task_targets.py::test_invalid_tasks_fail_explicitly": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_task_targets.py::test_key_flip_is_180deg_error_and_axis_flip_is_not_zero": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_task_targets.py::test_yaml_duplicates_and_aliases_rejected": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_tf_validation.py::test_old_or_different_stamp_never_completes_case": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_tf_validation.py::test_empty_buffer_context_cannot_reuse_previous_case_evidence": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_tf_validation.py::test_foreign_publisher_wrong_parent_and_static_type_rejected": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_tf_validation.py::test_missing_frame_timeout_is_explicit": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_tf_validation.py::test_cached_result_does_not_bypass_freshness_predicate": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_tf_validation.py::test_wait_returns_on_data_and_propagates_process_failure": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_tf_validation.py::test_model_parameter_identity_and_clock_flags": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_tf_validation.py::test_endpoint_identity_and_domain_isolation": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_tf_validation.py::test_environment_restoration_on_exception": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_tf_validation.py::test_pose_comparison_checks_both_tolerances_and_rotation_validity": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_tf_validation.py::test_tf_quaternion_validation_and_conversion": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_tf_validation.py::test_invalid_joint_input_refused_before_ros_start": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_tf_validation.py::test_missing_target_frame_refused_before_ros_start": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_tf_validation.py::test_rsp_launch_and_early_exit_errors": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_tf_validation.py::test_owned_process_cleanup_on_success_exception_or_interrupt": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_tf_validation.py::test_rsp_cleanup_escalation": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_tf_validation.py::test_other_resources_still_close_after_one_cleanup_failure": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_tf_validation.py::test_report_cannot_pass_with_missing_failed_or_unclean_case": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_tf_validation.py::test_unknown_then_correct_identity_continues_and_retains_history": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_tf_validation.py::test_unknown_forever_has_explicit_code_and_graph_qos_wait_diagnostics": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_tf_validation.py::test_unknown_then_known_wrong_identity_fails_without_waiting_to_timeout": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_tf_validation.py::test_multiple_publishers_never_pass_even_if_one_is_unknown": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_tf_validation.py::test_absent_endpoint_then_unknown_then_verified": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_tf_validation.py::test_absent_endpoint_timeout_is_distinct_from_unknown_identity": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_tf_validation.py::test_resolved_contradictory_type_qos_role_or_namespace_is_rejected": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_tf_validation.py::test_unresolved_matching_qos_is_not_accepted_until_resolved": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_tf_validation.py::test_endpoint_gid_cannot_change_after_strict_verification": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_tf_validation.py::test_node_graph_and_endpoint_graph_must_agree": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_tf_validation.py::test_startup_waits_for_node_then_parameter_barrier_before_any_endpoint_check": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_tf_validation.py::test_runtime_unresolved_identity_blocks_cached_success": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_tf_validation.py::test_abnormal_rsp_exit_is_separate_from_successful_resource_release": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_tf_validation.py::test_shutdown_readiness_barrier_precedes_child_signal": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_tf_validation.py::test_shutdown_barrier_timeout_is_recorded_and_owned_child_still_released": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_tf_validation.py::test_v3_report_requires_explicit_strict_identity_and_normal_exit_evidence": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_transforms.py::test_identity_translation_and_analytic_90_degree_rotation": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_transforms.py::test_composition_is_noncommutative_and_inverse_is_rigid": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_transforms.py::test_parent_chain_matches_hand_calculated_point_and_reverse_direction": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_transforms.py::test_quaternion_sign_canonicalization_and_matrix_roundtrip": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_transforms.py::test_invalid_quaternions_rejected": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_transforms.py::test_invalid_transform_not_repaired": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_transforms.py::test_invalid_vectors_rejected": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_transforms.py::test_inputs_and_immutable_records_are_not_mutated": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_transforms.py::test_invalid_frame_graphs_rejected": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_transforms.py::test_scene_transform_import_is_independent_of_ros_environment": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_transforms.py::test_lazy_g1_exports_preserve_identity": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_viewer_replay.py::test_missing_null_nonstring_names_and_line_do_not_stop_any_of_26_frames": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_viewer_replay.py::test_play_pause_end_restart_and_slider_stay_synchronized": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_viewer_replay.py::test_latest_slider_request_wins_while_plotly_render_is_pending": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_viewer_replay.py::test_render_error_pauses_playback_and_can_recover": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_viewer_replay.py::test_newly_exported_html_executes_fixed_replay_not_only_source_ast": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_visualization.py::test_full_view_preserves_all_rows_negative_z_and_source_arrays": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_visualization.py::test_deterministic_display_selection_keeps_original_npz_indices": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_visualization.py::test_invalid_display_limit_rejected": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_visualization.py::test_invalid_data_is_not_ignored": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_visualization.py::test_g2_loader_is_reused_with_model_and_real_100_row_pair": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "workspace_n100_seed42.npz",
+        "workspace_n100_seed42.json"
+      ]
+    },
+    "test_visualization.py::test_loading_does_not_change_source_npz_json": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "workspace_n100_seed42.npz",
+        "workspace_n100_seed42.json"
+      ]
+    },
+    "test_visualization.py::test_g2_file_validation_errors_stop_before_plotting": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "workspace_n100_seed42.npz",
+        "workspace_n100_seed42.json"
+      ]
+    },
+    "test_visualization.py::test_model_mismatch_is_rejected": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "workspace_n100_seed42.npz",
+        "workspace_n100_seed42.json"
+      ]
+    },
+    "test_visualization.py::test_missing_plotly_has_explicit_error_and_no_installation": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_visualization.py::test_output_paths_and_conflicts_preserve_existing_files": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_visualization.py::test_publication_transaction_failure_rolls_back_only_its_files": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_visualization.py::test_cli_bad_input_returns_nonzero_without_creating_html": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_visualization.py::test_cli_missing_plotly_does_not_claim_pass": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "workspace_n100_seed42.npz",
+        "workspace_n100_seed42.json"
+      ]
+    },
+    "test_visualization.py::test_render_failure_does_not_publish_either_html": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_visualization.py::test_3d_coordinates_hover_color_origin_and_scale": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_visualization.py::test_display_subset_figure_labels_and_hover_use_original_rows": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_visualization.py::test_projection_axes_same_rows_and_equal_metric_scales": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_visualization.py::test_real_html_export_embeds_plotly_and_has_no_external_script": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_visualization.py::test_real_cli_keeps_source_npz_json_unchanged": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "workspace_n100_seed42.npz",
+        "workspace_n100_seed42.json"
+      ]
+    },
+    "test_workspace_validation.py::test_same_seed_exact_all_arrays_and_different_seed_changes": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_workspace_validation.py::test_quaternion_sign_equivalence_does_not_relax_determinism": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_workspace_validation.py::test_invalid_comparison_arrays_are_rejected": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_workspace_validation.py::test_different_valid_sample_shapes_fail_with_no_invented_error": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_workspace_validation.py::test_fixed_grid_duplicate_hits_exact_edges_and_half_open_upper": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_workspace_validation.py::test_default_decimal_edges_and_shared_grid_are_not_fitted_to_data": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_workspace_validation.py::test_grid_rejects_invalid_or_outside_points": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_workspace_validation.py::test_invalid_voxel_size_rejected": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_workspace_validation.py::test_grid_requires_integer_span_and_valid_range": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_workspace_validation.py::test_flat_statistics_and_voxel_count_mapping": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_workspace_validation.py::test_seed_aggregates_have_predeclared_ddof_and_full_matrix_check": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_workspace_validation.py::test_reuse_checks_model_config_versions_parameters_and_hash": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_workspace_validation.py::test_duplicate_experiment_in_two_distinct_directories_rejected": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_workspace_validation.py::test_incomplete_corrupt_reused_input_rejected": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_workspace_validation.py::test_small_pipeline_reuses_data_roundtrips_reports_and_does_not_overwrite": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_workspace_validation.py::test_csv_comparison_preserves_float_precision_and_rejects_tampering": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_workspace_validation.py::test_output_files_refuse_overwrite_and_publication_rolls_back": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_workspace_validation.py::test_sampling_exception_keeps_failed_run_marker_and_no_pass_report": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_workspace_validation.py::test_reproducibility_failure_is_a_real_fail_report": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_workspace_validation.py::test_reused_points_outside_shared_region_stop_before_sampling": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_workspace_validation.py::test_existing_markdown_template_is_never_overwritten": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_workspace_validation.py::test_prior_evidence_is_cited_without_tf_rerun": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "g1a_fk.json",
+        "g1b_tf_v3.json"
+      ]
+    },
+    "test_workspace_validation.py::test_cli_small_diagnostic_from_other_cwd_and_error_exit": {
+      "level": "artifact",
+      "requires": [],
+      "artifacts": [
+        "g1a_fk.json",
+        "g1b_tf_v3.json"
+      ]
+    },
+    "test_workspace_validation.py::test_report_does_not_assume_stability_improves": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "integration/test_saved_viewer_artifacts.py::test_saved_t4_native_data_all_26_frames_slider_and_play": {
+      "level": "artifact",
+      "requires": [],
+      "artifacts": [
+        "task_approach/p22_20261104_03/figures/q0_approach.html",
+        "task_approach/p22_20261104_03/figures/q1_approach.html"
+      ]
+    },
+    "integration/test_saved_viewer_artifacts.py::test_saved_t3_replay_keeps_endpoint_only_semantics_and_mesh_updates": {
+      "level": "artifact",
+      "requires": [],
+      "artifacts": [
+        "task_planning/p22_20261104_02/figures/q0_linear.html"
+      ]
+    },
+    "test_repro_doctor.py::test_portable_identity_distinguishes_relocation_from_mesh_and_include_change": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_repro_doctor.py::test_full_environment_mock_is_ready_without_safety_claim": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_repro_doctor.py::test_missing_official_model_is_blocked_not_pass": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_repro_doctor.py::test_missing_native_is_explicitly_blocked": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_repro_doctor.py::test_wrong_model_identity_is_fail_not_a_geometry_bypass": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_repro_doctor.py::test_core_does_not_request_ros_model_native_or_historical_artifacts": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_repro_doctor.py::test_cli_json_output_is_parseable_readonly_default_and_no_overwrite": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_viewer_replay.py::test_synthetic_t3_mode_retains_endpoint_only_semantics_without_artifacts": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_repro_groups.py::test_explicit_missing_artifacts_and_lfs_pointers_block_with_nonzero_exit": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_repro_groups.py::test_saved_viewers_can_use_an_independent_external_artifact_root": {
+      "level": "artifact",
+      "requires": [],
+      "artifacts": [
+        "task_approach/p22_20261104_03/figures/q0_approach.html",
+        "task_approach/p22_20261104_03/figures/q1_approach.html",
+        "task_planning/p22_20261104_02/figures/q0_linear.html"
+      ]
+    },
+    "test_task_benchmark.py::test_arbitrary_ports_use_framegraph_and_distinct_identity": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_task_benchmark.py::test_p22_exact_identity_and_rotated_translated_scene": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_task_benchmark.py::test_invalid_ports_rejected": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_task_benchmark.py::test_invalid_task_frame_targets_and_session_identity_rejected": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_task_benchmark.py::test_zero_one_multiple_ik_solutions_and_collision_screening": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_task_benchmark.py::test_common_start_once_original_index_and_invalid_start": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_task_benchmark.py::test_linear_blocked_rrt_succeeds_and_fresh_validation": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_task_benchmark.py::test_search_success_cannot_override_failed_final_check": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_task_benchmark.py::test_unknown_native_is_system_error_not_collision_failure": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_task_benchmark.py::test_one_failed_port_continues_but_backend_error_blocks_followers": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_task_benchmark.py::test_seed_reproducibility_and_explicit_parameter_rejection": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_task_benchmark.py::test_existing_output_rejected_before_loading_model": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_task_benchmark.py::test_summary_denominators_and_not_run_are_explicit": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_task_benchmark.py::test_actual_numerical_ik_through_generic_interface_is_deterministic": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_task_benchmark.py::test_generic_approach_rejects_interior_task_error": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "integration/test_task_benchmark_artifacts.py::test_generic_p22_full_precision_historical_equivalence": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "task_benchmark/t5_1_p22_equivalence_20261104_02",
+        "task_reachability/p22_20261104_02",
+        "task_planning/p22_20261104_02",
+        "task_approach/p22_20261104_03",
+        "g4_run01/experiments/workspace_n1000_seed42.npz",
+        "g4_run01/experiments/workspace_n1000_seed42.json",
+        "c3/assembly_build_20261104/build/collision_backend"
+      ]
+    },
+    "integration/test_task_benchmark_artifacts.py::test_nine_ports_evidence_hashes_counts_and_identity_tamper": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "task_benchmark/t5_1_s1_20261104_03",
+        "g4_run01/experiments/workspace_n1000_seed42.npz",
+        "g4_run01/experiments/workspace_n1000_seed42.json",
+        "c3/assembly_build_20261104/build/collision_backend"
+      ]
+    },
+    "integration/test_task_benchmark_artifacts.py::test_missing_historical_equivalence_is_blocked": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_task_benchmark_native.py::test_fresh_native_generic_roundtrip_and_same_seed_reproducibility": {
+      "level": "integration",
+      "requires": [
+        "model",
+        "native"
+      ],
+      "artifacts": []
+    },
+    "test_task_benchmark_native.py::test_actual_geometry_task_viewer_uses_selected_port_label": {
+      "level": "integration",
+      "requires": [
+        "model",
+        "native"
+      ],
+      "artifacts": []
+    },
+    "test_replay_core.py::test_state_machine_original_samples_pause_resume_reset_and_end_restart": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_replay_core.py::test_phase_data_and_boundary_provenance": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_replay_core.py::test_task_switch_stops_old_playback_and_failed_ports_cannot_play": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_replay_core.py::test_invalid_selection_never_continues_old_animation": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_replay_core.py::test_joint_mapping_comes_from_model_and_excludes_mimic_publishers": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_replay_core.py::test_untrusted_trajectory_and_mismatched_join_rejected": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_replay_core.py::test_store_rejects_traversal_and_ambiguous_names": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_replay_core.py::test_store_missing_hash_lfs_symlinks_and_json_duplicates": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_replay_core.py::test_explicit_input_bindings_preserve_hashes_and_do_not_follow_original_paths": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_replay_core.py::test_scene_boxes_ports_and_rotated_cylinder_markers_use_framegraph": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_replay_core.py::test_protocol_rejects_stale_sessions_unknown_actions_and_noninteger_revision": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_replay_artifacts.py::test_real_ports_goals_planners_and_every_original_sample": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "task_benchmark/t5_1_s1_20261104_03",
+        "g4_run01/experiments/workspace_n1000_seed42.npz",
+        "g4_run01/experiments/workspace_n1000_seed42.json",
+        "c3/assembly_build_20261104/build/collision_backend"
+      ]
+    },
+    "test_replay_artifacts.py::test_relocated_run_never_reads_original_absolute_run_paths_and_never_plans": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "task_benchmark/t5_1_s1_20261104_03",
+        "g4_run01/experiments/workspace_n1000_seed42.npz",
+        "g4_run01/experiments/workspace_n1000_seed42.json",
+        "c3/assembly_build_20261104/build/collision_backend"
+      ]
+    },
+    "test_replay_artifacts.py::test_wrong_manifest_anchor_and_dynamic_path_reference_are_rejected": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "task_benchmark/t5_1_s1_20261104_03",
+        "g4_run01/experiments/workspace_n1000_seed42.npz",
+        "g4_run01/experiments/workspace_n1000_seed42.json",
+        "c3/assembly_build_20261104/build/collision_backend"
+      ]
+    },
+    "test_replay_ros.py::test_real_jointstate_rsp_tf_scene_markers_and_clean_shutdown": {
+      "level": "integration",
+      "requires": [
+        "ros",
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_replay_ros.py::test_real_qt_panel_selection_pause_resume_reset_and_protocol": {
+      "level": "integration",
+      "requires": [
+        "ros",
+        "qt"
+      ],
+      "artifacts": []
+    },
+    "test_replay_ros.py::test_installed_launch_actual_p12_p22_samples_mimic_tf_and_shutdown": {
+      "level": "artifact",
+      "requires": [
+        "ros",
+        "model",
+        "replay_install"
+      ],
+      "artifacts": [
+        "task_benchmark/t5_1_s1_20261104_03",
+        "g4_run01/experiments/workspace_n1000_seed42.npz",
+        "g4_run01/experiments/workspace_n1000_seed42.json",
+        "c3/assembly_build_20261104/build/collision_backend"
+      ]
+    },
+    "test_replay_ros.py::test_replay_explicitly_refuses_default_domain_and_nonloopback": {
+      "level": "integration",
+      "requires": [
+        "ros"
+      ],
+      "artifacts": []
+    },
+    "test_base_pose.py::test_full_tree_world_invariance_and_axes": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_base_pose.py::test_direct_base_collision_object_transformed_once": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_base_pose.py::test_invalid_base_pose_rejected": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_base_pose.py::test_bounded_pilot_explicit_fixed_index": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_base_pose.py::test_real_root_mount_and_context_tamper_rejected": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_base_pose.py::test_station_body_classification_is_not_hardware_safety": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_replay_base_pose.py::test_json_exponent_overflow_and_nested_nonfinite_rejected": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_replay_base_pose.py::test_formal_reader_requires_external_manifest_anchor_before_any_file_access": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_replay_base_pose.py::test_failed_planners_preserve_goal_and_disable_nonexistent_playback": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_replay_base_pose.py::test_world_tcp_uses_station_pose_without_changing_saved_joint_samples": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_replay_base_pose.py::test_embedded_scene_binding_is_hash_checked_and_never_follows_old_path": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_base_pose.py::test_invalid_fixed_start_never_replaced_or_planned": {
+      "level": "integration",
+      "requires": [
+        "model",
+        "native"
+      ],
+      "artifacts": []
+    },
+    "test_base_pose_artifacts.py::test_b0_all_nine_ports_preserve_ik_goals_paths_approach_and_npz": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "base_pose_benchmark/t52_r2_s1_20261104_01",
+        "task_benchmark/t5_1_s1_20261104_03"
+      ]
+    },
+    "test_base_pose_artifacts.py::test_pilot_all_station_hashes_inputs_start_and_geometry_are_verified": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "base_pose_benchmark/t52_r2_s1_20261104_01"
+      ]
+    },
+    "test_base_pose_artifacts.py::test_new_scene_replay_uses_embedded_bound_inputs_and_preserves_goals": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "base_pose_benchmark/t52_r2_s1_20261104_01"
+      ]
+    },
+    "test_replay_ros.py::test_new_station_world_tf_fixed_cabinet_and_original_saved_samples": {
+      "level": "artifact",
+      "requires": [
+        "model",
+        "ros",
+        "replay_install"
+      ],
+      "artifacts": [
+        "base_pose_benchmark/t52_r2_s1_20261104_01/stations/xm30/benchmark"
+      ]
+    },
+    "test_base_pose.py::test_summary_plot_uses_recorded_rows_and_refuses_overwrite": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_restricted.py::test_conditional_inclusive_boundaries": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_restricted.py::test_workspace_bad_positions_rejected": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_restricted.py::test_invalid_workspace_config": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_restricted.py::test_world_tcp_in_each_station": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_restricted.py::test_scene_exact_objects_and_world_invariance": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_restricted.py::test_composed_rule_cache_fresh_and_switch_refinement": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_restricted.py::test_restriction_marker_world_geometry_and_disabled_boundary": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_restricted_native.py::test_added_box_is_loaded_and_has_real_fcl_collision": {
+      "level": "artifact",
+      "requires": [
+        "model",
+        "native"
+      ],
+      "artifacts": [
+        "base_pose_benchmark/t52_r2_s1_20261104_01/stations/b0/benchmark"
+      ]
+    },
+    "test_restricted_artifacts.py::test_all_eleven_conditions_keep_original_goals_and_complete_fresh_evidence": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "restricted_benchmark/t53_a_20261109_02"
+      ]
+    },
+    "test_restricted_artifacts.py::test_restricted_reader_never_searches_and_plays_exact_saved_npz": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "restricted_benchmark/t53_a_20261109_02"
+      ]
+    },
+    "test_restricted.py::test_workspace_invalid_goal_never_enters_rrt_and_approach_uses_same_rule": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_replay_ros.py::test_restricted_d4_real_markers_workspace_and_replanned_npz": {
+      "level": "artifact",
+      "requires": [
+        "model",
+        "ros",
+        "replay_install"
+      ],
+      "artifacts": [
+        "restricted_benchmark/t53_a_20261109_02/b0_D4_workspace_on"
+      ]
+    },
+    "test_capture_image.py::test_capture_pixel_content_guard": {
+      "level": "integration",
+      "requires": [
+        "qt"
+      ],
+      "artifacts": []
+    },
+    "test_multistart.py::test_local_only_boundaries_and_original_semantics": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_multistart.py::test_local_only_rejects_bad_points": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_multistart.py::test_local_off_and_unknown_mode": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_multistart.py::test_quality_separates_waypoints_samples_exit_and_undefined_ratio": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_multistart.py::test_ready_region_and_non_goal_rule": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_multistart.py::test_ready_selection_is_deterministic_before_planning_and_exhaustion_is_explicit": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_multistart.py::test_local_composition_uses_same_search_and_fresh_validation": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_multistart.py::test_ready_marker_identifies_actual_start_and_local_mode": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_multistart_artifacts.py::test_all_trials_preserve_starts_goals_scene_and_planner_identity": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "multistart_benchmark/t53_b_20261109_01",
+        "restricted_benchmark/t53_a_20261109_02",
+        "base_pose_benchmark/t52_r2_s1_20261104_01"
+      ]
+    },
+    "test_multistart_artifacts.py::test_ready_poses_are_real_g4_samples_not_goals_and_independently_native_valid": {
+      "level": "artifact",
+      "requires": [
+        "model",
+        "native"
+      ],
+      "artifacts": [
+        "multistart_benchmark/t53_b_20261109_01",
+        "restricted_benchmark/t53_a_20261109_02",
+        "base_pose_benchmark/t52_r2_s1_20261104_01"
+      ]
+    },
+    "test_multistart_artifacts.py::test_multistart_replay_never_plans_and_preserves_actual_start_and_npz": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "multistart_benchmark/t53_b_20261109_01",
+        "restricted_benchmark/t53_a_20261109_02",
+        "base_pose_benchmark/t52_r2_s1_20261104_01"
+      ]
+    },
+    "test_multistart_artifacts.py::test_validator_rejects_corrupt_npz_even_with_updated_file_hash": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "multistart_benchmark/t53_b_20261109_01",
+        "restricted_benchmark/t53_a_20261109_02",
+        "base_pose_benchmark/t52_r2_s1_20261104_01"
+      ]
+    },
+    "test_multistart_artifacts.py::test_real_ros_multistart_local_only_exact_samples_start_tf_and_scene": {
+      "level": "artifact",
+      "requires": [
+        "model",
+        "native",
+        "ros",
+        "qt",
+        "replay_install"
+      ],
+      "artifacts": [
+        "multistart_benchmark/t53_b_20261109_01",
+        "restricted_benchmark/t53_a_20261109_02",
+        "base_pose_benchmark/t52_r2_s1_20261104_01"
+      ]
+    },
+    "test_multistart.py::test_cli_help_from_other_directory_and_no_overwrite": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_path_shortcut.py::test_shortcut_preserves_input_endpoints_and_fresh_final_evidence": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_path_shortcut.py::test_blocked_direct_connection_is_not_accepted_and_no_improvement_keeps_raw": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_path_shortcut.py::test_fixed_seed_shortcut_decisions_are_reproducible": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_path_shortcut.py::test_shortcut_rejects_invalid_settings": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_path_shortcut.py::test_invalid_raw_input_or_backend_error_cannot_produce_playable_path": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_path_shortcut.py::test_zero_attempt_budget_and_direct_path_still_get_final_validation": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_path_shortcut.py::test_trial_termination_reasons_are_not_conflated": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_path_shortcut.py::test_distinct_rrt_seeds_are_forwarded_and_repeat_seed_preserves_path": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_path_shortcut.py::test_preregistered_matrix_has_ninety_main_trials_and_shared_ten_seed_list": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_path_shortcut.py::test_local_only_shortcut_uses_production_fk_and_unified_constraint": {
+      "level": "integration",
+      "requires": [
+        "model"
+      ],
+      "artifacts": []
+    },
+    "test_robustness_reporting.py::test_descriptive_distributions_reject_nonfinite_and_keep_missing_counts": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_robustness_reporting.py::test_failed_search_is_not_removed_from_seed_denominator": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_robustness_reporting.py::test_paired_comparison_preserves_failed_raw_and_reports_tcp_clearance_regression": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_robustness_artifacts.py::test_complete_ninety_main_and_ten_local_seeds_keep_inputs_and_failure_denominators": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "robustness_benchmark/t53_c_search_20261109_01",
+        "robustness_benchmark/t53_c_shortcut_20261109_03",
+        "robustness_benchmark/t53_c_preparation_20261109_01",
+        "multistart_benchmark/t53_b_20261109_01"
+      ]
+    },
+    "test_robustness_artifacts.py::test_all_eligible_raw_paths_have_uniform_reconstructible_shortcuts_and_preserve_raw_bytes": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "robustness_benchmark/t53_c_search_20261109_01",
+        "robustness_benchmark/t53_c_shortcut_20261109_03",
+        "robustness_benchmark/t53_c_preparation_20261109_01",
+        "multistart_benchmark/t53_b_20261109_01"
+      ]
+    },
+    "test_robustness_artifacts.py::test_preparation_is_reference_only_with_original_ready_q_and_conditional_mode": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "robustness_benchmark/t53_c_search_20261109_01",
+        "robustness_benchmark/t53_c_shortcut_20261109_03",
+        "robustness_benchmark/t53_c_preparation_20261109_01",
+        "multistart_benchmark/t53_b_20261109_01"
+      ]
+    },
+    "test_robustness_artifacts.py::test_c_raw_shortcut_and_preparation_replay_saved_npz_without_planning": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "robustness_benchmark/t53_c_search_20261109_01",
+        "robustness_benchmark/t53_c_shortcut_20261109_03",
+        "robustness_benchmark/t53_c_preparation_20261109_01",
+        "multistart_benchmark/t53_b_20261109_01"
+      ]
+    },
+    "test_robustness_artifacts.py::test_shortcut_tampering_cannot_pass_even_after_rehashing_changed_npz": {
+      "level": "artifact",
+      "requires": [
+        "model"
+      ],
+      "artifacts": [
+        "robustness_benchmark/t53_c_search_20261109_01",
+        "robustness_benchmark/t53_c_shortcut_20261109_03",
+        "robustness_benchmark/t53_c_preparation_20261109_01",
+        "multistart_benchmark/t53_b_20261109_01"
+      ]
+    },
+    "test_robustness_artifacts.py::test_actual_ros_optimized_local_path_preserves_samples_and_world_tf": {
+      "level": "artifact",
+      "requires": [
+        "model",
+        "native",
+        "ros",
+        "qt",
+        "replay_install"
+      ],
+      "artifacts": [
+        "robustness_benchmark/t53_c_search_20261109_01",
+        "robustness_benchmark/t53_c_shortcut_20261109_03",
+        "robustness_benchmark/t53_c_preparation_20261109_01",
+        "multistart_benchmark/t53_b_20261109_01"
+      ]
+    },
+    "test_robustness_reporting.py::test_home_audit_does_not_execute_vendor_code_or_invent_joint_home": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_robustness_reporting.py::test_new_cli_help_and_existing_output_guards_do_not_start_native": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_path_shortcut.py::test_failed_fresh_candidate_can_only_fall_back_to_fresh_valid_raw": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    },
+    "test_path_shortcut.py::test_failed_candidate_and_failed_fallback_never_return_a_path": {
+      "level": "core",
+      "requires": [],
+      "artifacts": []
+    }
+  }
+}

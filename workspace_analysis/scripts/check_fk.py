@@ -28,8 +28,8 @@ def main():
     try:
         import numpy as np
         import PyKDL
-        from workspace_analysis.model import JOINT_ORDER, load_model
-        from workspace_analysis.fk import ForwardKinematics
+        from workspace_analysis.robot.model import JOINT_ORDER, load_model
+        from workspace_analysis.robot.fk import ForwardKinematics
 
         model = load_model(args.config, model_path=args.model)
         if model.joint_order != JOINT_ORDER:

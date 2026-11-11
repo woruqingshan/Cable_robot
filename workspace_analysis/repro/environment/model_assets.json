@@ -1,0 +1,926 @@
+{
+  "raw_urdf_sha256": "5ff0007d08a798ebe31bc4e243d457e0f463aa7b896c088a889c919571ccd72d",
+  "portable_model_sha256": "e1b67e78283800e24ac94f33526e1c5d249314df13e2a49909e753f01674b047",
+  "source_path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/urdf/jetrover.xacro",
+  "package_root": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description",
+  "include_sha256": {
+    "urdf/arm.urdf.xacro": "c1edcb014f9dc2dd42f0c9ad2cf53a43fe95b4e87e8f02738d06ba020f1c2ad0",
+    "urdf/car_mecanum.urdf.xacro": "02919d15bd519d46f6fc323d8fc44575f06c201c23f0d35c1fd4c8b939134643",
+    "urdf/common.urdf.xacro": "92d3a232986fc940fada9e9fcb44beffc120fc2f90a21cc38d647f5d649cd383",
+    "urdf/connect.urdf.xacro": "9a03cd4b9896d9c5e25b0fcdc98cdac1d998af8c3c45effc0649b56f44cc17a8",
+    "urdf/depth_camera.urdf.xacro": "3b1de35f0d4fa3fff5d93f2857c3602fd18eb7789a402d99f4e03e88b32d88e3",
+    "urdf/gripper.urdf.xacro": "42c3bb8dca5edc6727b17f2bac24800e3e1b84529134c58e1b2d5c4c591682cf",
+    "urdf/imu.urdf.xacro": "bfddaa8a1b7629ed5a40c1da763856e96866d4b928f0a341e3426e0c8bc7c683",
+    "urdf/inertial_matrix.xacro": "a6e9c97cf27bdb88b19e5281dbb0bda956ed14394c772a15903abea8c112fd26",
+    "urdf/jetrover.xacro": "c30b054e3d9283c43c0b91cdba004aa1210d9cd7272aceb50dc19a955021ad35",
+    "urdf/lidar.urdf.xacro": "6fc7bf1ef26a5263a3f17245f0d310a047570f71d7dd6bebecaf126b2a5f6753",
+    "urdf/lidar_a1.urdf.xacro": "46d73e308a156eb7d90df05a31eed656ba4423c1e346a44a39337b11278f016b",
+    "urdf/materials.xacro": "3dbbb155a81bae537ef67c20ebdaddd61112d44110acea63d6def692893daae4"
+  },
+  "base_frame": "base_link",
+  "ee_frame": "end_effector_link",
+  "joint_order": [
+    "joint1",
+    "joint2",
+    "joint3",
+    "joint4",
+    "joint5"
+  ],
+  "chain": [
+    {
+      "name": "joint1",
+      "kind": "revolute",
+      "parent": "base_link",
+      "child": "link1",
+      "xyz": [
+        0.0251328065010765,
+        0.0,
+        0.0774026880954513
+      ],
+      "rpy": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "axis": [
+        0.0,
+        0.0,
+        -1.0
+      ],
+      "lower": -2.09,
+      "upper": 2.09,
+      "mimic_joint": null,
+      "multiplier": 1.0,
+      "offset": 0.0
+    },
+    {
+      "name": "servo_joint1",
+      "kind": "fixed",
+      "parent": "link1",
+      "child": "servo_link1",
+      "xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rpy": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "axis": null,
+      "lower": null,
+      "upper": null,
+      "mimic_joint": null,
+      "multiplier": 1.0,
+      "offset": 0.0
+    },
+    {
+      "name": "joint2",
+      "kind": "revolute",
+      "parent": "servo_link1",
+      "child": "link2",
+      "xyz": [
+        0.0,
+        0.0,
+        0.0338648012164686
+      ],
+      "rpy": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "axis": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "lower": -2.09,
+      "upper": 2.09,
+      "mimic_joint": null,
+      "multiplier": 1.0,
+      "offset": 0.0
+    },
+    {
+      "name": "joint3",
+      "kind": "revolute",
+      "parent": "link2",
+      "child": "link3",
+      "xyz": [
+        0.0,
+        0.0,
+        0.129416446394797
+      ],
+      "rpy": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "axis": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "lower": -2.09,
+      "upper": 2.09,
+      "mimic_joint": null,
+      "multiplier": 1.0,
+      "offset": 0.0
+    },
+    {
+      "name": "joint4",
+      "kind": "revolute",
+      "parent": "link3",
+      "child": "link4",
+      "xyz": [
+        0.0,
+        0.0,
+        0.129444631186569
+      ],
+      "rpy": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "axis": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "lower": -2.09,
+      "upper": 2.09,
+      "mimic_joint": null,
+      "multiplier": 1.0,
+      "offset": 0.0
+    },
+    {
+      "name": "servo_joint2",
+      "kind": "fixed",
+      "parent": "link4",
+      "child": "servo_link2",
+      "xyz": [
+        0.0,
+        0.0,
+        0.0544833339503674
+      ],
+      "rpy": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "axis": null,
+      "lower": null,
+      "upper": null,
+      "mimic_joint": null,
+      "multiplier": 1.0,
+      "offset": 0.0
+    },
+    {
+      "name": "joint5",
+      "kind": "revolute",
+      "parent": "servo_link2",
+      "child": "link5",
+      "xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rpy": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "axis": [
+        0.0,
+        0.0,
+        -1.0
+      ],
+      "lower": -2.09,
+      "upper": 2.09,
+      "mimic_joint": null,
+      "multiplier": 1.0,
+      "offset": 0.0
+    },
+    {
+      "name": "end_effector_joint",
+      "kind": "fixed",
+      "parent": "link5",
+      "child": "end_effector_link",
+      "xyz": [
+        0.0,
+        0.0,
+        0.08
+      ],
+      "rpy": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "axis": null,
+      "lower": null,
+      "upper": null,
+      "mimic_joint": null,
+      "multiplier": 1.0,
+      "offset": 0.0
+    }
+  ],
+  "auxiliary_positions": {
+    "r_joint": 0.0
+  },
+  "xacro_environment": {
+    "MACHINE_TYPE": "JetRover_Mecanum",
+    "LIDAR_TYPE": "A1"
+  },
+  "resources": [
+    {
+      "link": "base_link",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "3f09c842f450eefc28a733b4bf98263e243806bbf0796ad4167dc2ee95e57684"
+    },
+    {
+      "link": "base_link",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "d6f1d30e125ad3bcbde5f8619a93257413c17a4af3bb3cbe73ba0bec8aa418cb"
+    },
+    {
+      "link": "wheel_left_front_link",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "509df6f2ad86959bf0fc74f0464b70683c77dc31a23263811d7bb4a1ca26a216"
+    },
+    {
+      "link": "wheel_left_front_link",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "1e20a25ed14d9d3faabc9c0a5286ecc6ec477f447fa6721bea2003d5fb1488ef"
+    },
+    {
+      "link": "wheel_left_back_link",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "74f749efd01c2171d3a956996f38c4f394a745f93d4e037bf319950fc3aa54b5"
+    },
+    {
+      "link": "wheel_left_back_link",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "1e20a25ed14d9d3faabc9c0a5286ecc6ec477f447fa6721bea2003d5fb1488ef"
+    },
+    {
+      "link": "wheel_right_front_link",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "8d517f4f7521199a661f0fd06f3238b388836b5d57547ec9afa21877af721ee6"
+    },
+    {
+      "link": "wheel_right_front_link",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "265671256dd51133f5f9c2510dac6f5f6ee1982c9aff089d38bbd0c747f446cb"
+    },
+    {
+      "link": "wheel_right_back_link",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "5cead78dd7b2e5b4aa905914ce898f946ffe92d00e5411ea7e4fb873b45f8700"
+    },
+    {
+      "link": "wheel_right_back_link",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "265671256dd51133f5f9c2510dac6f5f6ee1982c9aff089d38bbd0c747f446cb"
+    },
+    {
+      "link": "lidar_link",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "1cf6fef70b8fb6105a9fd02c0451b5c983e50e3f47fbf7d3d8073e1edac6300c"
+    },
+    {
+      "link": "imu_link",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "4016bd52396df07cbe3222be3f571aa7d9b752fa275ffc1f1878ac3af3cf2a07"
+    },
+    {
+      "link": "imu_link",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "4016bd52396df07cbe3222be3f571aa7d9b752fa275ffc1f1878ac3af3cf2a07"
+    },
+    {
+      "link": "camera_connect_link",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "f672b8554113ae682dc7028f8bca79dcae579a1f528fdad8e8fcfb4cf78e4e82"
+    },
+    {
+      "link": "camera_connect_link",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "f672b8554113ae682dc7028f8bca79dcae579a1f528fdad8e8fcfb4cf78e4e82"
+    },
+    {
+      "link": "depth_cam_link",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "87e72ff1f41110f78c724675a02222d58af83c6a10fd68342b66d1f0cd5b7802"
+    },
+    {
+      "link": "depth_cam_link",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "446b56296c35f4f7e2edc9a711e2ac4ad0e5202be998c601b2b66ae3712d810a"
+    },
+    {
+      "link": "back_shell_black_link",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "17d1ce641505f09bd2e8f3c96ea864b5668404c2bd720be4f0eda7f5791ba3b3"
+    },
+    {
+      "link": "back_shell_black_link",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "9191a265e3ff6c7358721cf710637c73b2991b572408b3705e0027678ab06f5d"
+    },
+    {
+      "link": "back_shell_green_link",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "f15b51b1b76cb8ad6f802ede57bd18cd4d026b81b1b23d8139da6eaba47e6895"
+    },
+    {
+      "link": "back_shell_green_link",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "2cd793f40561d1fe54f0daafc26769d0836a04f1c30eeb4d8258f02224a8bc5e"
+    },
+    {
+      "link": "link1",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "4fcb56ef62f7dedbe6382cdeb73ca27539051681eeb1f36a92d05269763b41a3"
+    },
+    {
+      "link": "link1",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "4fcb56ef62f7dedbe6382cdeb73ca27539051681eeb1f36a92d05269763b41a3"
+    },
+    {
+      "link": "servo_link1",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "e9008d8a3741d3472df20f7dd3f780044db8c536c06c593ddf27684733ed674b"
+    },
+    {
+      "link": "servo_link1",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "0aa32832cbc0cec52cdd6dafd458576f2a083534d37975db3f508320cf0b86bc"
+    },
+    {
+      "link": "link2",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "1ad77e2313e419c3593d8fbe7f0f69c0ab76c61ba73395e3cc3e30a07736b4d3"
+    },
+    {
+      "link": "link2",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "65e347d25a91abd103370d6933e9ec177e72787f2f9981b719ea44b1b60e32c4"
+    },
+    {
+      "link": "link3",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "154b9ae0ae34770cfa8a6bfd18213f071ac8a1e5e8807ad6412884ee9e13dcc3"
+    },
+    {
+      "link": "link3",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "1718fb80ed11489d71a7ce9beef23014897c0608f62e489142d5f59b6bd10944"
+    },
+    {
+      "link": "link4",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "85250882b73abe132f16009988b6138118dc104e8c8e45214ae7e24b25e714dc"
+    },
+    {
+      "link": "link4",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "475179a9c7bf24c10a558fec1f196466195b0bc883ce0209f83a056381e471cf"
+    },
+    {
+      "link": "servo_link2",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "338063d0bc27c7c54ac6327bb9f4dd2fcace11236c5bef04c999ae0a8403a0bc"
+    },
+    {
+      "link": "servo_link2",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "c3d7f0ba39ab708dc1576c61da87a0a55bcf9afd6d989bf2cf47ef14197b155e"
+    },
+    {
+      "link": "link5",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "3465b3928cccc2462c25f21c86f887e8c0515784e2799774d93eead48c48284c"
+    },
+    {
+      "link": "link5",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "3465b3928cccc2462c25f21c86f887e8c0515784e2799774d93eead48c48284c"
+    },
+    {
+      "link": "gripper_link",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "6a441cecabcb89e840ba3a3b2567467cac723efd807f10f251bfd3ee713928ab"
+    },
+    {
+      "link": "gripper_link",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "5d8c8714db1ce14df4081c5bbe60fcd0024086874a44a4903eb6877f0039f62f"
+    },
+    {
+      "link": "r_link",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "6df08ecd230db46e66655c2d6f272b7af2307ddf16d6e1ff2876d458f4bcae9d"
+    },
+    {
+      "link": "r_link",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "6df08ecd230db46e66655c2d6f272b7af2307ddf16d6e1ff2876d458f4bcae9d"
+    },
+    {
+      "link": "l_link",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "196519b292059564c3dc9f62cc2efe50ae4ea425c91cc1d54ecc18c6a2b03db6"
+    },
+    {
+      "link": "l_link",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "196519b292059564c3dc9f62cc2efe50ae4ea425c91cc1d54ecc18c6a2b03db6"
+    },
+    {
+      "link": "l_in_link",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "ec13b7c4ce769cf3c6521ad6b039d52b45fb7f8c9595a83b67c9d11a810224b0"
+    },
+    {
+      "link": "l_in_link",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "ec13b7c4ce769cf3c6521ad6b039d52b45fb7f8c9595a83b67c9d11a810224b0"
+    },
+    {
+      "link": "l_out_link",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "3db09b7aa1de7a5bde3c49ca0fec168485957ad65756223ec118500918ced86d"
+    },
+    {
+      "link": "l_out_link",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "3db09b7aa1de7a5bde3c49ca0fec168485957ad65756223ec118500918ced86d"
+    },
+    {
+      "link": "r_in_link",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "1a76838849e8aaefa9ba441a61a73decf4dd835a4c6cbd7af02432d7d051d0df"
+    },
+    {
+      "link": "r_in_link",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "1a76838849e8aaefa9ba441a61a73decf4dd835a4c6cbd7af02432d7d051d0df"
+    },
+    {
+      "link": "r_out_link",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "d51971e443fc653d0bb2dac8998073d715dc362fb351ae2ba204fe5e9466d71a"
+    },
+    {
+      "link": "r_out_link",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "d51971e443fc653d0bb2dac8998073d715dc362fb351ae2ba204fe5e9466d71a"
+    }
+  ],
+  "resource_locations": [
+    {
+      "link": "base_link",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "3f09c842f450eefc28a733b4bf98263e243806bbf0796ad4167dc2ee95e57684",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/mecanum/base_link.stl",
+      "uri": "file:///home/siyuen/Desktop/jetrover_sim_ws/install/jetrover_description/share/jetrover_description/meshes/mecanum/base_link.stl"
+    },
+    {
+      "link": "base_link",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "d6f1d30e125ad3bcbde5f8619a93257413c17a4af3bb3cbe73ba0bec8aa418cb",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/mecanum/base_link_collision.stl",
+      "uri": "package://jetrover_description/meshes/mecanum/base_link_collision.stl"
+    },
+    {
+      "link": "wheel_left_front_link",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "509df6f2ad86959bf0fc74f0464b70683c77dc31a23263811d7bb4a1ca26a216",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/mecanum/wheel_left_front_link.stl",
+      "uri": "package://jetrover_description/meshes/mecanum/wheel_left_front_link.stl"
+    },
+    {
+      "link": "wheel_left_front_link",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "1e20a25ed14d9d3faabc9c0a5286ecc6ec477f447fa6721bea2003d5fb1488ef",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/mecanum/wheel_left_front_link_collision.stl",
+      "uri": "package://jetrover_description/meshes/mecanum/wheel_left_front_link_collision.stl"
+    },
+    {
+      "link": "wheel_left_back_link",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "74f749efd01c2171d3a956996f38c4f394a745f93d4e037bf319950fc3aa54b5",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/mecanum/wheel_left_back_link.stl",
+      "uri": "package://jetrover_description/meshes/mecanum/wheel_left_back_link.stl"
+    },
+    {
+      "link": "wheel_left_back_link",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "1e20a25ed14d9d3faabc9c0a5286ecc6ec477f447fa6721bea2003d5fb1488ef",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/mecanum/wheel_left_back_link_collision.stl",
+      "uri": "package://jetrover_description/meshes/mecanum/wheel_left_back_link_collision.stl"
+    },
+    {
+      "link": "wheel_right_front_link",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "8d517f4f7521199a661f0fd06f3238b388836b5d57547ec9afa21877af721ee6",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/mecanum/wheel_right_front_link.stl",
+      "uri": "package://jetrover_description/meshes/mecanum/wheel_right_front_link.stl"
+    },
+    {
+      "link": "wheel_right_front_link",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "265671256dd51133f5f9c2510dac6f5f6ee1982c9aff089d38bbd0c747f446cb",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/mecanum/wheel_right_front_link_collision.stl",
+      "uri": "package://jetrover_description/meshes/mecanum/wheel_right_front_link_collision.stl"
+    },
+    {
+      "link": "wheel_right_back_link",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "5cead78dd7b2e5b4aa905914ce898f946ffe92d00e5411ea7e4fb873b45f8700",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/mecanum/wheel_right_back_link.stl",
+      "uri": "package://jetrover_description/meshes/mecanum/wheel_right_back_link.stl"
+    },
+    {
+      "link": "wheel_right_back_link",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "265671256dd51133f5f9c2510dac6f5f6ee1982c9aff089d38bbd0c747f446cb",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/mecanum/wheel_right_back_link_collision.stl",
+      "uri": "package://jetrover_description/meshes/mecanum/wheel_right_back_link_collision.stl"
+    },
+    {
+      "link": "lidar_link",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "1cf6fef70b8fb6105a9fd02c0451b5c983e50e3f47fbf7d3d8073e1edac6300c",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/common/lidar_link.stl",
+      "uri": "package://jetrover_description/meshes/common/lidar_link.stl"
+    },
+    {
+      "link": "imu_link",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "4016bd52396df07cbe3222be3f571aa7d9b752fa275ffc1f1878ac3af3cf2a07",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/common/imu_link.stl",
+      "uri": "package://jetrover_description/meshes/common/imu_link.stl"
+    },
+    {
+      "link": "imu_link",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "4016bd52396df07cbe3222be3f571aa7d9b752fa275ffc1f1878ac3af3cf2a07",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/common/imu_link.stl",
+      "uri": "package://jetrover_description/meshes/common/imu_link.stl"
+    },
+    {
+      "link": "camera_connect_link",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "f672b8554113ae682dc7028f8bca79dcae579a1f528fdad8e8fcfb4cf78e4e82",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/arm/camera_connect_link.STL",
+      "uri": "package://jetrover_description/meshes/arm/camera_connect_link.STL"
+    },
+    {
+      "link": "camera_connect_link",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "f672b8554113ae682dc7028f8bca79dcae579a1f528fdad8e8fcfb4cf78e4e82",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/arm/camera_connect_link.STL",
+      "uri": "package://jetrover_description/meshes/arm/camera_connect_link.STL"
+    },
+    {
+      "link": "depth_cam_link",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "87e72ff1f41110f78c724675a02222d58af83c6a10fd68342b66d1f0cd5b7802",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/arm/depth_cam_link.STL",
+      "uri": "package://jetrover_description/meshes/arm/depth_cam_link.STL"
+    },
+    {
+      "link": "depth_cam_link",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "446b56296c35f4f7e2edc9a711e2ac4ad0e5202be998c601b2b66ae3712d810a",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/arm/depth_cam_link_collision.stl",
+      "uri": "package://jetrover_description/meshes/arm/depth_cam_link_collision.stl"
+    },
+    {
+      "link": "back_shell_black_link",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "17d1ce641505f09bd2e8f3c96ea864b5668404c2bd720be4f0eda7f5791ba3b3",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/common/back_shell_black_link.stl",
+      "uri": "package://jetrover_description/meshes/common/back_shell_black_link.stl"
+    },
+    {
+      "link": "back_shell_black_link",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "9191a265e3ff6c7358721cf710637c73b2991b572408b3705e0027678ab06f5d",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/common/back_shell_black_link_collision.stl",
+      "uri": "package://jetrover_description/meshes/common/back_shell_black_link_collision.stl"
+    },
+    {
+      "link": "back_shell_green_link",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "f15b51b1b76cb8ad6f802ede57bd18cd4d026b81b1b23d8139da6eaba47e6895",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/common/back_shell_green_link.stl",
+      "uri": "package://jetrover_description/meshes/common/back_shell_green_link.stl"
+    },
+    {
+      "link": "back_shell_green_link",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "2cd793f40561d1fe54f0daafc26769d0836a04f1c30eeb4d8258f02224a8bc5e",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/common/back_shell_green_link_collision.stl",
+      "uri": "package://jetrover_description/meshes/common/back_shell_green_link_collision.stl"
+    },
+    {
+      "link": "link1",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "4fcb56ef62f7dedbe6382cdeb73ca27539051681eeb1f36a92d05269763b41a3",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/arm/link1.STL",
+      "uri": "package://jetrover_description/meshes/arm/link1.STL"
+    },
+    {
+      "link": "link1",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "4fcb56ef62f7dedbe6382cdeb73ca27539051681eeb1f36a92d05269763b41a3",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/arm/link1.STL",
+      "uri": "package://jetrover_description/meshes/arm/link1.STL"
+    },
+    {
+      "link": "servo_link1",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "e9008d8a3741d3472df20f7dd3f780044db8c536c06c593ddf27684733ed674b",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/arm/servo_link1.STL",
+      "uri": "package://jetrover_description/meshes/arm/servo_link1.STL"
+    },
+    {
+      "link": "servo_link1",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "0aa32832cbc0cec52cdd6dafd458576f2a083534d37975db3f508320cf0b86bc",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/arm/servo_link1_collision.stl",
+      "uri": "package://jetrover_description/meshes/arm/servo_link1_collision.stl"
+    },
+    {
+      "link": "link2",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "1ad77e2313e419c3593d8fbe7f0f69c0ab76c61ba73395e3cc3e30a07736b4d3",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/arm/link2.STL",
+      "uri": "package://jetrover_description/meshes/arm/link2.STL"
+    },
+    {
+      "link": "link2",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "65e347d25a91abd103370d6933e9ec177e72787f2f9981b719ea44b1b60e32c4",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/arm/link2_collision.stl",
+      "uri": "package://jetrover_description/meshes/arm/link2_collision.stl"
+    },
+    {
+      "link": "link3",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "154b9ae0ae34770cfa8a6bfd18213f071ac8a1e5e8807ad6412884ee9e13dcc3",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/arm/link3.STL",
+      "uri": "package://jetrover_description/meshes/arm/link3.STL"
+    },
+    {
+      "link": "link3",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "1718fb80ed11489d71a7ce9beef23014897c0608f62e489142d5f59b6bd10944",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/arm/link3_collision.stl",
+      "uri": "package://jetrover_description/meshes/arm/link3_collision.stl"
+    },
+    {
+      "link": "link4",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "85250882b73abe132f16009988b6138118dc104e8c8e45214ae7e24b25e714dc",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/arm/link4.STL",
+      "uri": "package://jetrover_description/meshes/arm/link4.STL"
+    },
+    {
+      "link": "link4",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "475179a9c7bf24c10a558fec1f196466195b0bc883ce0209f83a056381e471cf",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/arm/link4_collision.stl",
+      "uri": "package://jetrover_description/meshes/arm/link4_collision.stl"
+    },
+    {
+      "link": "servo_link2",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "338063d0bc27c7c54ac6327bb9f4dd2fcace11236c5bef04c999ae0a8403a0bc",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/arm/servo_link2.STL",
+      "uri": "package://jetrover_description/meshes/arm/servo_link2.STL"
+    },
+    {
+      "link": "servo_link2",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "c3d7f0ba39ab708dc1576c61da87a0a55bcf9afd6d989bf2cf47ef14197b155e",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/arm/servo_link2_collision.stl",
+      "uri": "package://jetrover_description/meshes/arm/servo_link2_collision.stl"
+    },
+    {
+      "link": "link5",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "3465b3928cccc2462c25f21c86f887e8c0515784e2799774d93eead48c48284c",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/arm/link5.STL",
+      "uri": "package://jetrover_description/meshes/arm/link5.STL"
+    },
+    {
+      "link": "link5",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "3465b3928cccc2462c25f21c86f887e8c0515784e2799774d93eead48c48284c",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/arm/link5.STL",
+      "uri": "package://jetrover_description/meshes/arm/link5.STL"
+    },
+    {
+      "link": "gripper_link",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "6a441cecabcb89e840ba3a3b2567467cac723efd807f10f251bfd3ee713928ab",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/arm/gripper_link.STL",
+      "uri": "package://jetrover_description/meshes/arm/gripper_link.STL"
+    },
+    {
+      "link": "gripper_link",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "5d8c8714db1ce14df4081c5bbe60fcd0024086874a44a4903eb6877f0039f62f",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/arm/gripper_link_collision.stl",
+      "uri": "package://jetrover_description/meshes/arm/gripper_link_collision.stl"
+    },
+    {
+      "link": "r_link",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "6df08ecd230db46e66655c2d6f272b7af2307ddf16d6e1ff2876d458f4bcae9d",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/gripper/r_link.STL",
+      "uri": "package://jetrover_description/meshes/gripper/r_link.STL"
+    },
+    {
+      "link": "r_link",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "6df08ecd230db46e66655c2d6f272b7af2307ddf16d6e1ff2876d458f4bcae9d",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/gripper/r_link.STL",
+      "uri": "package://jetrover_description/meshes/gripper/r_link.STL"
+    },
+    {
+      "link": "l_link",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "196519b292059564c3dc9f62cc2efe50ae4ea425c91cc1d54ecc18c6a2b03db6",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/gripper/l_link.STL",
+      "uri": "package://jetrover_description/meshes/gripper/l_link.STL"
+    },
+    {
+      "link": "l_link",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "196519b292059564c3dc9f62cc2efe50ae4ea425c91cc1d54ecc18c6a2b03db6",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/gripper/l_link.STL",
+      "uri": "package://jetrover_description/meshes/gripper/l_link.STL"
+    },
+    {
+      "link": "l_in_link",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "ec13b7c4ce769cf3c6521ad6b039d52b45fb7f8c9595a83b67c9d11a810224b0",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/gripper/l_in_link.STL",
+      "uri": "package://jetrover_description/meshes/gripper/l_in_link.STL"
+    },
+    {
+      "link": "l_in_link",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "ec13b7c4ce769cf3c6521ad6b039d52b45fb7f8c9595a83b67c9d11a810224b0",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/gripper/l_in_link.STL",
+      "uri": "package://jetrover_description/meshes/gripper/l_in_link.STL"
+    },
+    {
+      "link": "l_out_link",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "3db09b7aa1de7a5bde3c49ca0fec168485957ad65756223ec118500918ced86d",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/gripper/l_out_link.STL",
+      "uri": "package://jetrover_description/meshes/gripper/l_out_link.STL"
+    },
+    {
+      "link": "l_out_link",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "3db09b7aa1de7a5bde3c49ca0fec168485957ad65756223ec118500918ced86d",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/gripper/l_out_link.STL",
+      "uri": "package://jetrover_description/meshes/gripper/l_out_link.STL"
+    },
+    {
+      "link": "r_in_link",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "1a76838849e8aaefa9ba441a61a73decf4dd835a4c6cbd7af02432d7d051d0df",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/gripper/r_in_link.STL",
+      "uri": "package://jetrover_description/meshes/gripper/r_in_link.STL"
+    },
+    {
+      "link": "r_in_link",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "1a76838849e8aaefa9ba441a61a73decf4dd835a4c6cbd7af02432d7d051d0df",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/gripper/r_in_link.STL",
+      "uri": "package://jetrover_description/meshes/gripper/r_in_link.STL"
+    },
+    {
+      "link": "r_out_link",
+      "kind": "visual",
+      "index": 0,
+      "sha256": "d51971e443fc653d0bb2dac8998073d715dc362fb351ae2ba204fe5e9466d71a",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/gripper/r_out_link.STL",
+      "uri": "package://jetrover_description/meshes/gripper/r_out_link.STL"
+    },
+    {
+      "link": "r_out_link",
+      "kind": "collision",
+      "index": 0,
+      "sha256": "d51971e443fc653d0bb2dac8998073d715dc362fb351ae2ba204fe5e9466d71a",
+      "path": "/home/siyuen/Desktop/code/cable_robot/system_source/simulations/jetrover_description/meshes/gripper/r_out_link.STL",
+      "uri": "package://jetrover_description/meshes/gripper/r_out_link.STL"
+    }
+  ],
+  "collision_mesh_count": 24,
+  "model_config_sha256": "0028f14160dc6bbf1dec0671c681961ebc46eedc0e0e7bd0c3d45c0ca5800b78"
+}

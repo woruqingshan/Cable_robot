@@ -12,8 +12,8 @@ import numpy as np
 import pytest
 from scipy.spatial.transform import Rotation
 
-from workspace_analysis.model import ModelError, model_from_xml
-from workspace_analysis.tf_validation import (
+from workspace_analysis.robot.model import ModelError, model_from_xml
+from workspace_analysis.experiments.tf_validation import (
     CASES, ManagedRSP, TFTimeoutError, TFValidationError, TransformAudit,
     choose_domain, close_resources, compare_poses, finalize_report, matrix_from_tf,
     require_single_endpoint, run_case, temporary_environment, verify_rsp_parameters, wait_until,
@@ -432,7 +432,7 @@ def test_startup_waits_for_node_then_parameter_barrier_before_any_endpoint_check
         return "digest"
     def no_early_strict_check(*args, **kwargs):
         raise AssertionError("strict endpoint check before model initialization")
-    monkeypatch.setattr("workspace_analysis.tf_validation.require_single_endpoint", no_early_strict_check)
+    monkeypatch.setattr("workspace_analysis.experiments.tf_validation.require_single_endpoint", no_early_strict_check)
     phases = []
     result = wait_for_rsp_initialization(StartingNode(), Client(), spin, lambda: None, 1,
                                          read_parameters, phases.append)

@@ -1,0 +1,90 @@
+# SYNTHETIC TEST PARAMETERS ONLY: not measured IDC/RJ45 geometry or safety parameters.
+schema_version: 1
+scene:
+  id: synthetic_demo
+  provenance: {kind: synthetic, hardware_verified: false}
+  reference_frame: base_link
+  units: {length: m, angle: rad}
+  coverage: partial_synthetic_fixture
+  frames:
+    - id: synthetic_demo/cabinet
+      parent: base_link
+      pose: {position_m: [0.45, 0.0, 0.20], quaternion_xyzw: [0, 0, 0, 1]}
+    - id: synthetic_demo/panel
+      parent: synthetic_demo/cabinet
+      pose: {position_m: [-0.15, 0.0, 0.0], quaternion_xyzw: [0, -0.7071067811865476, 0, 0.7071067811865476]}
+    - id: synthetic_demo/port_01_frame
+      parent: synthetic_demo/panel
+      pose: {position_m: [0, 0, 0], quaternion_xyzw: [0, 0, 0, 1]}
+  entities:
+    - id: cabinet_demo
+      kind: cabinet
+      frame: synthetic_demo/cabinet
+      components: [cab_left, cab_right, cab_back]
+    - id: panel_demo
+      kind: patch_panel
+      frame: synthetic_demo/panel
+      components: [panel_top, panel_bottom, panel_left, panel_right]
+  collision_objects:
+    - id: cab_left
+      type: box
+      parent_frame: synthetic_demo/cabinet
+      pose: {position_m: [0, 0.18, 0], quaternion_xyzw: [0, 0, 0, 1]}
+      size_m: [0.30, 0.02, 0.40]
+    - id: cab_right
+      type: box
+      parent_frame: synthetic_demo/cabinet
+      pose: {position_m: [0, -0.18, 0], quaternion_xyzw: [0, 0, 0, 1]}
+      size_m: [0.30, 0.02, 0.40]
+    - id: cab_back
+      type: box
+      parent_frame: synthetic_demo/cabinet
+      pose: {position_m: [0.14, 0, 0], quaternion_xyzw: [0, 0, 0, 1]}
+      size_m: [0.02, 0.38, 0.40]
+    - id: panel_top
+      type: box
+      parent_frame: synthetic_demo/panel
+      pose: {position_m: [0, 0.055, 0], quaternion_xyzw: [0, 0, 0, 1]}
+      size_m: [0.12, 0.03, 0.01]
+    - id: panel_bottom
+      type: box
+      parent_frame: synthetic_demo/panel
+      pose: {position_m: [0, -0.055, 0], quaternion_xyzw: [0, 0, 0, 1]}
+      size_m: [0.12, 0.03, 0.01]
+    - id: panel_left
+      type: box
+      parent_frame: synthetic_demo/panel
+      pose: {position_m: [-0.045, 0, 0], quaternion_xyzw: [0, 0, 0, 1]}
+      size_m: [0.03, 0.08, 0.01]
+    - id: panel_right
+      type: box
+      parent_frame: synthetic_demo/panel
+      pose: {position_m: [0.045, 0, 0], quaternion_xyzw: [0, 0, 0, 1]}
+      size_m: [0.03, 0.08, 0.01]
+    - id: synthetic_cylinder
+      type: cylinder
+      parent_frame: base_link
+      pose: {position_m: [0.30, 0.10, 0.10], quaternion_xyzw: [0, 0, 0, 1]}
+      radius_m: 0.015
+      length_m: 0.08
+    - id: oriented_test_box
+      type: box
+      parent_frame: base_link
+      pose: {position_m: [0.26, -0.12, 0.12], quaternion_xyzw: [0, 0, 0.3826834323650898, 0.9238795325112867]}
+      size_m: [0.08, 0.02, 0.06]
+  ports:
+    - id: port_01
+      entity: panel_demo
+      frame: synthetic_demo/port_01_frame
+      outward_axis_local: [0, 0, 1]
+      insertion_axis_local: [0, 0, -1]
+      key_axis_local: [1, 0, 0]
+      task_parameters_status: unmeasured
+  clearance:
+    robot_environment_m: 0.0
+    self_m: 0.0
+    contact_epsilon_m: 0.0000001
+  tool:
+    status: uncalibrated
+    ee_frame: end_effector_link
+    tcp_frame: null

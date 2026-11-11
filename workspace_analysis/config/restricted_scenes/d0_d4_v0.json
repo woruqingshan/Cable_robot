@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "usage": "RESEARCH_ONLY",
+  "obstacle_size_m": [0.035, 0.030, 0.024],
+  "scenes": {
+    "D0": {"target": "P22", "obstacle_ports": []},
+    "D1": {"target": "P23", "obstacle_ports": []},
+    "D2": {"target": "P23", "obstacle_ports": ["P22"]},
+    "D3": {"target": "P22", "obstacle_ports": ["P21", "P23"]},
+    "D4": {"target": "P22", "obstacle_ports": ["P12", "P21", "P23", "P32"]}
+  }
+}

@@ -53,9 +53,9 @@ def main():
     try:
         json.dump(report, stream, indent=2)
         stream.flush()
-        from workspace_analysis.model import JOINT_ORDER, load_model
-        from workspace_analysis.fk import ForwardKinematics
-        from workspace_analysis.tf_validation import (
+        from workspace_analysis.robot.model import JOINT_ORDER, load_model
+        from workspace_analysis.robot.fk import ForwardKinematics
+        from workspace_analysis.experiments.tf_validation import (
             CASES, POSITION_TOLERANCE, ROTATION_TOLERANCE, TFValidationError,
             choose_domain, finalize_report, run_case,
         )

@@ -1,0 +1,146 @@
+{
+  "python_modules": [
+    {
+      "id": "python.numpy",
+      "status": "PASS",
+      "summary": "importable",
+      "details": {
+        "version": "1.21.5",
+        "version_status": "RESOLVED",
+        "origin": "/usr/lib/python3/dist-packages/numpy/__init__.py",
+        "distribution": "numpy"
+      }
+    },
+    {
+      "id": "python.scipy",
+      "status": "PASS",
+      "summary": "importable",
+      "details": {
+        "version": "1.8.0",
+        "version_status": "RESOLVED",
+        "origin": "/usr/lib/python3/dist-packages/scipy/__init__.py",
+        "distribution": "scipy"
+      }
+    },
+    {
+      "id": "python.yaml",
+      "status": "PASS",
+      "summary": "importable",
+      "details": {
+        "version": "5.4.1",
+        "version_status": "RESOLVED",
+        "origin": "/usr/lib/python3/dist-packages/yaml/__init__.py",
+        "distribution": "PyYAML"
+      }
+    },
+    {
+      "id": "python.plotly",
+      "status": "PASS",
+      "summary": "importable",
+      "details": {
+        "version": "5.24.1",
+        "version_status": "RESOLVED",
+        "origin": "/home/siyuen/Desktop/code/cable_robot/cable_vla_robot/workspace_analysis/.venv/lib/python3.10/site-packages/plotly/__init__.py",
+        "distribution": "plotly"
+      }
+    },
+    {
+      "id": "python.PyKDL",
+      "status": "PASS",
+      "summary": "importable",
+      "details": {
+        "version": "1.5.1",
+        "version_status": "RESOLVED",
+        "origin": "/usr/lib/python3/dist-packages/PyKDL.cpython-310-x86_64-linux-gnu.so",
+        "distribution": "PyKDL"
+      }
+    },
+    {
+      "id": "python.urdf_parser_py",
+      "status": "PASS",
+      "summary": "importable",
+      "details": {
+        "version": null,
+        "version_status": "UNRESOLVED",
+        "origin": "/opt/ros/humble/lib/python3.10/site-packages/urdf_parser_py/__init__.py",
+        "distribution": "urdf-parser-py"
+      }
+    },
+    {
+      "id": "python.pytest",
+      "status": "PASS",
+      "summary": "importable",
+      "details": {
+        "version": "6.2.5",
+        "version_status": "RESOLVED",
+        "origin": "/usr/lib/python3/dist-packages/pytest/__init__.py",
+        "distribution": "pytest"
+      }
+    },
+    {
+      "id": "python.xacro",
+      "status": "PASS",
+      "summary": "importable",
+      "details": {
+        "version": "2.1.1",
+        "version_status": "RESOLVED",
+        "origin": "/opt/ros/humble/local/lib/python3.10/dist-packages/xacro/__init__.py",
+        "distribution": "xacro"
+      }
+    },
+    {
+      "id": "python.ament_index_python",
+      "status": "PASS",
+      "summary": "importable",
+      "details": {
+        "version": "1.4.0",
+        "version_status": "RESOLVED",
+        "origin": "/opt/ros/humble/lib/python3.10/site-packages/ament_index_python/__init__.py",
+        "distribution": "ament-index-python"
+      }
+    },
+    {
+      "id": "python.rclpy",
+      "status": "PASS",
+      "summary": "importable",
+      "details": {
+        "version": "3.3.19",
+        "version_status": "RESOLVED",
+        "origin": "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/__init__.py",
+        "distribution": "rclpy"
+      }
+    },
+    {
+      "id": "python.tf2_ros",
+      "status": "PASS",
+      "summary": "importable",
+      "details": {
+        "version": null,
+        "version_status": "UNRESOLVED",
+        "origin": "/opt/ros/humble/lib/python3.10/site-packages/tf2_ros/__init__.py",
+        "distribution": "tf2-ros"
+      }
+    }
+  ],
+  "toolchain": {
+    "compiler": {
+      "returncode": 0,
+      "stdout": "c++ (Ubuntu 11.4.0-1ubuntu1~22.04.3) 11.4.0\nCopyright (C) 2021 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+      "stderr": "",
+      "version_status": "OBSERVED"
+    },
+    "cmake": {
+      "returncode": 0,
+      "stdout": "cmake version 3.22.1\n\nCMake suite maintained and supported by Kitware (kitware.com/cmake).\n",
+      "stderr": "",
+      "version_status": "OBSERVED"
+    },
+    "apt": {
+      "returncode": 1,
+      "stdout": "cmake\t3.22.1-1ubuntu1.22.04.2\tinstalled\ng++\t4:11.2.0-1ubuntu1\tinstalled\ngcc\t4:11.2.0-1ubuntu1\tinstalled\nlibeigen3-dev\t3.4.0-2ubuntu2\tinstalled\nlibfcl-dev:amd64\t0.7.0-3\tinstalled\nlibfcl0.7:amd64\t0.7.0-3\tinstalled\nlibjavascriptcoregtk-4.0-18:amd64\t2.50.4-0ubuntu0.22.04.1\tinstalled\nliborocos-kdl-dev:amd64\t1.5.1-2build1\tinstalled\nliborocos-kdl1.5:amd64\t1.5.1-2build1\tinstalled\nlibssl-dev:amd64\t3.0.2-0ubuntu1.30\tinstalled\nlibtinyxml2-dev:amd64\t9.0.0+dfsg-3\tinstalled\nnlohmann-json3-dev\t3.10.5-2\tinstalled\npython3-numpy\t1:1.21.5-1ubuntu22.04.1\tinstalled\npython3-pykdl:amd64\t1.5.1-2build1\tinstalled\npython3-pytest\t6.2.5-1ubuntu2\tinstalled\npython3-scipy\t1.8.0-1exp2ubuntu1\tinstalled\npython3-yaml\t5.4.1-1ubuntu1\tinstalled\nros-humble-ament-index-python\t1.4.0-2jammy.20250718.231234\tinstalled\nros-humble-moveit-core\t2.5.9-1jammy.20251119.004651\tinstalled\nros-humble-moveit-ros-planning\t2.5.9-1jammy.20251119.012916\tinstalled\nros-humble-moveit-setup-framework\t2.5.9-1jammy.20251119.025032\tinstalled\nros-humble-moveit-setup-srdf-plugins\t2.5.9-1jammy.20251119.025513\tinstalled\nros-humble-rclpy\t3.3.19-1jammy.20251118.151334\tinstalled\nros-humble-resource-retriever\t3.1.3-1jammy.20250718.234149\tinstalled\nros-humble-robot-state-publisher\t3.0.3-2jammy.20251118.234209\tinstalled\nros-humble-ros-base\t0.10.0-1jammy.20251119.014616\tinstalled\nros-humble-srdfdom\t2.0.7-1jammy.20251118.220411\tinstalled\nros-humble-tf2-ros\t0.25.17-1jammy.20251118.224851\tinstalled\nros-humble-tf2-ros-py\t0.25.17-1jammy.20251118.221142\tinstalled\nros-humble-urdf\t2.6.1-1jammy.20251118.220208\tinstalled\nros-humble-xacro\t2.1.1-1jammy.20250829.093455\tinstalled\n",
+      "stderr": "dpkg-query: \u6ca1\u6709\u627e\u5230\u4e0e ros-humble-urdf-parser-py \u76f8\u5339\u914d\u7684\u8f6f\u4ef6\u5305\n",
+      "version_status": "OBSERVED"
+    }
+  },
+  "note": "Observed imports/APT/ROS/venv; unknown module versions explicitly UNRESOLVED."
+}

@@ -1,4 +1,30 @@
-# JetRover Workspace Analysis — G1-A / G1-B / G2 / G3 / G4
+T5.3-C 多种子、标准 Shortcut 与准备动作复现见 [开发及验收说明](docs/t5_3_c_robustness_shortcut.md)。
+
+T5.3-B 多起点与 Local-only 复现实验见 [开发及验收说明](docs/t5_3_b_multistart_benchmark.md)。
+
+# JetRover Workspace Analysis — P2.2 / P2.3-R1
+
+R2-A/B 复现入口见 [repro/README.md](repro/README.md)。**默认 pytest 现在只运行 Core**；
+官方模型/Native 和历史 Artifact 测试必须分别显式选择。历史验收数字保留于下文，完整当前回归需按新入口运行三个分组。
+
+T5.1 通用任务规划与九网口 Benchmark 的 API、数据契约和复现命令见
+[开发说明](docs/t5_1_task_benchmark.md)。新增入口 `scripts/evaluate_task_benchmark.py`
+复用既有 IK、FCL、RRT 和 Cartesian Approach，原有 P22 CLI 保留。
+所有任务仍为 `RESEARCH_ONLY`，结果等待用户审核。
+
+T5.2-R1 的独立 ROS2/RViz2 交互式只读回放见
+[构建、启动及验收说明](docs/t5_2_r1_rviz_replay.md)。它读取已验证 T5.1 采样，
+不重新求解或规划，也不连接硬件控制接口。
+
+T5.2-R2 的 World/Base 位姿适配、五站位 Pilot、固定起点、独立场景身份和
+World RViz 回放见 [开发与验收说明](docs/t5_2_r2_base_pose.md)。本轮还修复了
+无路径 IK Goal 的查看、正式回放 Manifest SHA256 必填及 JSON 指数溢出。
+正式 Launch 必须传入已选定实验的可信 SHA256；RViz Fixed Frame 现在为 `world`。
+
+T5.3-A 的条件式 World TCP 边界、D0–D4 邻近网口 Box、固定历史 IK Goal
+重验证及 Linear/RRT 对照入口见
+[受限实验说明](docs/t5_3_a_restricted_benchmark.md)。实验通过同一有效性接口
+检查工作空间和语义碰撞，历史路径、重新规划和 Approach 分阶段保存。
 
 G1-A 已由用户运行并验收：三组 PyKDL/独立参考一致，pytest 为
 `48 passed, 1 warning`；本机 `results/g1a_fk.json` 的最大位置误差约
@@ -10,10 +36,14 @@ G1-B v3 也已由用户执行并验收：Zero、Nonzero、Near-limit 均 PASS，
 G2 已由用户运行并验收：100 / 10,000 行实验 PASS，两组 NPZ 哈希与 JSON
 一致，G2 完整回归为 `152 passed, 1 warning`。既有数据保存在 results/。
 G3 已由用户完成测试及交互式可视化验收；G3 代码已提交。
-本轮新增 G4 复现、采样稳定性与基础体素命中分析，**等待用户正式实验与验收**。
-G1-A/G2/G3/G4 不启动 ROS 节点；G1-B 只启动自己的 Robot State Publisher。
+G4 正式九组实验和复现报告现已由用户运行并验收，见 reports/g4_validation_run01.md。
+P2.3-A 架构和 B1 场景模型/坐标变换均已通过用户审核。
+B2 交互式场景与 Workspace 叠加已由用户验收并提交。
+当前 R1 模块化重构已实现，**等待用户审核**。详见 [R1 架构与迁移说明](docs/r1_architecture.md)。
+下文按阶段保留开发记录；Python 导入示例已更新为 R1 路径。
+G1-A/G2/G3/G4/B1/B2 不启动 ROS 节点；G1-B 只启动自己的 Robot State Publisher。
 所有入口均不启动机器人驱动或控制器，不调用实体机器人服务。
-不含碰撞检测、IK、环境建模或规划算法。
+目前包含合成场景表示及可视化，不含碰撞检测、距离/安全间隙计算、IK 或规划算法。
 
 ## 模型和坐标约定
 
@@ -39,12 +69,12 @@ Frame、非法 q、越界及非法辅助状态均报错，绝不静默固定或�
 
 ## 实现与独立性
 
-`model.py` 用 `urdf_parser_py` 读取标准 URDF；按真实父子关系提取完整链。
+`robot/model.py` 用 `urdf_parser_py` 读取标准 URDF；按真实父子关系提取完整链。
 Xacro 仅在内存展开；记录原文件及实际 includes 的 SHA-256、展开 XML
 哈希、Base/EE 和关节元数据，不复制官方 Mesh 或创建第二套模型。
 展开 XML 包含本机资源路径，跨机器的原始 XML 哈希可能不同。
 
-`fk.py` 构造 KDL Segment，并调用 `ChainFkSolverPos_recursive`。
+`robot/fk.py` 构造 KDL Segment，并调用 `ChainFkSolverPos_recursive`。
 转换采用 ROS `kdl_parser` 的语义：关节 pivot 为 origin 的平移，关节轴为
 `R_origin * axis_local`，segment 零位变换为完整 origin。固定段同样保留。
 适配代码没有 JetRover 尺寸常数，也没有依赖缺失的 `kdl_parser_py`。
@@ -107,8 +137,8 @@ JSON 同时打印到终端。异常时退出码为 1，pytest 异常也必须处
 ## API
 
 ```python
-from workspace_analysis.model import load_model
-from workspace_analysis.fk import ForwardKinematics
+from workspace_analysis.robot.model import load_model
+from workspace_analysis.robot.fk import ForwardKinematics
 
 model = load_model("/absolute/path/to/config/workspace.yaml")
 fk = ForwardKinematics(model)
@@ -164,8 +194,8 @@ pytest 各项应 PASSED，不能有 FAILED/ERROR，也不因缺少模型而静�
 
 ## G1-B：用户运行 ROS2 TF 交叉验证
 
-新增文件：`scripts/validate_tf.py`、`src/workspace_analysis/tf_validation.py`、
-`tests/test_tf_validation.py`。G1-A 的 model.py、fk.py、参考实现和测试不改动。
+新增文件：`scripts/validate_tf.py`、`src/workspace_analysis/experiments/tf_validation.py`、
+`tests/test_tf_validation.py`。G1-A 的 robot/model.py、robot/fk.py、参考实现和测试不改动。
 额外使用现有 rclpy、tf2_ros、tf2_msgs、sensor_msgs、rcl_interfaces、
 robot_state_publisher；没有安装/升级依赖。
 
@@ -330,9 +360,9 @@ v3 实际集成验证现已由用户执行并验收；本轮不重跑 ROS2 集�
 
 ## G2：几何可达工作空间采样
 
-开发分支：feat/workspace-planning。新增 sampling.py、results.py、
+开发分支：feat/workspace-planning。新增 workspace/sampling.py、workspace/results.py、
 scripts/sample_workspace.py 和 tests/test_sampling_results.py，不修改已验证
-的 model.py、fk.py 或 tf_validation.py，不引入新依赖。
+的 robot/model.py、robot/fk.py 或 experiments/tf_validation.py，不引入新依赖。
 
 数学定义为 joint-limit-constrained geometric reachable workspace：从 URDF
 动态读取关节上下限，使用 NumPy default_rng(seed) 在各关节区间独立均匀采样，
@@ -431,9 +461,9 @@ NPZ，最后发布作为提交标志的 JSON；删除临时文件和锁后读者
 ### Python API 与离线单元测试
 
 ```python
-from workspace_analysis.model import load_model
-from workspace_analysis.sampling import sample_workspace
-from workspace_analysis.results import file_sha256, save_results, load_results
+from workspace_analysis.robot.model import load_model
+from workspace_analysis.workspace.sampling import sample_workspace
+from workspace_analysis.workspace.results import file_sha256, save_results, load_results
 
 config = "/absolute/path/to/config/workspace.yaml"
 config_hash = file_sha256(config)
@@ -465,7 +495,7 @@ G2 仅研究模型关节限位约束下的原始几何 FK 点集。自碰撞、�
 
 ## G3 — 交互式工作空间可视化
 
-新增文件：src/workspace_analysis/visualization.py、scripts/plot_workspace.py、
+新增文件：src/workspace_analysis/viz/workspace.py、scripts/plot_workspace.py、
 tests/test_visualization.py。本轮只另外更新本 README，不改 G1/G2 核心、配置、
 官方模型、原始 NPZ/JSON。没有新增采样、批量 FK、碰撞/IK/规划或 G4。
 
@@ -629,7 +659,7 @@ workspace samples**。不等于 collision-free、physically valid、task-feasibl
 
 ## G4 — 复现性、采样稳定性与基础体素命中
 
-新增 validation.py（验证、实验编排、体素统计）、validation_report.py
+新增 experiments/workspace_validation.py（验证、实验编排、体素统计）、experiments/reporting.py
 （CSV/JSON/Markdown）、scripts/validate_workspace.py、
 tests/test_workspace_validation.py 和 reports/g4_validation.md 待实验模板。
 仅另行更新 README，G1-A/G1-B/G2/G3 核心、官方模型、配置和旧数据保持原样。
@@ -749,7 +779,7 @@ Markdown 展示逐轴统计、各组 AABB/FK/体素、跨 seed 表和观测解�
 掉电事务恢复；输出文件系统必须支持 hard-link。重新运行请使用新目录。
 
 可在其他 Python 程序中按既有导入方式调用
-`validation_report.load_validation_bundle(run_dir)`，拒绝不完整 run，验证输出
+`workspace_analysis.experiments.reporting.load_validation_bundle(run_dir)`，拒绝不完整 run，验证输出
 哈希、CSV/JSON 行一致性、跨 seed 聚合和复现状态。数据源的路径和哈希用于
 追溯，不是密码学身份认证；移动结果时需保留或更新外部 Markdown 路径。
 
@@ -773,3 +803,460 @@ P2.2 之后仍需研究：实物 TCP/模型标定与硬件误差、真实安全�
 这些是后续技术问题，本轮不实现。
 
 **G4 代码开发完成，等待用户运行正式实验与验收。**
+
+## P2.3-B1 — Strict Scene Model & Coordinate Transforms
+
+P2.3-A 设计见 docs/p23_architecture.md；本轮只实现 B1，不进入 B2/C/D/E。
+新增 geometry/se3.py + scene/frames.py、scene/schema.py + scene/model.py、config/scenes/synthetic_dev.yaml、
+tests/test_transforms.py 和 tests/test_scene_model.py。
+G1–G4 算法和官方资源不变；另外将包 __init__.py 的四个既有模型导出改为
+惰性加载，避免导入场景模块时先加载 URDF/ROS 依赖。原 __all__ 和导出对象
+身份保持兼容，已有调用方式不变，已在回归测试中核验。
+
+### API 与 Frame 图
+
+```python
+from workspace_analysis.scene.schema import load_scene, parse_scene, SceneError
+from workspace_analysis.scene.frames import Frame, FrameGraph, resolve_transform
+from workspace_analysis.geometry.se3 import (
+    pose_to_matrix, quaternion_to_matrix, matrix_to_quaternion,
+    validate_rotation, validate_transform, compose_transforms, invert_transform,
+    transform_point, transform_direction,
+    Pose, TransformError,
+)
+
+scene = load_scene('/absolute/path/to/config/scenes/synthetic_dev.yaml')
+T_base_port = resolve_transform(scene, 'base_link', 'synthetic_demo/port_01_frame')
+T_base_box = scene.object_transform('oriented_test_box')
+canonical_dict = scene.to_dict()  # 可编辑的深层副本，不会修改原 Snapshot
+canonical_json = scene.to_json()  # 精确参与 Canonical Hash 的 JSON 字符串
+```
+
+Pose/Frame/FrameGraph 和 SceneSnapshot 使用冻结、带 slots 的对象。内部向量与
+矩阵缓存存为元组，嵌套映射使用私有副本的 MappingProxyType；没有暴露可变数组。
+矩阵/点/方向 API 总是返回新数组，改动返回值不会影响 Snapshot 或输入数组。
+通过 to_dict/to_json 生成未来 native JSON 请求的数据，不要直接对 MappingProxyType
+调用 json.dumps。parse_scene 接受 str/bytes，支持严格 YAML 及本接口的 JSON 文本。
+
+FrameGraph 隐式包含唯一 base_link 根，检查重复 ID/多父、缺失父、环和不连通
+节点；不补造 Frame。构造时从根广度优先计算 ^base T_frame，并保存不可变缓存。
+resolve_transform(scene,target,source) 返回 **^target T_source**，即
+inverse(^base T_target) @ ^base T_source，使用列向量。
+Frame 列表顺序不影响解析。Scene Frame 必须采用 scene_id/局部名称，不覆盖机器人 Link。
+可直接用 FrameGraph/Frame/Pose 做不依赖 Scene Schema 的坐标图测试。
+
+所有矩阵都检查形状、有限性和 SO(3)（正交及 det=+1，绝对容差 1e-10）；
+齐次矩阵末行必须为 [0,0,0,1]。四元数为 XYZW，非零，单位范数容差 1e-8，
+只对容许的浮点范数误差做归一化；不通过 SciPy 静默修复错误旋转矩阵。
+transform_point 使用 R*p+t，transform_direction 只使用 R*d，不平移、不自动单位化。
+错误为包含输入位置的 TransformError/SceneError，均继承 ValueError。
+
+### 实际支持的 Schema v1
+
+顶层必须是 schema_version: 1 和 scene。scene 必须完整包含：
+id、provenance、reference_frame、units、coverage、frames、entities、
+collision_objects、ports、clearance、tool；所有层级未知/缺失字段均拒绝。
+
+- provenance：kind 为 synthetic/measured/vision，hardware_verified 必须是 bool；
+  synthetic 不能声称 hardware_verified=true。provenance/coverage 仅记录输入声明，
+  解析通过不能证明物理测量、碰撞覆盖或安全性。B1 交付的配置明确为合成场景。
+- units 必须为 length:m、angle:rad，reference_frame 必须为 base_link；不推断或转换单位。
+- frames：id、parent、pose；pose 仅含 position_m[3]、quaternion_xyzw[4]。
+  ID 使用 ASCII 字母/下划线开头的段，可含数字、下划线、连字符，Frame 段之间用 /。
+- collision_objects：id、type、parent_frame、pose；box 用完整边长 size_m[3]，
+  cylinder 用 radius_m/length_m（局部 +Z 轴），所有尺寸有限且 >0。旋转 Box 用 pose 表示。
+- entities：id、kind(cabinet/patch_panel)、frame、components；components 必须非空、
+  无重复并引用实际 object。实体只分组，不另外生成一个填满机柜的 solid。
+- ports：id、entity、frame、三个局部操作轴、task_parameters_status；entity 必须是
+  实际 patch_panel，port frame 必须位于它的后代分支。各类 ID 分别唯一。
+  outward=[0,0,+1]、insertion=[0,0,-1]、key=[+1,0,0]，校验绝对容差 1e-12，
+  规范化保存上述固定轴。Port 不自动给实体面板挖孔。
+- clearance：robot_environment_m、self_m、contact_epsilon_m，均非负有限实数；
+  只保存参数，B1 不执行间隙判定，也不把 epsilon 当实际安全裕量。
+- tool：当前精确支持 uncalibrated、ee_frame=end_effector_link、tcp_frame=null；
+  port task_parameters_status 当前只支持 unmeasured。真实测量/标定字段尚无实现定义，
+  不接受用 calibrated/measured 字符串替代完整数据，不自动补单位 TCP。
+
+YAML 重复 key、未知 tag、非字符串 key、merge key、alias、多个文档、非法编码
+均拒绝；数字检查排除 bool（包括与数字混合的列表）、数值字符串、NaN/Inf。
+解析资源限制为 UTF-8 1 MiB、64 层、20,000 个 YAML 节点。别名首版全部拒绝，
+避免无界展开；这些是输入资源限制，不是机器人几何精度。
+支持未加引号的 1e-07 等科学计数法，带引号的数字仍是非法数值字符串。
+
+### Canonical Hash 与不可变性
+
+Raw YAML SHA256 对读取的原始 bytes 计算，包含注释、换行、空白；保存路径不参与。
+Canonical Scene SHA256 对规范化完整 Schema 的 JSON UTF-8 字节计算，不包含来源路径、
+raw hash、自身 hash 或末尾换行。
+
+规范化规则：数值参数转为有限 float64/Python float；负零转正零；四元数在范数
+容差内归一化，按 **(w,x,y,z) 首个非零分量为正**固定 q/-q 符号。
+Frames/Objects/Entities/Ports 按 id 排序，components 按 ID 排序；空间向量分量不能排序。
+JSON 固定为 json.dumps(sort_keys=True,ensure_ascii=False,separators=(',',':'),allow_nan=False)。
+映射键顺序、空白、注释、这些无序集合的排列及 q/-q 不改变 Canonical Hash；
+几何、位姿、来源声明、关联或间隙等规范内容改变时哈希改变。
+
+这是本项目 v1 的 Python float64/JSON 约定，不宣称 RFC 8785 或跨科学计算版本的
+位级协议。未来 native 后端应核验原 canonical UTF-8 payload 的字节哈希，不能另用
+未约定的四舍五入或浮点格式重算。Snapshot 没有外部可变原字典引用；只读结构与
+导出的副本都已有测试覆盖。
+
+当前 synthetic_dev.yaml 的实测指纹：
+
+```text
+raw_yaml_sha256       cae02112d6a051b0bff3a6c7c8698ee1acc9a12e226fd75bd4df9b683ab5fba4
+canonical_scene_sha256 0196cd18fc10ef9e4a23cc054e1aecfcb4e3509f220344ee538d152a5fb210a6
+```
+
+仅编辑注释会改变前者；这些值是配置身份，不代表碰撞/硬件验证通过。
+
+### 合成场景的人工真值
+
+配置直接采用已审核架构第 6.2 节的几何参数，仅加合成声明注释：3 Frames、
+2 个语义实体、9 个几何体（8 Box + 1 Cylinder）、1 个 Port。
+包括左右侧板、后板、围成测试开口的四个 Box、圆柱及旋转 Box；不是实测 RJ45 几何。
+
+数学真值（m；显示舍去约 1e-16 的浮点残差）：
+
+```text
+^base T_cabinet = [[1,0,0,0.45], [0,1,0,0], [0,0,1,0.20], [0,0,0,1]]
+^base T_panel = ^base T_port =
+[[0,0,-1,0.30], [0,1,0,0], [1,0,0,0.20], [0,0,0,1]]
+```
+
+Panel 的局部偏移 (-0.15,0,0) 与 Cabinet 的 (0.45,0,0.20) 相加后，
+原点为 (0.30,0,0.20)，Ry(-90°) 将局部 +Z 旋到 Base -X。
+Port 在 Panel 中为零位姿，故外向 Base -X、插入 Base +X、键控 Base +Z。
+这是坐标变换结果，不证明五关节机器人可达到该姿态。
+额外手算测试用 Rz(90°) 和多层平移验证非交换连乘，不能仅靠同一实现互相对照。
+
+### 用户本地验收命令
+
+B1 API 本身无需 source ROS；隔离解释器测试已确认它不加载 model、rclpy、PyKDL、
+MoveIt、FCL 或 Plotly。完整测试还核验旧 G1 导出兼容性，因此先 source 既有环境：
+
+```bash
+source /opt/ros/humble/setup.bash
+source /home/siyuen/Desktop/jetrover_sim_ws/install/setup.bash
+cd /home/siyuen/Desktop/code/cable_robot/cable_vla_robot/workspace_analysis
+
+.venv/bin/python -m pytest -q -rs tests/test_transforms.py tests/test_scene_model.py
+.venv/bin/python -m pytest -q -rs tests
+
+PYTHONPATH=/home/siyuen/Desktop/code/cable_robot/cable_vla_robot/workspace_analysis/src \
+.venv/bin/python - <<'PY'
+from workspace_analysis.scene.schema import load_scene
+from workspace_analysis.scene.frames import resolve_transform
+from workspace_analysis.geometry.se3 import transform_direction
+s = load_scene('config/scenes/synthetic_dev.yaml')
+print(s.scene_id, len(s.frames), len(s.collision_objects), len(s.ports))
+print('Raw:', s.raw_yaml_sha256)
+print('Canonical:', s.canonical_scene_sha256)
+for frame in ('cabinet', 'panel', 'port_01_frame'):
+    print(frame)
+    print(resolve_transform(s, 'base_link', 'synthetic_demo/' + frame))
+T = resolve_transform(s, 'base_link', 'synthetic_demo/port_01_frame')
+print('outward:', transform_direction(T, [0, 0, 1]))
+print('insertion:', transform_direction(T, [0, 0, -1]))
+PY
+```
+
+本轮临时副本测试：**B1 115 passed**；全套 **336 passed, 1 warning，无 SKIP**。
+原 G1–G4 的 221 项全部保留并通过。warning 是原 URDF 解析依赖的 Python 3.11
+私有变量提示。测试没有启动机器人、RSP、Gazebo、MoveIt Move Group 或控制节点。
+原 G3 回归仍包含临时目录的小样本 HTML 导出；没有实现或运行 B2 场景可视化。
+没有生成新的正式 Workspace 采样或碰撞结果。
+
+待用户复核实际矩阵、严格错误信息、不可变对象和哈希后再验收 B1。
+当前场景为合成刚体几何数据，TCP 未标定；lidar overlay、真实机柜/工具/线缆、
+碰撞、安全间隙、任务可行性、IK 和规划均未验证或实现。
+
+**P2.3-B1 Code Implementation Completed — Pending User Review.**
+
+## P2.3-B2 — Interactive IDC Scene Visualization
+
+新增 src/workspace_analysis/viz/scene.py + viz/meshes.py、scripts/inspect_scene.py、
+tests/test_scene_visualization.py，只另外更新本 README。B1、G1–G4、架构文档、
+官方 URDF/Xacro/Mesh、合成配置及既有实验数据保持原样。未实现 P2.3-C/D/E。
+
+### Geometry → base_link
+
+- Box 使用 B1 的完整 size_m，在中心两侧 ±size/2 生成 8 顶点、12 个显式三角形。
+  绘制六个面与 12 条边线，不使用自动凸包或 Delaunay 推断形状。
+- Cylinder 局部轴为 +Z、中心为原点；两端环位于 z=±length/2，另有两个端面中心。
+  n 段共 2n+2 顶点、4n 三角形，包含侧面和端盖。默认 n=48，可配置 8–256。
+- 每个顶点都经 scene.object_transform(id, target_frame='base_link') 与 B1 的
+  transform_point 转换；没有只平移中心、忽略物体或父 Frame 旋转。
+- 只遍历 collision_objects 中的九个实际对象。Cabinet/Patch Panel 仅用于组件语义与
+  配色，不另加实心几何：3 柜体 Box、4 面板 Box、1 独立 Box、1 Cylinder。
+- 柜体灰、面板紫、独立障碍橙，颜色仅表示语义类别。物体使用透明 Mesh3d 加边线，
+  两个 trace 共享 legendgroup；点击对象图例同时控制其面与边线。
+
+Frame 显示 base_link 和所有 B1 Frames，X 红、Y 绿、Z 蓝，长度默认 0.05 m。
+原点与三轴端点由 resolve_transform/transform_point 计算。Port 的 outward、insertion、
+key 直接读取 B1 局部操作轴，通过 transform_direction 旋转到 base_link；没有硬编码
+合成例子的世界向量。Port 方向使用独立的虚线与 Cone 箭头，长度是坐标轴长度的 1.6 倍，
+只是显示尺度，不是操作行程。Frame 与 Port 方向各有图例开关。
+
+合成例的人工真值仍为 Cabinet=(0.45,0,0.20) m，Panel/Port=(0.30,0,0.20) m；
+Port outward=(-1,0,0)、insertion=(+1,0,0)、key=(0,0,+1)。测试还旋转父 Frame、
+将圆柱转为沿 Base X，验证方向来自数据而非固定常量。
+
+### API、可信数据叠加与身份
+
+```python
+from workspace_analysis.scene.schema import load_scene
+from workspace_analysis.viz.meshes import box_mesh, cylinder_mesh
+from workspace_analysis.viz.scene import (
+    object_mesh, frame_axes, port_directions,
+    build_scene_figure, load_scene_figure, export_scene_html,
+)
+
+scene = load_scene('/absolute/path/to/synthetic_dev.yaml')
+fig = build_scene_figure(scene, axis_length=0.05, cylinder_segments=48)
+
+# 文件入口：None 前缀为 Scene Only；有前缀时调用既有 G3 的受校验读取器。
+fig = load_scene_figure('/absolute/path/to/synthetic_dev.yaml',
+                       input_prefix='/absolute/path/to/results/workspace_n100_seed42',
+                       config_path='/absolute/path/to/config/workspace.yaml',
+                       max_points=None)
+export_scene_html(fig, '/absolute/path/to/results/new_scene.html')
+```
+
+Scene Only 不读取 G2 数据/模型配置，也不导入 G3/model/URDF/ROS/MoveIt/FCL 模块。
+需要已安装 Plotly；缺失时明确报错，没有自动安装。隔离解释器已验证该模式。
+Workspace 模式延迟导入并调用 G3 load_workspace，再复用 build_3d_figure 的原始
+Scatter3d 与 Base 标记，叠加 B1 的世界几何。不会绕过 load_results(model=model)；
+损坏数据、NPZ 哈希不符或模型不匹配直接失败。该旧读取接口内部重算至多三行 FK，
+是既有校验，并非重新采样或整批 FK。
+
+Scene Reference 和 Workspace Base 必须同时为 base_link；Workspace XYZ 已在 Base 中，
+不重复加底座偏移。默认保留全部行与负 Z，customdata/Sample Index/q/XYZ/高度颜色
+直接保留 G3 对应关系。--max-points M 调用其确定性原行号选择；图和日志显示 shown/total，
+Scene Only 下给 max-points 会明确报错。低层 build_scene_figure 接受已验证的 Snapshot/
+WorkspaceView，文件输入请用 load_scene_figure，不能自制 WorkspaceView 绕过身份校验。
+
+HTML layout.meta 保存 B2 阶段、scene path/ID、raw/canonical scene hashes、Frame/units、
+来源声明、对象数、显示参数，以及可选 G2 source prefix、NPZ/model hashes、seed、模型/
+Base/EE、显示与总数量及选择规则；hardware_checked/collision_checked 始终为 false。
+标题清楚显示 Synthetic Scene / Not Hardware Verified。Hover 显示对象 ID/类型、类别、
+parent、Base 中心、几何尺寸和所指坐标，点云继续显示原 Sample Index、XYZ 和五关节 rad。
+
+### HTML 发布与交互
+
+使用 Plotly Mesh3d/Scatter3d/Cone，XYZ 单位 m，aspectmode=data。初始视角从机柜前侧看入，
+支持 Orbit、缩放、平移和图例控制；Frame/物体/Port 方向/Workspace 可分别切换。
+单页内嵌 Plotly.js、关闭外部 MathJax，并检查 HTML 不含外链 script src。
+
+G3 的发布函数固定处理两份文件，且其模块入口会加载 URDF 依赖；本轮不改它。
+B2 使用小型单文件发布函数：完整渲染并检查后，同目录暂存、flush/fsync、hard-link
+NO-REPLACE 发布、清理暂存。无半写最终 HTML，不需要两文件锁；并发写入者也不能覆盖
+已有目标。普通异常/Ctrl+C 清理本次文件；输出冲突（含悬空符号链接）明确拒绝。
+硬终止/掉电可能留暂存文件，不承诺掉电恢复；输出文件系统需支持 hard-link。
+更换新输出名重跑，不自动删除或覆盖旧文件。
+
+[Mesh3d 显式三角形接口](https://plotly.com/python/3d-mesh/)、
+[Cone 方向与端点](https://plotly.com/python/cone-plot/)、
+[独立 HTML 导出](https://plotly.com/python/interactive-html-export/)。
+
+### 用户运行命令（先 Scene Only，再 100 点，最后正式 10,000 点）
+
+```bash
+cd /home/siyuen/Desktop/code/cable_robot/cable_vla_robot/workspace_analysis
+
+# Scene Only 不需要 source ROS，也不要求有 G2 文件。
+.venv/bin/python scripts/inspect_scene.py \
+  --scene config/scenes/synthetic_dev.yaml \
+  --output results/p23_synthetic_scene.html
+
+# Workspace 模式需要既有 overlay，供 G3 载入官方模型。
+source /opt/ros/humble/setup.bash
+source /home/siyuen/Desktop/jetrover_sim_ws/install/setup.bash
+
+.venv/bin/python scripts/inspect_scene.py \
+  --scene config/scenes/synthetic_dev.yaml \
+  --config config/workspace.yaml \
+  --input-prefix results/workspace_n100_seed42 \
+  --output results/p23_synthetic_workspace_n100.html
+
+# 用户确认前两种模式后再运行；Codex 本轮没有执行此正式可视化。
+.venv/bin/python scripts/inspect_scene.py \
+  --scene config/scenes/synthetic_dev.yaml \
+  --config config/workspace.yaml \
+  --input-prefix results/workspace_n10000_seed42 \
+  --output results/p23_synthetic_workspace_n10000.html
+```
+
+可选 --axis-length 0.05、--cylinder-segments 48、--max-points 1000（仅 overlay）。
+未给 max-points 时不下采样；轴长必须有限正数，分段数须为 8–256 整数。
+入口按自身目录导入模块/寻找默认 workspace.yaml，支持任意 CWD；显式相对输入/输出
+相对调用者 CWD。可使用绝对路径。输出名必须 .html，结果位于被现有 .gitignore 忽略的
+results/；默认拒绝覆盖，若重跑请换新文件名。
+
+CLI 打印 Scene 来源与两个哈希、Base、对象数、模式，以及 overlay 的源数据、模型/EE、
+数量、seed、NPZ 哈希和行选择方法。成功导出后才打印 HTML 绝对路径和 status: PASS、
+stage_acceptance: pending_user_visualization_review、hardware_checked:false、collision_checked:false。
+PASS 仅代表软件导出完成；用户应在浏览器确认显示与交互。异常返回 1，Ctrl+C 返回 130，
+错误时不打印 PASS；不会因缺少输入而生成替代采样数据。
+
+### 本轮测试与待用户观察
+
+```bash
+# 先 source 上面的 ROS/overlay，以运行涉及旧模型的完整测试。
+.venv/bin/python -m pytest -q -rs tests/test_scene_visualization.py
+.venv/bin/python -m pytest -q -rs tests
+```
+
+完整临时副本回归：**360 passed, 1 warning，无 SKIP**；其中 B2 新增 24 项，
+既有 G1–G4/B1 共 336 项保留并通过。warning 来自既有 URDF 依赖的 Python 3.11 提示。
+测试覆盖 Box/旋转 Box、圆柱侧面/端面/旋转轴、Frame/Port 人工真值、九个实际实体、
+语义颜色/图例、G3 可信读取、不重采样、原行号/q 配对、负 Z、确定性显示限制、Frame/
+数据身份错误、离线 HTML、任意 CWD/隔离 Scene Only CLI、禁止覆盖/竞态、导出失败及输入哈希不变。
+
+测试只绘制合成九对象和复制的 100 点数据，HTML 保存在 pytest 临时目录；未执行正式
+10,000 点可视化，没有生成 C0/C1/C2/C3 对照实验或碰撞结果。没有启动 ROS 节点、
+Gazebo、RSP、Move Group 或机器人，也没有修改已验收核心/官方资源/旧实验文件。
+
+待用户打开三种模式的 HTML，检查九对象与开口、完整姿态、Frame 与 Port 方向、
+图例分别隐藏、Workspace 悬停行号/关节角、缩放平移以及断网打开效果。
+圆柱是离散绘制近似；透明 WebGL Mesh 的深度排序、重合的 Panel/Port 轴标签、
+小窗口布局和大量点的性能仍需实际观察。图中未绘制整条机械臂的实体 Link 或标定工具。
+
+**视觉重叠不证明碰撞，视觉分离不证明整臂无碰撞。** 不计算任何碰撞分类、距离、
+安全间隙或 Workspace 过滤。Base 原点不等于地面，Port 是未测量的语义目标，
+TCP 未标定；几何点云、显示颜色或合成开口不证明 RJ45 插拔任务可行。
+
+**P2.3-B2 Code Implementation Completed — Pending User Visualization Review.**
+
+
+## P2.3-R1 模块化重构
+
+源码根目录只保留 `__init__.py`。完整目录、依赖、迁移映射和基线见
+[docs/r1_architecture.md](docs/r1_architecture.md)。原 CLI 参数和运行方式不变。
+
+```python
+from workspace_analysis import load_model  # 原 G1 公共入口保持不变
+from workspace_analysis.robot.fk import ForwardKinematics
+from workspace_analysis.scene.schema import load_scene, parse_scene
+from workspace_analysis.scene.model import SceneSnapshot, SceneError
+from workspace_analysis.geometry.se3 import Pose, transform_point
+from workspace_analysis.scene.frames import Frame, FrameGraph, resolve_transform
+from workspace_analysis.viz.meshes import box_mesh, cylinder_mesh
+from workspace_analysis.viz.scene import build_scene_figure
+from workspace_analysis.experiments.reporting import load_validation_bundle
+```
+
+旧平铺内部子模块路径不再支持，没有 `sys.modules` 别名或旧模块 shim。
+仓库外脚本/notebook 需要按迁移表更新；根包的四个公共模型导出仍懒加载且对象身份不变。
+Scene 数据/解析、纯网格、已有 G4 报告读取不需要 ROS/PyKDL/Plotly。
+绘图函数需要已安装 Plotly；实际 FK/采样/模型校验仍需要既有 ROS Python 环境。
+
+```bash
+cd /home/siyuen/Desktop/code/cable_robot/cable_vla_robot/workspace_analysis
+source /opt/ros/humble/setup.bash
+source /home/siyuen/Desktop/jetrover_sim_ws/install/setup.bash
+PYTHONDONTWRITEBYTECODE=1 .venv/bin/python -B -m pytest -q -rs -p no:cacheprovider tests
+```
+
+R1 最终实际目录回归：**388 passed, 1 warning, 0 skipped**（重构前 360 passed）。
+28 项新增检查覆盖依赖方向、隔离导入、冻结数值、路径定位和 CLI。
+原有测试归一化导入后 AST 相同；正式数据/报告和官方模型哈希不变。
+
+R1 没有执行真实 ROS2 TF 集成、重新生成正式采样数据或进入 P2.3-C。
+严格数值基线只承诺本次已验收的软件版本；不能据此推断跨版本逐位一致或实物精度。
+
+
+## C2.6 / D0：碰撞模型细化与受限工作空间探索
+
+模型级 ACM v1、定向关节/夹爪诊断、FCL 无符号距离及通用 Evaluator 已实现。
+100 / 1,000 / 10,000 既有配置的 Empty/v0/v1 对照均已运行；所有配置仍有拒绝性自碰撞，不能据此断言真实机器人没有工作空间。
+活动连接/夹爪的物理几何审核为 PARTIAL，未执行硬件安全认证。
+
+- [碰撞细化与 Clearance 证据](docs/c26_collision_refinement.md)
+- [实际实验、API、完整复跑与 Viewer 命令](docs/d0_constrained_workspace_pilot.md)
+
+```python
+from workspace_analysis.collision.evaluator import Evaluator
+from workspace_analysis.collision.policy import load_policy
+
+policy = load_policy(policy_path, model)
+with Evaluator(model, scene_snapshot, policy, backend_path,
+               gripper=0.3,
+               clearance={"environment_m": 0.0, "self_m": 0.0}) as evaluator:
+    rows = evaluator.evaluate(q, batch_size=64)
+# rows[i]["model_scope_collision_free"] 不是实物安全结论；Final 不自动变成 CLEAR。
+```
+
+
+## C2.7 / D1：局部碰撞几何与可行性恢复对照
+
+新增显式 Official / Refined Geometry Profile，局部三角面仅用于声明的 Self Pair，环境与其余 Pair 保留官方完整几何。
+Refined Profile 仍为 diagnostic_only；100 / 1,000 / 10,000 对照均已运行，整体模型可行率仍为 0，正式几何审核 PARTIAL。
+
+- [局部几何、逐对 Contact/Distance 与正反例](docs/c27_collision_geometry_refinement.md)
+- [D1 数据、API、完整复跑与 Viewer 命令](docs/d1_workspace_validation.md)
+
+```python
+from workspace_analysis.collision.geometry_profile import load_geometry_profile
+from workspace_analysis.collision.evaluator import Evaluator
+
+profile = load_geometry_profile(profile_yaml, model, asset_dir=new_asset_directory)
+with Evaluator(model, scene, policy, backend_path, geometry_profile=profile,
+               gripper=0.3, clearance={"self_m": 0.0, "environment_m": 0.0}) as evaluator:
+    rows = evaluator.evaluate(q)
+# Geometry Profile 与 ACM Policy 独立；诊断候选不能作为实物安全结论。
+```
+
+
+## C2.8 / D2：机构诊断与任务范围碰撞
+
+官方完整几何、既有 ACM v1 和独立 task_scope_v0 分开管理。七对显式夹爪内部 Pair 单独诊断，其他 Self Pair 与全部环境碰撞继续检查。
+100 / 1,000 / 10,000 原配置对照已运行；实际任务候选仍为 0，主要阻塞转为官方 Arm/Base 近轴 Pair。内部机械和硬件验证仍未完成。
+
+- [机构、Scope、Native 正反例与可视化](docs/c28_gripper_assembly_modeling.md)
+- [D2 实验、API、完整运行与验收命令](docs/d2_task_scoped_workspace.md)
+
+```python
+from workspace_analysis.collision.scope import load_scope
+from workspace_analysis.collision.evaluator import Evaluator
+
+scope = load_scope(scope_path, model, policy)
+with Evaluator(model, scene, policy, backend_path, task_scope=scope, gripper=0.3) as evaluator:
+    rows = evaluator.evaluate(q)
+# rows[i]["task_scope_candidate"] 独立于原 model_scope_collision_free / final_decision。
+# 内部诊断仍 UNVERIFIED，Task Candidate 不代表完整机器人或硬件安全。
+```
+
+## C3 reviewed SRDF collision semantics
+
+See [C3 semantics](docs/c3_collision_semantics.md) and [validation commands](docs/c3_semantic_validation.md).
+The optional SRDF channel keeps Raw, historical ACM and Semantic FCL queries separate.
+Current model review is PARTIAL; normal-reference validation is PENDING. No10,000 rerun is enabled.
+
+## 装配碰撞规则与独立研究基线
+
+见 [装配规则根因与实现](docs/assembly_collision_rules.md)。严格 SRDF 保持原样；
+新增 Adjacent/Default 候选配置需要显式启用，输出 RESEARCH_CANDIDATE，不能用作正式规划许可。
+
+## 研究级受限工作空间恢复
+
+见 [100/1,000样本对照、装配审核及验收命令](docs/research_workspace_recovery.md)。
+使用 evaluate_research_workspace.py 显式选择候选基线；所有结果保持 RESEARCH_ONLY。
+
+## T1/T2 P22任务约束可达性
+
+见 [P22任务配置、IK结果与复现命令](docs/p22_task_reachability.md)。
+虚拟TCP、接近距离和容差独立配置；任务姿态满足与实验性碰撞通过分别记录，所有输出保持 RESEARCH_ONLY。
+
+## T3 — P22 discrete joint-space planning
+
+See [P22 path planning](docs/p22_path_planning.md) for the unchanged IK goals,
+deterministic G4 simulation start, semantic FCL linear/RRT-Connect comparison,
+full robot playback, result formats and reproducible commands. All results are
+`RESEARCH_ONLY`; discrete validation is not continuous collision or hardware safety.
+
+## T4 — P22 Cartesian Approach
+
+见 [40→10 mm 顺序 IK、全程任务约束与 FCL 验证](docs/p22_cartesian_approach.md)。
+复用 T2 完整精度起点与 T3 有效性/机器人回放；路点和关节插值中间状态均检查原有 TCP 位置与方向容差。
+所有结果保持 `RESEARCH_ONLY`，不包含实际插入、接触许可或连续碰撞安全证明。
