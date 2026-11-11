@@ -1,0 +1,27 @@
+# CONFIGURATION TEMPLATE ONLY. No verified source/checkpoint/environment pairing.
+schema_version: 1
+host: 127.0.0.1
+port: 8000
+source_revision: null
+policy:
+  type: smolvla
+  lerobot_checkout: /workspace/third_party/lerobot
+  lerobot_revision: null
+  checkpoint_path: /data/models/smolvla_base
+  checkpoint_repo: lerobot/smolvla_base
+  checkpoint_revision: null
+  checkpoint_inventory_sha256: null
+  feature_spec: null
+  native_spec: null
+  device: cuda
+  offline: true
+limits:
+  max_horizon: 64
+  request_timeout_s: 30.0
+  max_observation_age_s: 0.5
+  max_action_age_s: 5.0
+timing:
+  inference_timeout_s: 20.0
+  startup_timeout_s: 120.0
+  warmup_timeout_s: 30.0
+  warmup_observation_path: null

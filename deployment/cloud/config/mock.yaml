@@ -1,0 +1,14 @@
+schema_version: 1
+host: 127.0.0.1
+port: 8000
+source_revision: null
+policy:
+  type: mock
+limits:
+  max_horizon: 32
+  request_timeout_s: 2.0
+  max_observation_age_s: 0.5
+  max_action_age_s: 5.0
+timing:
+  inference_timeout_s: 2.0
+  startup_timeout_s: 10.0
