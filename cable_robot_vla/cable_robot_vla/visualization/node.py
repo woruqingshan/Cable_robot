@@ -87,14 +87,15 @@ class PreviewNode(Node):
             label.pose.position.z, label.pose.orientation.w = 0.65, 1.0
             label.scale.z = 0.022
             label.color.r, label.color.g, label.color.a = 1.0, 0.75, 1.0
-            label.text = self.playback.label
+            # Avoid Ogre's oversized default space advance in small world text.
+            label.text = self.playback.label.replace(" / ", ":")
             authorization = Marker()
             authorization.header = state.header
             authorization.ns, authorization.id, authorization.type, authorization.action = "read_only", 2, Marker.TEXT_VIEW_FACING, Marker.ADD
             authorization.pose.position.z, authorization.pose.orientation.w = 0.60, 1.0
             authorization.scale.z = 0.018
             authorization.color.r, authorization.color.g, authorization.color.a = 1.0, 0.75, 1.0
-            authorization.text = "READ ONLY / NO EXECUTION"
+            authorization.text = "READ-ONLY:NO-EXECUTION"
             line = Marker()
             line.header = state.header
             line.ns, line.id, line.type, line.action = "ee_preview", 1, Marker.LINE_STRIP, Marker.ADD
