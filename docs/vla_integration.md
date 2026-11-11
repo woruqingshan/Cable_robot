@@ -1,5 +1,7 @@
 # Stage 1 local VLA integration
 
+> This guide retains the Stage 1 operating mode and defaults. Stage 1.5 adds optional model-native inspection, cloud bootstrap and read-only preview; see `docs/stage15_cloud_readiness.md` and `deployment/cloud/README.md` for the current extensions.
+
 This implements a repeated ROS 2 observation → HTTP inference → explicit action
 adaptation → local validation → mock execution loop. It has **no hardware execution
 mode**. The default policy holds position. No VLA weights, LeRobot checkout, GPU
