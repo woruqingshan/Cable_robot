@@ -1,13 +1,13 @@
 """Bounded request-response service. No ROS controller dependency."""
 import argparse
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager
 import logging
 from time import perf_counter
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, Response
-from starlette.concurrency import run_in_threadpool
 from vla_protocol import codec
 from vla_protocol.action import PolicyActionChunk
 from vla_protocol.errors import VLAError
@@ -24,13 +24,22 @@ def create_app(policy=None, limits: RuntimeLimits | None = None) -> FastAPI:
 
     @asynccontextmanager
     async def lifespan(app):
-        policy.start()
-        app.state.started = True
+        # A timed-out HTTP request cannot stop a Python inference thread. Keep
+        # start/predict/close on ONE owned worker so cancellation never permits
+        # concurrent model calls or teardown while an inference is still running.
+        worker = ThreadPoolExecutor(max_workers=1, thread_name_prefix="vla_policy")
+        app.state.policy_worker = worker
+        loop = asyncio.get_running_loop()
         try:
+            await loop.run_in_executor(worker, policy.start)
+            app.state.started = True
             yield
         finally:
             app.state.started = False
-            policy.close()
+            try:
+                await loop.run_in_executor(worker, policy.close)
+            finally:
+                worker.shutdown(wait=True, cancel_futures=True)
 
     app = FastAPI(title="IDC VLA Stage 1", version="0.1.0", lifespan=lifespan)
     lock = asyncio.Lock()
@@ -81,7 +90,7 @@ def create_app(policy=None, limits: RuntimeLimits | None = None) -> FastAPI:
             async def predict():
                 async with lock:
                     begin = perf_counter()
-                    result = await run_in_threadpool(policy.predict, observation)
+                    result = await asyncio.get_running_loop().run_in_executor(app.state.policy_worker, policy.predict, observation)
                     result = codec.validate(result.model_dump(), PolicyActionChunk, limits)
                     if identity_fields(result) != identity_fields(observation):
                         raise VLAError("POLICY_OUTPUT_INVALID", "policy changed request identity")

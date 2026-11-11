@@ -8,7 +8,8 @@ from cable_robot_vla.action_adapter import adapt_action
 from deployment.local.test_support import observation, moved_candidate
 
 
-def test_real_model_native_hold_and_joint_limit_rejection():
+@pytest.mark.parametrize("workspace_enabled", [False, True])
+def test_real_model_native_hold_and_joint_limit_rejection(workspace_enabled):
     assert os.environ.get("IDC_P2_ROOT"), "Set IDC_P2_ROOT to the actual workspace_analysis directory"
     assert os.environ.get("C1_BACKEND"), "Set C1_BACKEND to the actual Native executable"
     root = Path(os.environ["IDC_P2_ROOT"]).resolve()
@@ -16,7 +17,8 @@ def test_real_model_native_hold_and_joint_limit_rejection():
         model_config_path=str(root / "config/workspace.yaml"),
         scene_path=str(root / "config/scenes/idc_prototype_v0.yaml"),
         srdf_path=str(root / "config/collision/semantic/standard_moveit_candidate_v0/standard_moveit_candidate_v0.srdf"),
-        backend_path=os.environ["C1_BACKEND"], allow_candidate_semantics=True))
+        backend_path=os.environ["C1_BACKEND"], allow_candidate_semantics=True,
+        workspace_enabled=workspace_enabled, task_path=str(root / "config/tasks/p22_research_v0.yaml")))
     try:
         adapter._load(0.3)
         from workspace_analysis.workspace.sampling import sample_joint_positions
@@ -31,6 +33,7 @@ def test_real_model_native_hold_and_joint_limit_rejection():
         assert result.provenance["checked_samples"] >= 2
         assert result.provenance["query_statistics"]["cache_hits"] == 0
         assert result.discrete_only and result.hardware_validated is False
+        assert result.provenance["workspace_checked"] is workspace_enabled
         invalid = list(good)
         invalid[0] = float(adapter.model.limits[0, 1] + 1)
         bad_obs = observation(invalid, scene_id=obs.scene_id, scene_sha256=obs.scene_sha256, model_id=obs.model_id)

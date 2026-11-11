@@ -69,11 +69,22 @@ def test_policy_failures_are_explicit_and_correlated(behavior):
 
 def test_policy_deadline_returns_explicit_timeout():
     class Slow(HoldPositionPolicy):
+        active = False
+        closed = False
         def predict(self, obs):
-            time.sleep(0.05)
-            return super().predict(obs)
+            self.active = True
+            try:
+                time.sleep(0.05)
+                return super().predict(obs)
+            finally:
+                self.active = False
+        def close(self):
+            assert not self.active, "policy teardown must wait for timed-out worker inference"
+            self.closed = True
     obs = observation()
-    with TestClient(create_app(Slow(), limits=RuntimeLimits(request_timeout_s=0.01))) as client:
+    policy = Slow()
+    with TestClient(create_app(policy, limits=RuntimeLimits(request_timeout_s=0.01))) as client:
         response = client.post("/v1/infer", json=obs.model_dump())
         assert response.status_code == 504 and response.json()["code"] == "TIMEOUT"
         assert response.json()["request_id"] == obs.request_id
+    assert policy.closed
