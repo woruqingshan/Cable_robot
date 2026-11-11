@@ -1,0 +1,16 @@
+/idc_vla/mock/mock_robot:
+  ros__parameters:
+    publish_hz: 10.0
+    initial_positions: [0.0, 0.0, 0.0, 0.0, 0.0]
+    gripper_rad: 0.3
+    instruction: "Hold the simulated arm position"
+/idc_vla/mock/vla_pipeline:
+  ros__parameters:
+    inference_interval_s: 0.25
+    request_timeout_s: 2.0
+    max_observation_age_s: 0.5
+    max_sync_skew_s: 0.02
+    max_action_age_s: 5.0
+    max_body_bytes: 6000000
+    max_image_bytes: 1048576
+    max_horizon: 32
