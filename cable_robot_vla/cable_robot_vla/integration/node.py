@@ -138,7 +138,8 @@ class SimulationIntegrationNode(Node):
         label.ns, label.id, label.type, label.action = "native_inspection", 0, Marker.TEXT_VIEW_FACING, Marker.ADD
         label.pose.position.z, label.pose.orientation.w, label.scale.z = 0.52, 1.0, 0.022
         label.color.r, label.color.g, label.color.b, label.color.a = 1.0, 0.8, 0.25, 1.0
-        label.text = f"SmolVLA native {self.last_candidate.shape if self.last_candidate else 'waiting'} — INSPECTION ONLY\nNo robot mapping | RTT {self.last_latency or 0:.3f} s\n{self.backend.last_status if hasattr(self.backend,'last_status') else 'READ ONLY'}"
+        # Ogre's default space advance is oversized in small world text.
+        label.text = f"Native:{self.last_candidate.shape if self.last_candidate else 'waiting'}\nINSPECTION-ONLY:NO-ROBOT-MAPPING\nRTT:{self.last_latency or 0:.3f}s|{self.backend.last_status if hasattr(self.backend,'last_status') else 'READ-ONLY'}".replace(" ", "")
         markers.append(label)
         if self.last_candidate:
             for channel in range(self.last_candidate.shape[1]):
