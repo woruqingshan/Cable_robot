@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.16)
+project(cable_vla_simulation_init LANGUAGES CXX)
+find_package(ignition-gazebo6 REQUIRED)
+add_library(stage23_initialize SHARED initialize.cpp)
+target_compile_features(stage23_initialize PRIVATE cxx_std_17)
+target_link_libraries(stage23_initialize PRIVATE ignition-gazebo6::ignition-gazebo6)

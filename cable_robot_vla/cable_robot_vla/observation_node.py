@@ -26,10 +26,11 @@ class StateMetadata(StrictModel):
 
 
 class ObservationAdapter:
-    def __init__(self, limits=None, clock=monotonic):
+    def __init__(self, limits=None, clock=monotonic, source_profile=None):
         self.limits = limits or RuntimeLimits()
         self.clock = clock
         self.parts = {}
+        self.source_profile = source_profile
 
     def offer(self, kind, value):
         expected = {"metadata": StateMetadata, "joints": JointPositions, "gripper": GripperState, "image": ImagePayload}
@@ -59,4 +60,7 @@ class ObservationAdapter:
             robot_id=meta.robot_id, robot_profile_id="jetrover_joint_abs_rad_v1",
             scene_id=meta.scene_id, scene_sha256=meta.scene_sha256, model_id=meta.model_id,
             instruction=meta.instruction, joints=values["joints"], gripper=values["gripper"],
-            images=[values["image"]], simulated=True, calibration_status="synthetic_uncalibrated")
+            images=[values["image"]],
+            simulated=self.source_profile is None or self.source_profile.profile_id == "synthetic_uncalibrated_v1",
+            calibration_status=self.source_profile.profile_id.removesuffix("_v1") if self.source_profile else "synthetic_uncalibrated",
+            source_profile=self.source_profile, capabilities=["source_profiles_v1"] if self.source_profile else [])
