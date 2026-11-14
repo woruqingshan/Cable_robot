@@ -1,233 +1,116 @@
-#!/usr/bin/env bash
-# IDC-VLA / AutoDL first-time GPU preparation.
-# Run from the Cable_robot checkout: bash deployment/cloud/scripts/setup_autodl.sh
-# Safe to re-run on a matching checkout/environment; does NOT start an inference server.
-set -Eeuo pipefail
+[[ -f "$BASE/models/smolvla_base_revision.txt" ]] || fail 'Missing models/smolvla_base_revision.txt (model SHA recorded on Mac)'
+MODEL_SHA="$(tr -d '\r\n' < "$BASE/models/smolvla_base_revision.txt")"
+[[ "$MODEL_SHA" =~ ^[a-f0-9]{40}$ ]] || fail "Model revision is not a 40-character SHA: $MODEL_SHA"
+[[ "$EXPECTED_LEROBOT" =~ ^[a-f0-9]{40}$ ]] || fail 'VLA_LEROBOT_REF must be an exact 40-character SHA'
+ACTUAL_LEROBOT="$(git -C "$LEROBOT" rev-parse HEAD)"
+[[ "$ACTUAL_LEROBOT" == "$EXPECTED_LEROBOT" ]] || fail "LeRobot HEAD $ACTUAL_LEROBOT != expected $EXPECTED_LEROBOT. Fix/approve the revision; script will not reset Git."
+[[ -z "$(git -C "$LEROBOT" status --porcelain --untracked-files=no)" ]] || fail 'LeRobot tracked worktree is dirty or incomplete (git status --short). Restore intentionally before installation.'
 
-REPO_DIR="$(git rev-parse --show-toplevel 2>/dev/null || true)"
-if [[ -z "$REPO_DIR" || ! -f "$REPO_DIR/vla_protocol/pyproject.toml" || ! -f "$REPO_DIR/vla_server/pyproject.toml" ]]; then
-  echo '[ERROR] Run this script from a Cable_robot Git checkout containing vla_protocol and vla_server.' >&2
-  exit 2
-fi
+say 'GPU and storage'
+nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv
+df -h "$BASE" || true
 
-if [[ -z "${VLA_BASE:-}" ]]; then
-  if [[ -d /root/autodl-tmp ]]; then
-    VLA_BASE=/root/autodl-tmp/idc-vla
-  else
-    echo '[ERROR] Set VLA_BASE to a persistent directory with enough free space (e.g. /data/idc-vla).' >&2
-    exit 2
-  fi
-fi
-VLA_BASE="$(realpath -m "$VLA_BASE")"
-VENV_DIR="${VLA_VENV:-$VLA_BASE/venvs/vla-model}"
-LEROBOT_DIR="${VLA_LEROBOT_DIR:-$VLA_BASE/third_party/lerobot}"
-MODEL_DIR="${VLA_MODEL_DIR:-$VLA_BASE/models/smolvla_base}"
-RUN_DIR="$VLA_BASE/runs/bootstrap"
-LEROBOT_REF="${VLA_LEROBOT_REF:-ff0acf5ee6434369eeeb9d26e76d1e2ddc20c0d2}"
-TORCH_VERSION="${VLA_TORCH_VERSION:-2.8.0}"
-TORCHVISION_VERSION="${VLA_TORCHVISION_VERSION:-0.23.0}"
-CUDA_WHEEL="${VLA_CUDA_WHEEL:-cu128}"
-MODE=install
-SKIP_MODEL=0
-SKIP_LEROBOT_INSTALL=0
-
-usage() {
-  cat <<'HELP'
-Usage: bash setup_autodl_vla.sh [--check-only] [--skip-model] [--skip-lerobot-install]
-
-Environment:
-  VLA_BASE          persistent data root (default /root/autodl-tmp/idc-vla)
-  VLA_VENV          existing/new Python 3.12 environment directory
-  VLA_LEROBOT_DIR   existing/new LeRobot checkout
-  VLA_MODEL_DIR     SmolVLA checkpoint directory
-  VLA_LEROBOT_REF   exact LeRobot SHA (default reviewed reference)
-  VLA_SMOL_REV      exact Hugging Face checkpoint SHA (optional; resolved when absent)
-
-Notes:
-  - Requires an already-cloned Cable_robot checkout and functioning network.
-  - Does not install OS/GPU drivers, alter Git branches, or run a real model.
-  - Does not replace a conflicting existing LeRobot checkout or checkpoint revision.
-  - For a running installation, finish/stop that command before rerunning this script.
-HELP
-}
-while (( $# )); do
-  case "$1" in
-    --check-only) MODE=check ;;
-    --skip-model) SKIP_MODEL=1 ;;
-    --skip-lerobot-install) SKIP_LEROBOT_INSTALL=1 ;;
-    -h|--help) usage; exit 0 ;;
-    *) echo "Unknown option: $1" >&2; usage; exit 2 ;;
-  esac
-  shift
-done
-
-log() { printf '\n[%s] %s\n' "$(date '+%H:%M:%S')" "$*"; }
-die() { echo "[ERROR] $*" >&2; exit 2; }
-trap 'echo "[ERROR] Failed at line $LINENO: $BASH_COMMAND" >&2' ERR
-
-command -v git >/dev/null || die 'git is required'
-command -v nvidia-smi >/dev/null || die 'nvidia-smi is missing: check the GPU image'
-log 'GPU inventory'; nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv
-log 'Disk inventory'; df -h "$REPO_DIR" "$(dirname "$VLA_BASE")" | awk '!seen[$1]++'
-
-if [[ "$MODE" == check ]]; then
-  echo "Repo: $REPO_DIR"
-  echo "Data root: $VLA_BASE"
-  if [[ -x "$VENV_DIR/bin/python" ]]; then
-    "$VENV_DIR/bin/python" - <<'PY'
-import sys
-print('Python:', sys.version)
-try:
- import torch
- print('Torch:', torch.__version__, 'CUDA:', torch.version.cuda, 'available:', torch.cuda.is_available())
-except Exception as e: print('Torch import failed:', repr(e))
-try:
- import lerobot
- print('LeRobot:', lerobot.__file__)
-except Exception as e: print('LeRobot import failed:', repr(e))
-PY
-  else
-    echo 'No VLA Python environment created yet.'
-  fi
-  [[ -d "$LEROBOT_DIR/.git" ]] && git -C "$LEROBOT_DIR" log -1 --format='LeRobot HEAD: %H' || true
-  [[ -f "$MODEL_DIR/.idc-vla-revision" ]] && cat "$MODEL_DIR/.idc-vla-revision" || true
-  exit 0
-fi
-
-mkdir -p "$VLA_BASE/venvs" "$VLA_BASE/third_party" "$VLA_BASE/models" "$VLA_BASE/cache/huggingface" "$VLA_BASE/cache/pip" "$RUN_DIR"
-export HF_HOME="$VLA_BASE/cache/huggingface"
-export HF_HUB_CACHE="$HF_HOME/hub"
-export PIP_CACHE_DIR="$VLA_BASE/cache/pip"
-export PYTHONNOUSERSITE=1
-
-# Python env: reuse explicitly matching venv/conda env; do not tamper with system Python.
-if [[ ! -x "$VENV_DIR/bin/python" ]]; then
-  if [[ -e "$VENV_DIR" ]]; then die "Non-Python environment directory exists: $VENV_DIR"; fi
-  if command -v python3.12 >/dev/null; then
-    PYBASE="$(command -v python3.12)"
-  elif python -c 'import sys; assert sys.version_info[:2] == (3,12)' >/dev/null 2>&1; then
-    PYBASE="$(command -v python)"
-  else
-    die 'Python 3.12 not found. Select the AutoDL Python 3.12 image or install Python 3.12 first.'
-  fi
-  log "Creating Python 3.12 venv at $VENV_DIR"
-  "$PYBASE" -m venv "$VENV_DIR" || die 'venv creation failed; check python3.12-venv availability'
-fi
-PY="$VENV_DIR/bin/python"
-"$PY" -c 'import sys; assert sys.version_info[:2] == (3, 12), sys.version' || die 'Existing VLA environment is not Python 3.12'
-log "Python: $($PY --version)"
-"$PY" -m pip --version >/dev/null || die 'pip missing in the model environment'
-"$PY" -m pip install --upgrade pip setuptools wheel
-
-# PyTorch: only install if missing; incompatible existing torch is a stop, not silently overwritten.
-if "$PY" -c 'import torch' >/dev/null 2>&1; then
-  log 'PyTorch already installed; verifying requested version/CUDA'
+if [[ -x "$PYENV/bin/python" ]]; then
+  PY="$PYENV/bin/python"
 else
-  log "Installing PyTorch $TORCH_VERSION ($CUDA_WHEEL)"
-  "$PY" -m pip install "torch==$TORCH_VERSION" "torchvision==$TORCHVISION_VERSION" \
-    --index-url "https://download.pytorch.org/whl/$CUDA_WHEEL"
+  if (( CHECK_ONLY )); then fail "Environment not created: $PYENV"; fi
+  command -v python3.12 >/dev/null || fail 'python3.12 not available; install/select Python 3.12 before running'
+  [[ ! -e "$PYENV" ]] || fail "Environment directory exists but has no bin/python: $PYENV"
+  say 'Creating isolated Python 3.12 environment'
+  mkdir -p "$(dirname "$PYENV")"
+  python3.12 -m venv "$PYENV"
+  PY="$PYENV/bin/python"
 fi
-"$PY" - "$TORCH_VERSION" "$CUDA_WHEEL" <<'PY'
+"$PY" -c 'import sys; assert sys.version_info[:2] == (3,12), sys.version' || fail 'GPU model environment must be Python 3.12'
+
+if (( ! CHECK_ONLY )); then
+  mkdir -p "$LOGDIR" "$BASE/cache/pip" "$BASE/cache/huggingface"
+  export PIP_INDEX_URL="$PYPI_INDEX" PIP_DEFAULT_TIMEOUT=120 PIP_RETRIES=8
+  export PIP_CACHE_DIR="$BASE/cache/pip" HF_HOME="$BASE/cache/huggingface" HF_HUB_CACHE="$BASE/cache/huggingface/hub"
+  export PYTHONNOUSERSITE=1
+  say "Using ordinary Python packages from: $PIP_INDEX_URL"
+  "$PY" -m pip install -U pip setuptools wheel
+  if "$PY" -c 'import torch' >/dev/null 2>&1; then
+    say 'Reusing installed PyTorch'
+  else
+    (( INSTALL_TORCH )) || fail 'PyTorch missing and --skip-torch-install requested'
+    say 'Installing CUDA-enabled Torch from dedicated official wheel index'
+    "$PY" -m pip install "torch==$TORCH_VERSION" "torchvision==$TV_VERSION" --index-url "$TORCH_INDEX"
+  fi
+fi
+
+say 'Checking Torch/CUDA and model GPU capabilities'
+"$PY" - "$TORCH_VERSION" <<'PY'
 import sys, torch
-expected, wheel = sys.argv[1:]
-print('Torch:', torch.__version__, 'Torch CUDA:', torch.version.cuda, 'GPU visible:', torch.cuda.is_available())
-if torch.__version__.split('+')[0] != expected: raise SystemExit('Unexpected Torch version; use a fresh venv or explicitly review dependencies')
-if not torch.cuda.is_available(): raise SystemExit('Torch cannot access GPU; check driver and image first')
-if not torch.version.cuda or not torch.version.cuda.startswith('12.8' if wheel == 'cu128' else '12.6'):
-    raise SystemExit('CUDA wheel/runtime differs from the requested target')
+want=sys.argv[1]
+print('Python:', sys.version.split()[0], 'Torch:', torch.__version__, 'CUDA:', torch.version.cuda)
+if torch.__version__.split('+')[0] != want:
+    raise SystemExit('Torch version mismatch; stop instead of silently reinstalling')
+if not torch.cuda.is_available():
+    raise SystemExit('CUDA unavailable: inspect image/driver/venv before continuing')
 print('GPU:', torch.cuda.get_device_name(0))
+print('Compute capability:', torch.cuda.get_device_capability(0))
+print('BF16 supported:', torch.cuda.is_bf16_supported())
+if not torch.cuda.is_bf16_supported():
+    print('NOTICE: Do NOT force BF16 on this GPU; verify FP16/FP32 support for actual model inference')
 PY
 
-# Framework checkout: preserve any existing checkout, reject wrong pinned revision.
-if [[ -d "$LEROBOT_DIR/.git" ]]; then
-  log "Reusing LeRobot checkout: $LEROBOT_DIR"
-  actual="$(git -C "$LEROBOT_DIR" rev-parse HEAD)"
-  [[ "$actual" == "$LEROBOT_REF" ]] || die "LeRobot HEAD is $actual, expected $LEROBOT_REF. No automatic reset performed."
-  if [[ -n "$(git -C "$LEROBOT_DIR" status --porcelain --untracked-files=no)" ]]; then
-    die 'LeRobot tracked files are modified; refusing to overwrite.'
-  fi
-elif [[ -e "$LEROBOT_DIR" ]]; then
-  die "Directory exists and is not a Git checkout: $LEROBOT_DIR"
-else
-  log 'Cloning official LeRobot independently'
-  git clone https://github.com/huggingface/lerobot.git "$LEROBOT_DIR"
-  git -C "$LEROBOT_DIR" checkout --detach "$LEROBOT_REF"
-fi
-if [[ "$SKIP_LEROBOT_INSTALL" == 0 ]]; then
-  log 'Installing LeRobot SmolVLA dependencies (editable)'
-  "$PY" -m pip install -e "$LEROBOT_DIR[smolvla]"
-else
-  log 'Skipping LeRobot pip install by request'
+if (( ! CHECK_ONLY )); then
+  say 'Installing LeRobot from the UPLOADED local Git checkout (no git download)'
+  "$PY" -m pip install -e "$LEROBOT[smolvla]"
+  say 'Installing local Cable_robot protocol and HTTP server'
+  "$PY" -m pip install -e "$REPO/vla_protocol" -e "$REPO/vla_server"
 fi
 
-log 'Installing Cable_robot Python packages (GPU side only; no ROS)'
-"$PY" -m pip install -e "$REPO_DIR/vla_protocol" -e "$REPO_DIR/vla_server"
+say 'Checking Python dependencies and imports'
 "$PY" -m pip check
-"$PY" - "$TORCH_VERSION" <<'PYTORCH'
-import sys, torch
-expected=sys.argv[1]
-if torch.__version__.split('+')[0] != expected or not torch.cuda.is_available():
-    raise SystemExit('LeRobot or app dependencies changed the Torch version or broke CUDA; check pip freeze before continuing')
-print('Final Torch GPU check OK:', torch.__version__, torch.cuda.get_device_name(0))
-PYTORCH
-
-# Verify installed imports actually point to the independent checkout.
-"$PY" - "$LEROBOT_DIR" <<'PY'
-import sys, pathlib, torch
-from lerobot.policies.smolvla.modeling_smolvla import SmolVLAPolicy
+"$PY" - "$LEROBOT" "$MODEL" "$TORCH_VERSION" <<'PY'
+import pathlib, sys, torch
+if torch.__version__.split('+')[0] != sys.argv[3] or not torch.cuda.is_available():
+    raise SystemExit('Torch/CUDA changed after installing LeRobot; resolve dependencies before proceeding')
+try:
+    x = torch.tensor([1., 2.], device='cuda')
+    result = (x * 2).cpu().tolist()
+    if result != [2., 4.]: raise RuntimeError('Wrong CUDA result')
+    print('CUDA tensor execution OK')
+except Exception as exc:
+    raise SystemExit(f'Actual CUDA tensor execution failed: {exc}')
+from safetensors import safe_open
 import lerobot, vla_protocol, vla_server
-root=pathlib.Path(sys.argv[1]).resolve()
-path=pathlib.Path(lerobot.__file__).resolve()
-if not path.is_relative_to(root): raise SystemExit('LeRobot import resolved outside the pinned checkout: ' + str(path))
-if not torch.cuda.is_available(): raise SystemExit('GPU disappeared after dependency install')
-print('Imports OK. LeRobot:', path, 'Torch:', torch.__version__)
+from lerobot.policies.smolvla.modeling_smolvla import SmolVLAPolicy
+source = pathlib.Path(sys.argv[1]).resolve()
+actual = pathlib.Path(lerobot.__file__).resolve()
+if not actual.is_relative_to(source):
+    raise SystemExit(f'Wrong LeRobot import location: {actual} (expected under {source})')
+model=pathlib.Path(sys.argv[2])
+weights=list(model.rglob('*.safetensors'))
+if len(weights) < 3:
+    raise SystemExit('Expected model and pre/post processor safetensors files')
+for p in weights:
+    with safe_open(str(p), framework='pt', device='cpu') as f:
+        n=len(list(f.keys()))
+        print('Readable safetensors:', p.name, 'tensors:', n)
+        if not n: raise SystemExit('Empty safetensors metadata: '+str(p))
+print('LeRobot:', actual, 'SmolVLA class:', SmolVLAPolicy.__name__)
+print('Environment and local files CHECKED; genuine model loading/inference NOT yet tested.')
 PY
 
-if [[ "$SKIP_MODEL" == 0 ]]; then
-  log 'Resolving and downloading official SmolVLA checkpoint'
-  "$PY" -m pip install 'huggingface-hub>=1.31,<3'
-  # Exact commit from user, existing receipt, or official Hub API.
-  if [[ -z "${VLA_SMOL_REV:-}" && -f "$MODEL_DIR/.idc-vla-revision" ]]; then
-    VLA_SMOL_REV="$(cat "$MODEL_DIR/.idc-vla-revision")"
-  fi
-  if [[ -z "${VLA_SMOL_REV:-}" ]]; then
-    VLA_SMOL_REV="$("$PY" -c 'from huggingface_hub import HfApi; print(HfApi().model_info("lerobot/smolvla_base").sha)')"
-  fi
-  [[ "$VLA_SMOL_REV" =~ ^[0-9a-f]{40}$ ]] || die 'Model revision must be an exact 40-character SHA'
-  if [[ -f "$MODEL_DIR/.idc-vla-revision" && "$(cat "$MODEL_DIR/.idc-vla-revision")" != "$VLA_SMOL_REV" ]]; then
-    die 'Existing model directory is pinned to a different revision; refusing overwrite.'
-  fi
-  "$PY" - "$MODEL_DIR" "$VLA_SMOL_REV" <<'PY'
-import sys
-from pathlib import Path
-from huggingface_hub import snapshot_download
-folder, rev=Path(sys.argv[1]),sys.argv[2]
-folder.mkdir(parents=True,exist_ok=True)
-snapshot_download(repo_id='lerobot/smolvla_base', revision=rev, local_dir=str(folder))
-(folder/'.idc-vla-revision').write_text(rev+'\n')
-print('Model downloaded and pinned:', folder, rev)
-PY
-else
-  log 'Skipping model download by request'
-fi
-
-log 'Saving bootstrap environment record'
-"$PY" -m pip freeze > "$RUN_DIR/pip-freeze.txt"
-"$PY" - <<'PY' > "$RUN_DIR/python-torch.txt"
+if (( ! CHECK_ONLY )); then
+  say 'Recording local installation evidence'
+  "$PY" -m pip freeze > "$LOGDIR/pip-freeze.txt"
+  nvidia-smi > "$LOGDIR/nvidia-smi.txt"
+  git -C "$REPO" rev-parse HEAD > "$LOGDIR/cable_robot.sha"
+  printf '%s\n' "$ACTUAL_LEROBOT" > "$LOGDIR/lerobot.sha"
+  printf '%s\n' "$MODEL_SHA" > "$LOGDIR/smolvla.sha"
+  "$PY" - <<'PY' > "$LOGDIR/runtime.txt"
 import sys, torch
-print('Python:', sys.version)
-print('Torch:', torch.__version__)
-print('Torch CUDA:', torch.version.cuda)
-print('GPU:', torch.cuda.get_device_name(0))
+print('Python',sys.version)
+print('Torch',torch.__version__)
+print('CUDA',torch.version.cuda)
+print('GPU',torch.cuda.get_device_name(0))
+print('BF16',torch.cuda.is_bf16_supported())
 PY
-nvidia-smi > "$RUN_DIR/nvidia-smi.txt"
-git -C "$REPO_DIR" rev-parse HEAD > "$RUN_DIR/cable-robot-sha.txt"
-git -C "$LEROBOT_DIR" rev-parse HEAD > "$RUN_DIR/lerobot-sha.txt"
-[[ -f "$MODEL_DIR/.idc-vla-revision" ]] && cp "$MODEL_DIR/.idc-vla-revision" "$RUN_DIR/smolvla-sha.txt" || true
-printf 'BASE=%s\nVENV=%s\nLEROBOT=%s\nMODEL=%s\n' "$VLA_BASE" "$VENV_DIR" "$LEROBOT_DIR" "$MODEL_DIR" > "$RUN_DIR/paths.txt"
-
-log 'SETUP COMPLETE (dependencies and checkpoint only; real inference NOT yet tested)'
-echo "Activate: source '$VENV_DIR/bin/activate'"
-echo "Check:    bash '$REPO_DIR/deployment/cloud/scripts/setup_autodl.sh' --check-only"
-echo "Evidence: $RUN_DIR"
-echo 'Next: verify official checkpoint loading + genuine predict_action_chunk, then fill the repository cloud manifest/config.'
+fi
+say 'PASS: installed imports, CUDA and checkpoint metadata checks; real GPU inference is the NEXT stage.'
+echo "Python: $PY"
+echo "Records: $LOGDIR"
