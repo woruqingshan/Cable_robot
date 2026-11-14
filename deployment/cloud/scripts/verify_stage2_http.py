@@ -2,7 +2,6 @@
 """Real loopback HTTP acceptance with owned server lifecycle; no robot execution."""
 import argparse
 from concurrent.futures import ThreadPoolExecutor
-from copy import deepcopy
 from datetime import datetime, timezone
 import json
 import os
@@ -16,7 +15,8 @@ from uuid import uuid4
 
 ROOT = Path(__file__).resolve().parents[3]
 sys.path[:0] = [str(ROOT / "vla_protocol/src"), str(ROOT / "vla_server/src"), str(ROOT / "cable_robot_vla")]
-import httpx
+from urllib.request import Request, build_opener, ProxyHandler
+from urllib.error import HTTPError, URLError
 from vla_protocol import codec
 from vla_protocol.action import PolicyActionChunk
 from vla_server.config import load_config
@@ -42,58 +42,120 @@ def checked_action(response, obs, config):
     return action
 
 
+class HTTPClient:
+    """Bounded loopback test transport; no cloud-only client dependency needed."""
+    def __init__(self, base_url="", timeout=30, **_):
+        self.base_url, self.timeout = base_url, timeout
+        self.opener = build_opener(ProxyHandler({}))
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_):
+        pass
+
+    def request(self, method, path, *, json=None, content=None, headers=None):
+        import json as json_module
+        from types import SimpleNamespace
+        headers = dict(headers or {})
+        if json is not None:
+            content = json_module.dumps(json, allow_nan=False).encode()
+            headers["Content-Type"] = "application/json"
+        request = Request(self.base_url + path, data=content, headers=headers, method=method)
+        try:
+            response = self.opener.open(request, timeout=self.timeout)
+        except HTTPError as error:
+            response = error
+        with response:
+            body = response.read(6_000_001)
+            if len(body) > 6_000_000:
+                raise ValueError("response exceeds protocol ceiling")
+            return SimpleNamespace(status_code=response.code, content=body, text=body.decode(),
+                json=lambda: json_module.loads(body), headers=response.headers)
+
+    def get(self, path):
+        return self.request("GET", path)
+
+    def post(self, path, **kwargs):
+        return self.request("POST", path, **kwargs)
+
+
 def gpu_fault_probes(config):
-    """Explicit isolated ASGI fault injection, with real model forwards, no production hooks."""
-    from fastapi.testclient import TestClient
+    """Isolated ASGI fault injection with real GPU forwards; no HTTPX dependency."""
+    import asyncio
     from vla_server.app import create_app
     from vla_server.policies.smolvla import SmolVLAPolicyAdapter
-    policy = SmolVLAPolicyAdapter(config.policy)
-    probes = []
-    with TestClient(create_app(policy, config=config)) as client:
-        assert client.get("/health").json()["gpu_model_ready"]
-        original = policy.postprocess
-        forwards = [0]
-        def injected_postprocess(actions):
-            # predict_action_chunk has genuinely completed before this callback.
-            forwards[0] += 1
-            raise RuntimeError("explicit test-only failure after genuine GPU forward pass")
-        policy.postprocess = injected_postprocess
-        response = client.post("/v1/infer", json=observation(config))
-        assert response.status_code == 500 and response.json()["code"] == "POLICY_ERROR"
-        assert forwards[0] == 1
-        probes.append({"name": "injected_postprocessor_failure", "status": "PASS", "http_status": 500,
-            "kind": "ASGI with real GPU forward and explicitly injected processor exception"})
-        policy.postprocess = original
-        obs = observation(config)
-        checked_action(client.post("/v1/infer", json=obs), obs, config)
-        probes.append({"name": "recovery_after_failure", "status": "PASS", "kind": "ASGI real GPU inference"})
-    assert policy.model is None and not policy.gpu_loaded
-    timing = config.timing.model_copy(update={"inference_timeout_s": 0.001})
-    short = config.model_copy(update={"timing": timing})
-    policy = SmolVLAPolicyAdapter(short.policy)
-    timeout_forwards = [0]
-    with TestClient(create_app(policy, config=short)) as client:
-        original_predict = policy.model.predict_action_chunk
-        def tracked_predict(*args, **kwargs):
-            output = original_predict(*args, **kwargs)
-            timeout_forwards[0] += 1
-            return output
-        policy.model.predict_action_chunk = tracked_predict
-        response = client.post("/v1/infer", json=observation(short))
-        assert response.status_code == 504 and response.json()["code"] == "TIMEOUT"
-        # Lifespan shutdown drains the owned worker, even after HTTP timeout.
-    assert timeout_forwards[0] == 1 and policy.model is None
-    probes.append({"name": "timeout_and_serial_cleanup", "status": "PASS", "http_status": 504,
-        "kind": "ASGI real GPU forward; 1 ms deadline; late result discarded and worker drained"})
-    bad_policy = config.policy.model_copy(update={"checkpoint_path": str(Path(config.policy.checkpoint_path) / "deliberately_missing")})
-    with TestClient(create_app(config=config.model_copy(update={"policy": bad_policy}))) as client:
-        health = client.get("/health").json()
-        assert not health["policy_ready"] and not health["genuine_inference_verified"]
-        response = client.post("/v1/infer", json=observation(config))
-        assert response.status_code == 503 and response.json()["code"] == "POLICY_NOT_READY"
-    probes.append({"name": "unavailable_model", "status": "PASS", "http_status": 503,
-        "kind": "ASGI real adapter startup with deliberately missing path; no forward pass"})
-    return probes
+
+    async def request(app, data):
+        body = json.dumps(data).encode()
+        sent = False
+        messages = []
+        async def receive():
+            nonlocal sent
+            if not sent:
+                sent = True
+                return {"type": "http.request", "body": body, "more_body": False}
+            await asyncio.Event().wait()
+        async def send(message):
+            messages.append(message)
+        await app({"type": "http", "asgi": {"version": "3.0"}, "http_version": "1.1",
+            "method": "POST", "scheme": "http", "path": "/v1/infer", "raw_path": b"/v1/infer",
+            "root_path": "", "query_string": b"", "headers": [(b"content-type", b"application/json")],
+            "client": ("127.0.0.1", 12345), "server": ("127.0.0.1", 8000)}, receive, send)
+        from types import SimpleNamespace
+        status = next(m["status"] for m in messages if m["type"] == "http.response.start")
+        raw = b"".join(m.get("body", b"") for m in messages if m["type"] == "http.response.body")
+        return SimpleNamespace(status_code=status, content=raw, text=raw.decode(), json=lambda: json.loads(raw))
+
+    async def run():
+        probes = []
+        policy = SmolVLAPolicyAdapter(config.policy)
+        app = create_app(policy, config=config)
+        async with app.router.lifespan_context(app):
+            assert app.state.started and policy.gpu_loaded
+            original = policy.postprocess
+            forwards = [0]
+            def injected_postprocess(actions):
+                forwards[0] += 1
+                raise RuntimeError("explicit test-only failure after genuine GPU forward pass")
+            policy.postprocess = injected_postprocess
+            response = await request(app, observation(config))
+            assert response.status_code == 500 and response.json()["code"] == "POLICY_ERROR"
+            assert forwards[0] == 1
+            probes.append({"name": "injected_postprocessor_failure", "status": "PASS", "http_status": 500,
+                "kind": "ASGI with real GPU forward and explicitly injected processor exception"})
+            policy.postprocess = original
+            obs = observation(config)
+            checked_action(await request(app, obs), obs, config)
+            probes.append({"name": "recovery_after_failure", "status": "PASS", "kind": "ASGI real GPU inference"})
+        assert policy.model is None and not policy.gpu_loaded
+        short = config.model_copy(update={"timing": config.timing.model_copy(update={"inference_timeout_s": 0.05})})
+        policy = SmolVLAPolicyAdapter(short.policy)
+        app = create_app(policy, config=short)
+        timeout_forwards = [0]
+        async with app.router.lifespan_context(app):
+            original_predict = policy.model.predict_action_chunk
+            def tracked_predict(*args, **kwargs):
+                output = original_predict(*args, **kwargs)
+                timeout_forwards[0] += 1
+                return output
+            policy.model.predict_action_chunk = tracked_predict
+            response = await request(app, observation(short))
+            assert response.status_code == 504 and response.json()["code"] == "TIMEOUT"
+        assert timeout_forwards[0] == 1 and policy.model is None
+        probes.append({"name": "timeout_and_serial_cleanup", "status": "PASS", "http_status": 504,
+            "kind": "ASGI real GPU forward; 50 ms deadline; late result discarded and worker drained"})
+        bad = config.policy.model_copy(update={"checkpoint_path": str(Path(config.policy.checkpoint_path) / "deliberately_missing")})
+        policy = SmolVLAPolicyAdapter(bad)
+        app = create_app(policy, config=config.model_copy(update={"policy": bad}))
+        async with app.router.lifespan_context(app):
+            assert not app.state.started and not policy.genuine_inference_verified
+            response = await request(app, observation(config))
+            assert response.status_code == 503 and response.json()["code"] == "POLICY_NOT_READY"
+        probes.append({"name": "unavailable_model", "status": "PASS", "http_status": 503,
+            "kind": "ASGI real adapter startup with deliberately missing path; no forward pass"})
+        return probes
+    return asyncio.run(run())
 
 
 def main():
@@ -102,6 +164,7 @@ def main():
     parser.add_argument("--manifest", help="required when owning remote server")
     parser.add_argument("--report", required=True)
     parser.add_argument("--url", default="http://127.0.0.1:8000")
+    parser.add_argument("--check-local-client", action="store_true", help="exercise installed Ubuntu HTTPX client and unmapped-action rejection")
     parser.add_argument("--connect-only", action="store_true", help="test an existing service/tunnel, do not stop it")
     parser.add_argument("--gpu-fault-probes", action="store_true", help="after clean shutdown, run isolated explicit fault tests")
     args = parser.parse_args()
@@ -134,7 +197,7 @@ def main():
             process = subprocess.Popen(["bash", str(ROOT / "deployment/cloud/scripts/start_server.sh"),
                 "--manifest", args.manifest, "--config", args.config], env=env, stdout=log, stderr=subprocess.STDOUT,
                 start_new_session=True)
-        with httpx.Client(base_url=args.url.rstrip("/"), timeout=30, trust_env=False) as client:
+        with HTTPClient(base_url=args.url.rstrip("/"), timeout=30, trust_env=False) as client:
             deadline = monotonic() + 150
             while True:
                 if process is not None and process.poll() is not None:
@@ -144,7 +207,7 @@ def main():
                     if not health["policy_ready"]:
                         raise RuntimeError("model startup failed: " + str(health.get("startup_error")))
                     break
-                except httpx.HTTPError:
+                except (URLError, ConnectionError):
                     if monotonic() >= deadline:
                         raise
                     sleep(0.1)
@@ -167,7 +230,7 @@ def main():
                     round_trip_s=elapsed, adapter_s=action.inference_duration_s,
                     server_timing=response.headers.get("server-timing"), runtime=runtime)
                 if index == 0:
-                    original_values = action.values
+                    report["first_action_values"] = action.values
             # Cache the most recent request; never claim idempotent replay as another forward.
             response = client.post("/v1/infer", json=obs)
             assert checked_action(response, obs, cfg).values == action.values
@@ -198,37 +261,38 @@ def main():
                 record(name, "actual HTTP input validation; no model forward", http_status=status, code=response.json()["code"])
             def concurrent(_):
                 obs = observation(cfg)
-                with httpx.Client(timeout=30, trust_env=False) as worker:
+                with HTTPClient(timeout=30, trust_env=False) as worker:
                     return checked_action(worker.post(args.url.rstrip("/") + "/v1/infer", json=obs), obs, cfg).shape
             with ThreadPoolExecutor(max_workers=2) as pool:
                 assert list(pool.map(concurrent, range(2))) == [[50, 6], [50, 6]]
             record("concurrent_requests", "actual HTTP two real GPU forwards, serialized worker")
             report["final_health"] = client.get("/health").json()
             assert report["final_health"]["genuine_inference_verified"]
-            # Exercise the unchanged ROS-independent client and fail-closed action registry.
-            from cable_robot_vla.policy_client import PolicyClient
-            from cable_robot_vla.action_adapter import adapt_action
-            from vla_protocol.errors import VLAError
-            from vla_protocol.observation import Observation
-            policy_client = PolicyClient(args.url, limits=cfg.limits)
-            try:
-                policy_client.submit(Observation.model_validate(observation(cfg)))
-                deadline = monotonic() + 30
-                result = None
-                while result is None and monotonic() < deadline:
-                    result = policy_client.poll()
-                    sleep(0.01)
-                assert result is not None and result.candidate.shape == [50, 6]
+            if args.check_local_client:
+                # Exercise the unchanged ROS-independent client and fail-closed action registry.
+                from cable_robot_vla.policy_client import PolicyClient
+                from cable_robot_vla.action_adapter import adapt_action
+                from vla_protocol.errors import VLAError
+                from vla_protocol.observation import Observation
+                policy_client = PolicyClient(args.url, limits=cfg.limits)
                 try:
-                    adapt_action(result.candidate)
-                except VLAError as exc:
-                    assert exc.code == "UNSUPPORTED_ACTION_PROFILE"
-                else:
-                    raise AssertionError("unknown real model output unexpectedly executable")
-                record("local_policy_client_and_action_boundary", "actual HTTP real GPU forward; unknown action mapping rejected",
-                    round_trip_s=result.round_trip_s)
-            finally:
-                policy_client.close()
+                    policy_client.submit(Observation.model_validate(observation(cfg)))
+                    deadline = monotonic() + 30
+                    result = None
+                    while result is None and monotonic() < deadline:
+                        result = policy_client.poll()
+                        sleep(0.01)
+                    assert result is not None and result.candidate.shape == [50, 6]
+                    try:
+                        adapt_action(result.candidate)
+                    except VLAError as exc:
+                        assert exc.code == "UNSUPPORTED_ACTION_PROFILE"
+                    else:
+                        raise AssertionError("unknown real model output unexpectedly executable")
+                    record("local_policy_client_and_action_boundary", "actual HTTP real GPU forward; unknown action mapping rejected",
+                        round_trip_s=result.round_trip_s)
+                finally:
+                    policy_client.close()
         report["status"] = "PASS"
     except Exception as exc:
         import traceback
