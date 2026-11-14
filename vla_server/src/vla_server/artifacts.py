@@ -34,12 +34,13 @@ def inventory_hash(files):
     return sha256(json.dumps(files, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
 
 
-def verify_checkpoint(root, repository, revision, expected_inventory):
+def verify_checkpoint(root, repository, revision, expected_inventory, receipt_path=None):
     root = Path(root)
-    if not (root / "config.json").is_file() or not (root / RECEIPT).is_file():
+    receipt_path = Path(receipt_path) if receipt_path else root / RECEIPT
+    if not (root / "config.json").is_file() or not receipt_path.is_file():
         raise VLAError("CHECKPOINT_MISSING", "local config.json and pinned download receipt are required")
     try:
-        receipt = json.loads((root / RECEIPT).read_text())
+        receipt = json.loads(receipt_path.read_text())
         if (receipt["repository"], receipt["revision"]) != (repository, revision):
             raise ValueError("checkpoint repository/revision differs")
         files = inventory(root)

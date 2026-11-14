@@ -8,7 +8,7 @@ import sys
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("group", choices=["unit", "ros", "p2", "stage15-unit", "stage15-ros"])
+    parser.add_argument("group", choices=["unit", "ros", "p2", "stage15-unit", "stage15-ros", "stage2-unit"])
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[2]
     env = dict(os.environ, PYTHONDONTWRITEBYTECODE="1")
@@ -17,6 +17,7 @@ def main():
     groups = {
         "unit": ["vla_protocol/tests/test_contract.py", "vla_server/tests/test_http_service.py", "cable_robot_vla/test/test_edge_core.py",
                  "cable_robot_vla/test/test_isolation.py", "cable_robot_vla/test/test_p2_adapter.py"],
+        "stage2-unit": ["vla_server/tests/test_stage2_integration.py"],
         "ros": ["cable_robot_vla/test/test_ros_loop.py"],
         "p2": ["cable_robot_vla/test/test_p2_native.py"],
         "stage15-unit": ["vla_protocol/tests/test_stage15_compatibility.py", "vla_server/tests/test_stage15_model_boundary.py",

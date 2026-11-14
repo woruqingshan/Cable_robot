@@ -12,6 +12,7 @@ class CameraFeature(StrictModel):
     camera_id: Identifier
     feature_name: Identifier
     shape_chw: list[int] = Field(min_length=3, max_length=3)
+    required: bool = True
     shape_policy: Literal["exact", "official_processor"] = "exact"
 
     @model_validator(mode="after")
@@ -69,15 +70,23 @@ class FeatureObservationAdapter(ObservationAdapter):
         profile = observation.source_profile.profile_id if observation.source_profile else "synthetic_uncalibrated_v1"
         if profile not in spec.source_profiles:
             raise VLAError("OBSERVATION_SOURCE_UNSUPPORTED", "model feature specification does not accept this source profile")
+        if not observation.instruction.strip():
+            raise VLAError("INVALID_TASK", "task text must contain a non-whitespace instruction")
         cameras = {image.camera_id: image for image in observation.images}
+        if set(cameras) - {feature.camera_id for feature in spec.cameras}:
+            raise VLAError("CAMERA_MAPPING_UNKNOWN", "observation contains an undeclared camera identifier")
         bound = {}
         for feature in spec.cameras:
             image = cameras.get(feature.camera_id)
+            if image is None and not feature.required:
+                continue
             if image is None:
                 raise VLAError("CAMERA_MAPPING_MISSING", "missing camera: " + feature.camera_id)
             if feature.shape_policy == "exact" and [3, image.height, image.width] != feature.shape_chw:
                 raise VLAError("IMAGE_FEATURE_SHAPE_MISMATCH", "camera shape differs from declared feature")
             bound[feature.feature_name] = image
+        if not bound:
+            raise VLAError("CAMERA_MAPPING_MISSING", "at least one declared camera must be present")
         joints = dict(zip(observation.joints.names, observation.joints.positions))
         joints[observation.gripper.name] = observation.gripper.position
         state = tuple(joints[channel] for channel in spec.state_channels)

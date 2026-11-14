@@ -3,7 +3,9 @@
 The calls here were reviewed against upstream ff0acf5ee6434369eeeb9d26e76d1e2ddc20c0d2.
 That is an API-review reference, not a verified deployment/checkpoint pairing.
 """
+from collections import Counter
 import importlib
+import math
 import os
 from pathlib import Path
 import subprocess
@@ -24,7 +26,9 @@ class SmolVLAPolicyAdapter(Policy):
     def __init__(self, config):
         self.settings = config
         self.model = self.preprocess = self.postprocess = self.torch = None
-        self.identity = PolicyIdentity(policy_type="smolvla", policy_version="official_lerobot_adapter_v1",
+        self.runtime_info = {}
+        self.reset_count = 0
+        self.identity = PolicyIdentity(policy_type="smolvla", policy_version="official_lerobot_adapter_v2",
             framework_revision=config.lerobot_revision, checkpoint_revision=config.checkpoint_revision,
             processor_id=config.native_spec.processor_id if config.native_spec else "unresolved",
             normalization_id=config.native_spec.normalization_id if config.native_spec else "unresolved")
@@ -45,7 +49,7 @@ class SmolVLAPolicyAdapter(Policy):
     def start(self):
         c = self.settings
         c.require_model_pins()
-        verify_checkpoint(c.checkpoint_path, c.checkpoint_repo, c.checkpoint_revision, c.checkpoint_inventory_sha256)
+        verify_checkpoint(c.checkpoint_path, c.checkpoint_repo, c.checkpoint_revision, c.checkpoint_inventory_sha256, receipt_path=c.checkpoint_receipt_path)
         checkout = Path(c.lerobot_checkout).resolve()
         try:
             actual = subprocess.check_output(["git", "-C", str(checkout), "rev-parse", "HEAD"], text=True).strip()
@@ -56,6 +60,9 @@ class SmolVLAPolicyAdapter(Policy):
             raise VLAError("LEROBOT_REVISION_MISMATCH", "LeRobot checkout differs from the exact clean revision")
         if sys.version_info < (3, 12):
             raise VLAError("MODEL_PYTHON_INCOMPATIBLE", "the reviewed current LeRobot API needs its independent Python 3.12+ environment")
+        if c.hf_home:
+            os.environ["HF_HOME"] = c.hf_home
+            os.environ["HF_HUB_CACHE"] = str(Path(c.hf_home) / "hub")
         os.environ["HF_HUB_OFFLINE"] = "1"
         os.environ["TRANSFORMERS_OFFLINE"] = "1"
         sys.path.insert(0, str(checkout / "src"))
@@ -65,14 +72,27 @@ class SmolVLAPolicyAdapter(Policy):
         if c.device == "cuda" and not torch.cuda.is_available():
             raise VLAError("GPU_UNAVAILABLE", "CUDA requested but unavailable")
         try:
+            begin = perf_counter()
             cfg = config_class.from_pretrained(c.checkpoint_path, local_files_only=True, revision=c.checkpoint_revision)
             cfg.device = c.device
+            if c.backbone_revision:
+                snapshot_download = importlib.import_module("huggingface_hub").snapshot_download
+                pinned = snapshot_download(cfg.vlm_model_name, revision=c.backbone_revision, local_files_only=True)
+                effective = snapshot_download(cfg.vlm_model_name, local_files_only=True)
+                if Path(pinned).resolve() != Path(effective).resolve():
+                    raise VLAError("BACKBONE_REVISION_MISMATCH", "offline backbone ref differs from the pinned snapshot")
             if getattr(cfg, "rtc_config", None) is not None:
-                raise VLAError("MODEL_CONFIGURATION_UNSUPPORTED", "RTC is outside Stage 1.5")
+                raise VLAError("MODEL_CONFIGURATION_UNSUPPORTED", "RTC is outside the synchronous inference service")
             model = policy_class.from_pretrained(c.checkpoint_path, config=cfg,
                 local_files_only=True, revision=c.checkpoint_revision, strict=True)
             self.model = model.to(torch.device(c.device)).eval()
             self.torch, self.prepare_observation = torch, prepare
+            self._synchronize()
+            self.runtime_info = {"model_load_s": perf_counter() - begin,
+                "parameter_dtypes": dict(Counter(str(p.dtype) for p in self.model.parameters())),
+                "precision_conversion": None, "torch_version": torch.__version__,
+                "cuda_runtime": torch.version.cuda,
+                "native_bf16_supported": torch.cuda.is_bf16_supported(including_emulation=False) if c.device == "cuda" else None}
             self._validate_features()
             self.preprocess, self.postprocess = make_processors(self.model.config,
                 pretrained_path=c.checkpoint_path, pretrained_revision=c.checkpoint_revision,
@@ -94,10 +114,10 @@ class SmolVLAPolicyAdapter(Policy):
         if state is None or list(state.shape) != [c.feature_spec.state_dimension]:
             raise VLAError("MODEL_FEATURE_MISMATCH", "checkpoint state shape differs; no padding is invented")
         expected = {f.feature_name: f for f in c.feature_spec.cameras}
-        if set(expected) != set(cfg.image_features):
+        if not set(expected) <= set(cfg.image_features):
             raise VLAError("MODEL_FEATURE_MISMATCH", "camera feature names differ from checkpoint")
-        for name, feature in cfg.image_features.items():
-            mapped = expected[name]
+        for name, mapped in expected.items():
+            feature = cfg.image_features[name]
             if list(feature.shape) != mapped.shape_chw:
                 raise VLAError("MODEL_FEATURE_MISMATCH", "checkpoint image shape differs")
             if mapped.shape_policy == "official_processor" and cfg.resize_imgs_with_padding is None:
@@ -109,7 +129,13 @@ class SmolVLAPolicyAdapter(Policy):
         if cfg.chunk_size * c.native_spec.step_s > 10:
             raise VLAError("MODEL_ACTION_MISMATCH", "declared sample timing exceeds the native wire duration ceiling")
 
+    def _synchronize(self):
+        if self.torch is not None and self.settings.device == "cuda":
+            self.torch.cuda.synchronize()
+
     def reset(self, context=None, reason="session_change"):
+        self.reset_count += 1
+        self.runtime_info = {**self.runtime_info, "reset_count": self.reset_count, "last_reset_reason": reason}
         if self.model is not None:
             self.model.reset()
         for processor in (self.preprocess, self.postprocess):
@@ -119,28 +145,49 @@ class SmolVLAPolicyAdapter(Policy):
     def predict(self, observation):
         if not self.model_loaded:
             raise VLAError("POLICY_NOT_READY", "SmolVLA has not loaded")
+        self._synchronize()
         c, begin = self.settings, perf_counter()
         frame = self.adapter.official_frame(observation, self.prepare_observation, self.torch.device(c.device))
         batch = self.preprocess(frame)
+        self._synchronize()
+        pre_s = perf_counter() - begin
+        model_begin = perf_counter()
         with self.torch.inference_mode():
             actions = self.model.predict_action_chunk(batch)
+        self._synchronize()
+        model_s = perf_counter() - model_begin
+        h, d = self.model.config.chunk_size, len(c.native_spec.channels)
+        if tuple(actions.shape) != (1, h, d):
+            raise VLAError("MODEL_ACTION_MISMATCH", "official model returned unexpected [B,H,D]")
+        post_begin = perf_counter()
+        with self.torch.inference_mode():
             actions = self.postprocess(actions)
+        self._synchronize()
         h, d = self.model.config.chunk_size, len(c.native_spec.channels)
         if tuple(actions.shape) != (1, h, d):
             raise VLAError("MODEL_ACTION_MISMATCH", "official model/postprocessor returned unexpected [B,H,D]")
         values = actions.detach().cpu()[0].tolist()
+        if any(not math.isfinite(value) for row in values for value in row):
+            raise VLAError("MODEL_ACTION_NONFINITE", "official postprocessor returned NaN/Inf")
+        metrics = {"preprocess_s": pre_s, "model_s": model_s,
+            "postprocess_s": perf_counter() - post_begin, "total_s": perf_counter() - begin}
+        if c.device == "cuda":
+            metrics.update(allocated_gib=self.torch.cuda.memory_allocated() / 1024**3,
+                peak_allocated_gib=self.torch.cuda.max_memory_allocated() / 1024**3,
+                peak_reserved_gib=self.torch.cuda.max_memory_reserved() / 1024**3)
         result = PolicyActionChunk(**identity_fields(observation), action_id=str(uuid4()), policy=self.identity,
             native_action_space=c.native_spec.space_id, channel_names=c.native_spec.channels,
             units=c.native_spec.units, semantics=c.native_spec.semantics, shape=[h, d], values=values,
             time_offsets_s=[(i + 1) * c.native_spec.step_s for i in range(h)],
             horizon=NativeHorizon(generated=h, transmitted=h), inference_duration_s=perf_counter() - begin,
             synthetic=False)
+        self.runtime_info = {**self.runtime_info, "last_inference": metrics}
         self.genuine_inference_verified = True
         return result
 
     def close(self):
         self.reset(reason="shutdown")
         self.model = self.preprocess = self.postprocess = None
-        self.model_loaded = self.gpu_loaded = False
+        self.model_loaded = self.gpu_loaded = self.genuine_inference_verified = False
         if self.torch is not None and self.settings.device == "cuda" and self.torch.cuda.is_available():
             self.torch.cuda.empty_cache()

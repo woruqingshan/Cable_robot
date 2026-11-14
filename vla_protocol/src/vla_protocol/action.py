@@ -49,7 +49,7 @@ class PolicyActionChunk(Identity):
     native_action_space: Identifier
     channel_names: list[Identifier] = Field(min_length=1, max_length=256)
     units: list[Identifier] = Field(min_length=1, max_length=256)
-    semantics: Literal["absolute", "delta"]
+    semantics: Literal["absolute", "delta", "unknown"]
     shape: list[int] = Field(min_length=2, max_length=2)
     values: list[list[Finite]] = Field(min_length=1, max_length=MAX_NATIVE_HORIZON)
     time_offsets_s: list[Finite] = Field(min_length=1, max_length=MAX_NATIVE_HORIZON)
