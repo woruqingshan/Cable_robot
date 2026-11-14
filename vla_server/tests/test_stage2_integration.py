@@ -122,3 +122,34 @@ def test_unknown_real_native_semantics_remain_unexecutable():
     with pytest.raises(VLAError) as error:
         adapt_action(action)
     assert error.value.code == "UNSUPPORTED_ACTION_PROFILE"
+
+
+@pytest.mark.parametrize("shape,value,code", [
+    ((1, 49, 6), 0.0, "MODEL_ACTION_MISMATCH"),
+    ((2, 50, 6), 0.0, "MODEL_ACTION_MISMATCH"),
+    ((1, 50, 6), float("nan"), "MODEL_ACTION_NONFINITE"),
+    ((1, 50, 6), float("inf"), "MODEL_ACTION_NONFINITE"),
+])
+def test_adapter_rejects_invalid_native_output_before_verification(shape, value, code):
+    from contextlib import nullcontext
+    native = NativeActionSpec(space_id="unmapped_test", channels=[f"native_{i}" for i in range(6)],
+        units=["unknown"] * 6, semantics="unknown", step_s=0.02, processor_id="official_test",
+        normalization_id="test_only", semantics_source="Explicit CPU boundary double")
+    adapter = SmolVLAPolicyAdapter(PolicyConfig(type="smolvla", device="cpu", feature_spec=features(), native_spec=native))
+    class Tensor:
+        def detach(self): return self
+        def cpu(self): return self
+        def __getitem__(self, index): return self
+        def tolist(self): return [[value] * 6 for _ in range(50)]
+    tensor = Tensor()
+    tensor.shape = shape
+    adapter.model = SimpleNamespace(config=SimpleNamespace(chunk_size=50), predict_action_chunk=lambda _: tensor)
+    adapter.model_loaded = True
+    adapter.torch = SimpleNamespace(device=lambda x: x, inference_mode=nullcontext)
+    adapter.adapter = FeatureObservationAdapter(features())
+    adapter.prepare_observation = lambda frame, device, **kw: frame
+    adapter.preprocess = adapter.postprocess = lambda x: x
+    with pytest.raises(VLAError) as error:
+        adapter.predict(observation())
+    assert error.value.code == code
+    assert not adapter.genuine_inference_verified

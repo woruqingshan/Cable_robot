@@ -11,6 +11,8 @@ checkpoint:
   directory: /data/models/smolvla_base
   inventory_sha256: null
 environment:
+  kind: container
+  requirements_format: hashed
   python_version: null
   torch_version: null
   cuda_runtime: null

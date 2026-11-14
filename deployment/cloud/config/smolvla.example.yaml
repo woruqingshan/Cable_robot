@@ -8,6 +8,9 @@ policy:
   lerobot_checkout: /workspace/third_party/lerobot
   lerobot_revision: null
   checkpoint_path: /data/models/smolvla_base
+  checkpoint_receipt_path: null
+  hf_home: null
+  backbone_revision: null
   checkpoint_repo: lerobot/smolvla_base
   checkpoint_revision: null
   checkpoint_inventory_sha256: null

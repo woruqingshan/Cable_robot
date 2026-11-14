@@ -1,11 +1,15 @@
-# Cloud deployment preparation — Stage 1.5
+# Cloud deployment — Stage 2
 
-The Mock/Fake HTTP deployment path is implemented and tested locally. The optional
-SmolVLA binding is implemented against reviewed official APIs, but **no GPU,
-LeRobot installation, real checkpoint, real model loading or genuine inference
-has been verified**. Production GPU pins deliberately remain `null` in
-`model_manifest.example.yaml` and `config/smolvla.example.yaml`. GPU bootstrap
-fails clearly until an operator supplies an actually verified pairing.
+Genuine offline SmolVLA inference and the existing HTTP service have passed on the
+AutoDL V100 with official LeRobot processors. See [the Stage 2 runbook](STAGE2.md)
+for measured evidence, exact pins, existing-venv manifests, private SSH forwarding
+and safe ROS inspection commands. Model-native actions remain unmapped and cannot
+execute JetRover commands. The unresolved example configurations below remain
+safe templates; deployment-specific configs and evidence live outside Git.
+
+The following Stage 1.5 notes describe the original bootstrap and Mock/Fake paths.
+Their historical unverified statements are superseded only for the precise
+AutoDL combination documented in the Stage 2 runbook.
 
 ## Layout and environment boundaries
 
