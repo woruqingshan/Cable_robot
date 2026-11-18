@@ -1,5 +1,6 @@
 """Exact deployment pins are configuration evidence, not proof of GPU execution."""
 from pathlib import Path
+from typing import Literal
 import re
 from urllib.parse import urlparse
 from pydantic import Field
@@ -18,10 +19,13 @@ class CheckpointPin(StrictModel):
     repository: str = "lerobot/smolvla_base"
     revision: str | None = Field(default=None, pattern=r"^[0-9a-f]{40}$")
     directory: str = "/data/models/smolvla_base"
+    receipt_path: str | None = None
     inventory_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
 
 
 class EnvironmentPin(StrictModel):
+    kind: Literal["container", "existing_venv"] = "container"
+    requirements_format: Literal["hashed", "installed_freeze"] = "hashed"
     python_version: str | None = Field(default=None, pattern=r"^3\.12\.\d+$")
     torch_version: str | None = Field(default=None, min_length=1)
     cuda_runtime: str | None = Field(default=None, min_length=1)
@@ -47,6 +51,10 @@ class DeploymentManifest(StrictModel):
             ("requirements_sha256", self.environment.requirements_sha256), ("base_image_digest", self.environment.base_image_digest)):
             if value is None:
                 missing.append(name)
+        if self.environment.kind == "existing_venv" and "base_image_digest" in missing:
+            missing.remove("base_image_digest")
+        if self.environment.requirements_format == "installed_freeze" and self.environment.kind != "existing_venv":
+            raise VLAError("DEPLOYMENT_INVALID", "installed freeze evidence is only valid for an existing venv")
         if not download and self.checkpoint.inventory_sha256 is None:
             missing.append("checkpoint.inventory_sha256")
         if missing:
@@ -61,6 +69,11 @@ class DeploymentManifest(StrictModel):
         if not lock.is_file() or file_hash(lock) != self.environment.requirements_sha256:
             raise VLAError("ENVIRONMENT_LOCK_INVALID", "GPU dependency lock missing or hash differs")
         text = lock.read_text()
+        if self.environment.requirements_format == "installed_freeze":
+            if not text.strip():
+                raise VLAError("ENVIRONMENT_LOCK_INVALID", "installed environment snapshot is empty")
+            # This is audit evidence, never an installation requirements file.
+            return lock
         logical = text.replace("\\\n", " ")
         lines = [line.strip() for line in logical.splitlines() if line.strip() and not line.lstrip().startswith("#")]
         requirements = []

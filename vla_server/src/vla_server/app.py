@@ -80,6 +80,7 @@ def create_app(policy=None, limits: RuntimeLimits | None = None, config=None) ->
                 "policy": policy.identity.model_dump(), "gpu_model_ready": bool(ready and policy.gpu_loaded),
                 "model_loaded": bool(policy.model_loaded), "genuine_inference_verified": bool(policy.genuine_inference_verified),
                 "warmup_verified": getattr(app.state, "warmup_verified", False),
+                "runtime": getattr(policy, "runtime_info", {}),
                 "startup_error": getattr(app.state, "startup_error", None), "source_revision": config.source_revision,
                 "session_generation": runner.generation, "inference_timeout_s": inference_timeout,
                 "protocol_extensions": ["native_actions_v1", "source_profiles_v1", "session_state_v1"],
@@ -110,6 +111,7 @@ def create_app(policy=None, limits: RuntimeLimits | None = None, config=None) ->
 
     @app.post("/v1/infer")
     async def infer(request: Request):
+        http_begin = perf_counter()
         try:
             data = await asyncio.wait_for(read_body(request), limits.request_timeout_s)
         except asyncio.TimeoutError as exc:
@@ -134,7 +136,9 @@ def create_app(policy=None, limits: RuntimeLimits | None = None, config=None) ->
                     return await future
             result = await asyncio.wait_for(predict(), inference_timeout)
             response_limits = limits.model_copy(update={"max_body_bytes": limits.max_response_bytes})
-            return Response(codec.dumps(result, response_limits), media_type="application/json")
+            body = codec.dumps(result, response_limits)
+            return Response(body, media_type="application/json", headers={
+                "Server-Timing": f"policy;dur={result.inference_duration_s * 1000:.3f}, http;dur={(perf_counter() - http_begin) * 1000:.3f}"})
         except asyncio.TimeoutError:
             token.cancelled.set()
             return JSONResponse(VLAError("TIMEOUT", "policy deadline exceeded", request_id=request_id).report(), status_code=504)
@@ -143,6 +147,15 @@ def create_app(policy=None, limits: RuntimeLimits | None = None, config=None) ->
             raise
         except VLAError as exc:
             token.cancelled.set()
+            if exc.code in ("CAMERA_MAPPING_MISSING", "CAMERA_MAPPING_UNKNOWN", "IMAGE_FEATURE_SHAPE_MISMATCH", "INVALID_TASK", "OBSERVATION_SOURCE_UNSUPPORTED", "INVALID_IMAGE"):
+                exc.request_id = request_id
+                return JSONResponse(exc.report(), status_code=422)
+            if exc.code == "POLICY_NOT_READY":
+                exc.request_id = request_id
+                return JSONResponse(exc.report(), status_code=503)
+            if exc.code == "TIMEOUT":
+                exc.request_id = request_id
+                return JSONResponse(exc.report(), status_code=504)
             if exc.code in ("REQUEST_INVALIDATED", "SESSION_RETIRED", "STALE_OBSERVATION_SEQUENCE", "REQUEST_ID_REUSE", "PROTOCOL_EXTENSION_REQUIRED"):
                 exc.request_id = request_id
                 return JSONResponse(exc.report(), status_code=409)

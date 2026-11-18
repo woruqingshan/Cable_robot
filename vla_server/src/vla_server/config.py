@@ -12,7 +12,7 @@ class NativeActionSpec(StrictModel):
     space_id: Identifier
     channels: list[Identifier] = Field(min_length=1, max_length=256)
     units: list[Identifier] = Field(min_length=1, max_length=256)
-    semantics: Literal["absolute", "delta"]
+    semantics: Literal["absolute", "delta", "unknown"]
     step_s: float = Field(gt=0, le=10)
     processor_id: Identifier
     normalization_id: Identifier
@@ -32,11 +32,14 @@ class PolicyConfig(StrictModel):
     fake_horizon: int = Field(default=50, ge=1, le=256)
     fake_dimension: int = Field(default=7, ge=1, le=256)
     fake_delay_s: float = Field(default=0.0, ge=0, le=60)
-    fake_semantics: Literal["absolute", "delta"] = "absolute"
+    fake_semantics: Literal["absolute", "delta", "unknown"] = "absolute"
     fake_normalization_id: Identifier = "fake_native_stats_v1"
     lerobot_checkout: str | None = None
     lerobot_revision: str | None = Field(default=None, pattern=r"^[0-9a-f]{40}$")
     checkpoint_path: str | None = None
+    checkpoint_receipt_path: str | None = None
+    hf_home: str | None = None
+    backbone_revision: str | None = Field(default=None, pattern=r"^[0-9a-f]{40}$")
     checkpoint_repo: str = "lerobot/smolvla_base"
     checkpoint_revision: str | None = Field(default=None, pattern=r"^[0-9a-f]{40}$")
     checkpoint_inventory_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
@@ -104,7 +107,7 @@ def load_config(path):
     except Exception as exc:
         raise VLAError("INVALID_CONFIG", str(exc)) from exc
     data = config.model_dump()
-    for name in ("lerobot_checkout", "checkpoint_path"):
+    for name in ("lerobot_checkout", "checkpoint_path", "checkpoint_receipt_path", "hf_home"):
         value = data["policy"][name]
         if value:
             data["policy"][name] = str((path.parent / Path(value).expanduser()).resolve())

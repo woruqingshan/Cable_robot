@@ -14,4 +14,5 @@ setup(
     entry_points={"console_scripts": [
         "mock_robot = cable_robot_vla.mock_robot_node:main",
         "vla_pipeline = cable_robot_vla.vla_node:main",
-        "trajectory_preview = cable_robot_vla.visualization.node:main"]})
+        "trajectory_preview = cable_robot_vla.visualization.node:main",
+        "simulation_pipeline = cable_robot_vla.integration.node:main"]})

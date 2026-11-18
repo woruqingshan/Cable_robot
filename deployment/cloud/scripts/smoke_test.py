@@ -7,7 +7,6 @@ import sys
 from time import time_ns
 from uuid import uuid4
 from urllib.parse import urlparse
-import httpx
 from vla_protocol import codec
 from vla_protocol.action import PolicyActionChunk
 from vla_protocol.observation import Observation
@@ -29,6 +28,7 @@ def smoke_observation():
 
 
 def main():
+    import httpx
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--url", default="http://127.0.0.1:8000")
     parser.add_argument("--timeout", type=float, default=5.0)

@@ -76,6 +76,8 @@ def main():
             manifest = load_manifest(args.manifest)
             manifest.require_resolved(download=args.operation in ("download-model", "install-lerobot"))
             lock = manifest.verify_lock(args.manifest)
+            if manifest.environment.kind == "existing_venv" and args.operation in ("install-lerobot", "download-model"):
+                raise VLAError("INSTALLATION_NOT_PERMITTED", "existing-venv manifest reuses uploaded assets; no installation or download")
             check_source(manifest)
             checkout, checkpoint = outside_repo(manifest.lerobot.checkout), outside_repo(manifest.checkpoint.directory)
             if args.operation == "install-lerobot":
@@ -116,17 +118,22 @@ def main():
                     result.update(executed=True, inventory_sha256=inventory_hash(files))
             elif args.operation in ("check", "start"):
                 check_python(manifest)
+                if manifest.environment.requirements_format == "installed_freeze":
+                    installed = subprocess.check_output([sys.executable, "-m", "pip", "freeze", "--all"], text=True)
+                    if installed != lock.read_text():
+                        raise VLAError("GPU_ENVIRONMENT_MISMATCH", "installed package snapshot differs from manifest")
                 import torch
                 if (torch.__version__ != manifest.environment.torch_version or torch.version.cuda != manifest.environment.cuda_runtime or not torch.cuda.is_available()):
                     raise VLAError("GPU_ENVIRONMENT_MISMATCH", "Torch/CUDA availability or versions differ from manifest")
                 from vla_server.artifacts import verify_checkpoint
-                verify_checkpoint(checkpoint, manifest.checkpoint.repository, manifest.checkpoint.revision, manifest.checkpoint.inventory_sha256)
+                verify_checkpoint(checkpoint, manifest.checkpoint.repository, manifest.checkpoint.revision, manifest.checkpoint.inventory_sha256, receipt_path=manifest.checkpoint.receipt_path)
                 config_path = Path(args.config) if args.config else Path(args.manifest).resolve().parent / manifest.server_config
                 config = load_config(config_path)
                 config.policy.require_model_pins()
                 if (config.source_revision != manifest.cable_robot_revision or config.policy.lerobot_revision != manifest.lerobot.revision
                     or config.policy.checkpoint_revision != manifest.checkpoint.revision or config.policy.checkpoint_inventory_sha256 != manifest.checkpoint.inventory_sha256
-                    or Path(config.policy.lerobot_checkout).resolve() != checkout or Path(config.policy.checkpoint_path).resolve() != checkpoint):
+                    or Path(config.policy.lerobot_checkout).resolve() != checkout or Path(config.policy.checkpoint_path).resolve() != checkpoint
+                    or config.policy.checkpoint_receipt_path != manifest.checkpoint.receipt_path):
                     raise VLAError("DEPLOYMENT_CONFIG_MISMATCH", "server configuration differs from the pinned manifest")
                 if args.operation == "start":
                     os.execv(sys.executable, [sys.executable, "-B", "-m", "vla_server.app", "--config", str(config_path.resolve()),
