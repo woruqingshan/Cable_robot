@@ -15,4 +15,6 @@ setup(
         "mock_robot = cable_robot_vla.mock_robot_node:main",
         "vla_pipeline = cable_robot_vla.vla_node:main",
         "trajectory_preview = cable_robot_vla.visualization.node:main",
-        "simulation_pipeline = cable_robot_vla.integration.node:main"]})
+        "simulation_pipeline = cable_robot_vla.integration.node:main",
+        "real_observation = cable_robot_vla.real_observation_node:main",
+        "real_replay = cable_robot_vla.real_recording:main"]})

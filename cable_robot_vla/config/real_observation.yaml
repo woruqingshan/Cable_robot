@@ -1,0 +1,20 @@
+# TEMPLATE: camera topic must be verified at runtime. Cached state is rejected.
+/idc_vla/real/real_observation:
+  ros__parameters:
+    use_sim_time: false
+    camera_topic: ""
+    joint_state_topic: /controller_manager/joint_states
+    gripper_state_topic: ""
+    state_evidence_path: ""
+    state_evidence_sha256: ""
+    camera_id: real_rgb
+    robot_id: jetrover_real
+    scene_id: unregistered_real_scene
+    scene_sha256: ""  # Required SHA256 of a real, explicitly uncalibrated scene manifest.
+    model_id: unregistered_model
+    instruction: "Observe the RJ45 workspace; do not execute actions."
+    observation_hz: 2.0
+    output_directory: real_observations
+    enable_inference: false
+    server_url: http://127.0.0.1:8000
+    request_timeout_s: 30.0
