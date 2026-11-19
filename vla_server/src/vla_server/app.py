@@ -4,6 +4,8 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager
 import logging
+from datetime import datetime, timezone
+from .diagnostics import InferenceDiagnostics
 from time import perf_counter
 from time import monotonic
 
@@ -66,9 +68,12 @@ def create_app(policy=None, limits: RuntimeLimits | None = None, config=None) ->
 
     app = FastAPI(title="IDC VLA inference service", version="0.1.0", lifespan=lifespan)
     lock = asyncio.Lock()
+    diagnostics = InferenceDiagnostics(config.diagnostic_directory) if config.diagnostic_directory else None
 
     @app.exception_handler(VLAError)
     async def protocol_error(request, exc):
+        if diagnostics:
+            diagnostics.error(request_id=exc.request_id, code=exc.code)
         status = 413 if exc.code == "PAYLOAD_TOO_LARGE" else 504 if exc.code == "TIMEOUT" else 422
         return JSONResponse(exc.report(), status_code=status)
 
@@ -112,6 +117,7 @@ def create_app(policy=None, limits: RuntimeLimits | None = None, config=None) ->
     @app.post("/v1/infer")
     async def infer(request: Request):
         http_begin = perf_counter()
+        started_utc = datetime.now(timezone.utc).isoformat()
         try:
             data = await asyncio.wait_for(read_body(request), limits.request_timeout_s)
         except asyncio.TimeoutError as exc:
@@ -119,6 +125,8 @@ def create_app(policy=None, limits: RuntimeLimits | None = None, config=None) ->
         observation = codec.loads(data, Observation, limits)
         request_id = observation.request_id
         if not app.state.started:
+            if diagnostics:
+                diagnostics.error(request_id=request_id, code="POLICY_NOT_READY")
             return JSONResponse(VLAError("POLICY_NOT_READY", "selected policy failed startup/readiness", request_id=request_id).report(), status_code=503)
         token = RequestToken(monotonic() + inference_timeout)
         try:
@@ -137,15 +145,22 @@ def create_app(policy=None, limits: RuntimeLimits | None = None, config=None) ->
             result = await asyncio.wait_for(predict(), inference_timeout)
             response_limits = limits.model_copy(update={"max_body_bytes": limits.max_response_bytes})
             body = codec.dumps(result, response_limits)
+            if diagnostics:
+                diagnostics.success(observation, result, started_utc=started_utc,
+                    duration_s=perf_counter()-http_begin, policy=policy)
             return Response(body, media_type="application/json", headers={
                 "Server-Timing": f"policy;dur={result.inference_duration_s * 1000:.3f}, http;dur={(perf_counter() - http_begin) * 1000:.3f}"})
         except asyncio.TimeoutError:
+            if diagnostics:
+                diagnostics.error(request_id=request_id, code="TIMEOUT")
             token.cancelled.set()
             return JSONResponse(VLAError("TIMEOUT", "policy deadline exceeded", request_id=request_id).report(), status_code=504)
         except asyncio.CancelledError:
             token.cancelled.set()
             raise
         except VLAError as exc:
+            if diagnostics:
+                diagnostics.error(request_id=request_id, code=exc.code)
             token.cancelled.set()
             if exc.code in ("CAMERA_MAPPING_MISSING", "CAMERA_MAPPING_UNKNOWN", "IMAGE_FEATURE_SHAPE_MISMATCH", "INVALID_TASK", "OBSERVATION_SOURCE_UNSUPPORTED", "INVALID_IMAGE"):
                 exc.request_id = request_id
@@ -161,6 +176,8 @@ def create_app(policy=None, limits: RuntimeLimits | None = None, config=None) ->
                 return JSONResponse(exc.report(), status_code=409)
             return JSONResponse(VLAError("POLICY_ERROR", "policy failed to produce a valid correlated candidate", request_id=request_id).report(), status_code=500)
         except Exception:
+            if diagnostics:
+                diagnostics.error(request_id=request_id, code="POLICY_ERROR")
             token.cancelled.set()
             LOG.exception("policy failed for request %s", request_id)
             return JSONResponse(VLAError("POLICY_ERROR", "policy failed to produce a valid correlated candidate", request_id=request_id).report(), status_code=500)

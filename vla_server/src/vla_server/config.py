@@ -66,6 +66,7 @@ class ServerConfig(StrictModel):
     host: Literal["127.0.0.1", "::1"] = "127.0.0.1"
     port: int = Field(default=8000, ge=1, le=65535)
     source_revision: str | None = Field(default=None, pattern=r"^[0-9a-f]{40}$")
+    diagnostic_directory: str | None = None
     policy: PolicyConfig = Field(default_factory=PolicyConfig)
     limits: RuntimeLimits = Field(default_factory=RuntimeLimits)
     timing: ServiceTiming = Field(default_factory=ServiceTiming)
