@@ -1,13 +1,14 @@
 # R1 / R2 验收与交接：2026-11-20
 
 唯一开发分支：`feat/real-operation-pipeline`，本轮起点 `e86d0e6`。
-正式修改只在JetRover仓库进行。未部署AutoDL、未修改厂商运行文件。
+正式修改只在JetRover仓库进行。未部署AutoDL；原SDK/脚本未改，按键服务新增已批准覆盖配置。
 本轮结论：离线准备完成；实际固件身份UNKNOWN；单舵机实测准入NOT_READY。
 
 ## 验收矩阵
 
 |项目|结果|证据边界|
 |---|---|---|
+|R1 Known Extra Serial Opener|PASS（限定）|Stage A后只见原驱动；内核独占未验证|
 |R1 Protocol|BLOCKED|参考C缺陷已离线复现，本车固件未对应；不能把测试通过解释为协议安全|
 |R1 Live Single ID|NOT_RUN|0次硬件RPC|
 |R1 Six Servo Snapshot|BLOCKED|仅有Mock六ID批次；实测未执行|
@@ -53,6 +54,8 @@ source /home/ubuntu/ros2_ws/install/setup.bash
 export PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1
 export PYTHONPATH="$PWD:$PWD/vla_protocol/src:$PWD/vla_server/src:$PWD/cable_robot_vla:$PWD/workspace_analysis/src:$PYTHONPATH"
 ROS_DOMAIN_ID=117 RMW_IMPLEMENTATION=rmw_fastrtps_cpp python3 -m pytest -q -rs -p no:cacheprovider \
+  cable_robot_vla/test/test_wifi_button_adapter.py \
+  cable_robot_vla/test/test_r1_maintenance_transport.py \
   cable_robot_vla/test/test_r1_readback_guard.py \
   cable_robot_vla/test/test_r1_vendor_patch.py \
   cable_robot_vla/test/test_r1_raw_feedback.py \
@@ -101,7 +104,7 @@ ROS_DOMAIN_ID=117 RMW_IMPLEMENTATION=rmw_fastrtps_cpp python3 -m pytest -q -rs -
 不是批准调用已知可能阻塞的原接口。
 
 
-## 新一轮拥有者修复准备（2026-11-20）
+## 历史：Stage A部署前准备（2026-11-20）
 
 - 备份及SHA核验：PASS（53文件/134,200字节；不是整机或凭据备份）。
 - 已知串口竞争来源定位：PASS；移除与实际独占验证：NOT_RUN。
@@ -114,3 +117,36 @@ ROS_DOMAIN_ID=117 RMW_IMPLEMENTATION=rmw_fastrtps_cpp python3 -m pytest -q -rs -
 待授权的首项实机维护仅为
 [R1_OWNER_STAGE_A_PLAN.md](R1_OWNER_STAGE_A_PLAN.md)中的按键服务单独变更，
 不包含SDK部署、start_app_node重启、首次ID1读取或固件操作。
+
+## 最新进展：Stage A已部署，SDK维护模式仅离线（2026-11-20）
+
+Confirmed：
+- Stage A经用户单独批准后，只重启按键服务；原SDK/节点和整车服务未重启。
+- 已知额外串口打开者移除；时点快照只见ROS驱动PID3756。
+  这不是物理端口内核独占或固件事务关联验证。
+- 53个原始文件SHA与备份一致，0次硬件位置RPC。
+- SDK候选增加显式维护模式：跳过启动和中断运动指令、移除运动订阅、
+  有限且串行化的完整帧TX、既有FD的TIOCEXCL候选。
+  所有这些SDK变化仅在项目补丁及临时测试副本中，未安装到运行厂商目录。
+- 完整选定回归306 passed、1 skipped in12.25s。
+  新增43项相对Stage A提交；唯一skip为FastAPI缺失。
+  PTY与Mock结果不作为真实控制板验证。
+
+Unknown：
+- 用户推测的主机USB口3不证明STM32 UART3/ROS。
+- 实际板型/固件版本及重开串口复位风险、内层关联/迟到边界仍未确认。
+
+R1：首次ID1 NOT_RUN；六路实测/连续采集BLOCKED。
+R2：完整有效真实Observation=0，真实状态云端联调BLOCKED；无新AutoDL部署或请求。
+默认DISARMED、KEY_REUSE_UNSAFE和内层匹配前提未解除；动作执行DISABLED。
+
+详见[R1_OWNER_STAGE_A_PLAN.md](R1_OWNER_STAGE_A_PLAN.md)实测追加、
+[R1_SDK_MAINTENANCE_PLAN.md](R1_SDK_MAINTENANCE_PLAN.md)及验收矩阵。
+
+最终状态：
+- SDK modification required: YES（现有Python读取缺陷需修复；候选未部署）。
+- STM32 firmware modification required: UNDETERMINED。
+- Offline tests: PASS（306 passed，1 skipped）。
+- Live hardware readback: NOT_RUN。
+- R1 status: BLOCKED；仅Stage A已知额外串口打开者移除通过。
+- R2 readiness: BLOCKED；完整真实状态及单位/采样时间证据不足。

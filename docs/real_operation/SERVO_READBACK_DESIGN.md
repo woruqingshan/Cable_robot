@@ -173,7 +173,7 @@ flush/tcdrain无显式期限；取消写入不证明USB/设备缓存中没有剩
   PWM旧路径不在修复范围，整节点不因此获得全面可恢复性证明。
 - audit_environment.py：只读取文件和/proc元数据，不打开设备、不导入SDK、不发送RPC。
 
-当前候选SHA256：`6a96c91671eeefa2e8ad3e94b1fa75438a5171e68368fb95d8379ef3b8569f8e`；
+e0f151e历史候选SHA256：`6a96c91671eeefa2e8ad3e94b1fa75438a5171e68368fb95d8379ef3b8569f8e`；
 详情见baseline.json。旧e86d0e6候选SHA为2d57222e…，不可混用。
 当前SDK默认write_timeout=None，候选即使其它条件满足也拒绝发送。
 没有实机arming接口、安装器、自动恢复/重启或固件升级命令。
@@ -293,3 +293,30 @@ Robot Execution: DISABLED
 VLA隔离断言原样保留，硬件维护工具位于patches目录。
 SDK候选未部署、未激活，KEY_REUSE_UNSAFE未解除。Stage A部署等待用户单独授权，
 单ID读回仍NOT_RUN，R1连续读取与R2仍BLOCKED。
+
+## 最新进展：Stage A已部署，SDK维护模式仅离线（2026-11-20）
+
+Confirmed：
+- Stage A经用户单独批准后，只重启按键服务；原SDK/节点和整车服务未重启。
+- 已知额外串口打开者移除；时点快照只见ROS驱动PID3756。
+  这不是物理端口内核独占或固件事务关联验证。
+- 53个原始文件SHA与备份一致，0次硬件位置RPC。
+- SDK候选增加显式维护模式：跳过启动和中断运动指令、移除运动订阅、
+  有限且串行化的完整帧TX、既有FD的TIOCEXCL候选。
+  所有这些SDK变化仅在项目补丁及临时测试副本中，未安装到运行厂商目录。
+- 完整选定回归306 passed、1 skipped in12.25s。
+  新增43项相对Stage A提交；唯一skip为FastAPI缺失。
+  PTY与Mock结果不作为真实控制板验证。
+
+Unknown：
+- 用户推测的主机USB口3不证明STM32 UART3/ROS。
+- 实际板型/固件版本及重开串口复位风险、内层关联/迟到边界仍未确认。
+
+R1：首次ID1 NOT_RUN；六路实测/连续采集BLOCKED。
+R2：完整有效真实Observation=0，真实状态云端联调BLOCKED；无新AutoDL部署或请求。
+默认DISARMED、KEY_REUSE_UNSAFE和内层匹配前提未解除；动作执行DISABLED。
+
+详见[R1_OWNER_STAGE_A_PLAN.md](R1_OWNER_STAGE_A_PLAN.md)实测追加、
+[R1_SDK_MAINTENANCE_PLAN.md](R1_SDK_MAINTENANCE_PLAN.md)及验收矩阵。
+
+最新项目候选补丁SHA256：0ef5decd928521d931dde747a205cffb0f5472dee21e3d92919bffca6009e9f1；未应用。

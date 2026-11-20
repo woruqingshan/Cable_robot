@@ -108,7 +108,7 @@ class ReadbackGate:
                 self.condition.notify_all()
 
     def read_position(self, servo_id, command, unpack, send, *, timeout_s=0.1,
-                      write_timeout_s=None, reception_enabled=False):
+                      write_timeout_s=None, reception_enabled=False, send_with_deadline=False):
         if type(servo_id) is not int or servo_id not in SERVO_IDS or command != 0x05 or unpack != "<BBbh":
             raise ReadbackFault("POSITION_ONLY_SCOPE")
         if not math.isfinite(timeout_s) or not 0 < timeout_s <= 5:
@@ -139,7 +139,10 @@ class ReadbackGate:
             try:
                 # Existing SDK buf_write only. No extra serial port or worker.
                 # A finite, independently verified serial write bound is required.
-                send()
+                if send_with_deadline:
+                    send(deadline)
+                else:
+                    send()
             except Exception as error:
                 self.fail("SEND_FAILED")
                 raise ReadbackFault("SEND_FAILED") from error
@@ -158,4 +161,71 @@ class ReadbackGate:
             with self.condition:
                 self.pending = None
                 self.reply = None
+            self.lock.release()
+
+
+def claim_linux_exclusive(port):
+    """Claim the EXISTING fd only; never opens a second serial device.
+
+    TIOCEXCL rejects later ordinary opens, but does not revoke older descriptors
+    and privileged callers can bypass it. Owner preflight is still mandatory.
+    """
+    import fcntl
+    import termios
+    fcntl.ioctl(port.fileno(), termios.TIOCEXCL)
+
+
+class MaintenanceFrameWriter:
+    """Bounded opt-in maintenance TX using the one existing PySerial instance.
+
+    Only buzzer and position-query frames are permitted. No reset/retry exists.
+    Software deadlines are checked; this is not a hard-real-time guarantee.
+    """
+    def __init__(self, port, crc_function, *, clock_ns=time.monotonic_ns):
+        self.port, self.crc_function, self.clock_ns = port, crc_function, clock_ns
+        self.lock = threading.Lock()
+        self.fault = None
+
+    def write(self, frame, *, deadline_ns=None):
+        raw = bytes(frame)
+        if (len(raw) < 5 or raw[:2] != b"\xaa\x55"
+                or raw[3] != len(raw)-5 or self.crc_function(raw[2:-1]) != raw[-1]):
+            raise ReadbackFault("MAINTENANCE_INVALID_TX_FRAME")
+        function, payload = raw[2], raw[4:-1]
+        allowed = (function == 2 and len(payload) == 8) or (
+            function == 5 and len(payload) == 2 and payload[0] == 5 and payload[1] in SERVO_IDS)
+        if not allowed:
+            raise ReadbackFault("MAINTENANCE_COMMAND_FORBIDDEN")
+        timeout = self.port.write_timeout
+        if (type(timeout) not in (int, float) or not math.isfinite(timeout)
+                or not 0 < timeout <= .1):
+            raise ReadbackFault("MAINTENANCE_FINITE_WRITE_REQUIRED")
+        now = self.clock_ns()
+        if deadline_ns is None:
+            deadline_ns = now + 100_000_000
+        if type(deadline_ns) is not int:
+            raise ReadbackFault("MAINTENANCE_INVALID_TX_DEADLINE")
+        if self.fault:
+            raise ReadbackFault(self.fault)
+        lock_budget = (deadline_ns-now)/1e9-timeout
+        if lock_budget <= 0 or not self.lock.acquire(timeout=lock_budget):
+            raise ReadbackFault("MAINTENANCE_TX_LOCK_BUDGET")
+        try:
+            if self.fault:
+                raise ReadbackFault(self.fault)
+            if (deadline_ns-self.clock_ns())/1e9 < timeout:
+                raise ReadbackFault("MAINTENANCE_TX_BUDGET_EXHAUSTED")
+            try:
+                written = self.port.write(raw)
+            except Exception as error:
+                self.fault = "MAINTENANCE_TX_IO_FAILED"
+                raise ReadbackFault(self.fault) from error
+            if type(written) is not int or written != len(raw):
+                self.fault = "MAINTENANCE_TX_SHORT_WRITE"
+                raise ReadbackFault(self.fault)
+            if self.clock_ns() >= deadline_ns:
+                self.fault = "MAINTENANCE_TX_DEADLINE_OVERRUN"
+                raise ReadbackFault(self.fault)
+            return written
+        finally:
             self.lock.release()

@@ -255,3 +255,213 @@ def test_legacy_write_default_return_semantics_unchanged(patched_sdk):
     sdk,helper,_,_=patched_sdk;board=board_fixture(sdk,helper)
     board.port.write=lambda frame:0
     assert board.buf_write(sdk.PacketFunction.PACKET_FUNC_BUS_SERVO,[1,1]) is None
+
+
+class ConstructorPort(FakePort):
+    def __init__(self, *args, **kwargs):
+        super().__init__()
+        self.arguments = (args, kwargs)
+        self.write_timeout = kwargs.get("write_timeout")
+        self.closed = False
+        self.opened = False
+
+    def setPort(self, device):
+        self.device = device
+
+    def open(self):
+        self.opened = True
+
+    def close(self):
+        self.closed = True
+
+
+def constructor_sdk(patched_sdk, monkeypatch):
+    sdk, helper, node_source, original = patched_sdk
+    ports, exclusive = [], []
+    def make(*args, **kwargs):
+        port = ConstructorPort(*args, **kwargs)
+        ports.append(port)
+        return port
+    monkeypatch.setattr(sdk.serial, "Serial", make)
+    monkeypatch.setattr(sdk.time, "sleep", lambda _: None)
+    monkeypatch.setattr(sdk.threading, "Thread", lambda **_: S(start=lambda: None))
+    monkeypatch.setattr(sdk, "claim_linux_exclusive", exclusive.append)
+    return sdk, helper, ports, exclusive
+
+
+@pytest.mark.parametrize("mode", [None, .05])
+def test_board_constructor_maintenance_is_explicit_and_does_not_transmit(
+        patched_sdk, monkeypatch, mode):
+    sdk, helper, ports, exclusive = constructor_sdk(patched_sdk, monkeypatch)
+    board = sdk.Board(maintenance_tx_timeout_s=mode)
+    assert len(ports) == 1 and ports[0].frames == [] and ports[0].opened
+    assert board._bounded_bus_feedback.status()["state"] == "DISARMED"
+    if mode is None:
+        assert ports[0].arguments[1] == {"timeout": 5}
+        assert board._maintenance_writer is None and exclusive == []
+    else:
+        assert ports[0].arguments[1] == {"timeout": 5, "write_timeout": .05}
+        assert exclusive == [ports[0]]
+        assert board._maintenance_writer.port is ports[0]
+
+
+@pytest.mark.parametrize("mode", [True, 0, .1, float("nan"), float("inf")])
+def test_invalid_maintenance_timeout_rejected_before_serial_open(
+        patched_sdk, monkeypatch, mode):
+    sdk, _, ports, _ = constructor_sdk(patched_sdk, monkeypatch)
+    with pytest.raises(ValueError):
+        sdk.Board(maintenance_tx_timeout_s=mode)
+    assert ports == []
+
+
+def test_exclusive_claim_failure_closes_port_without_receiver_start(
+        patched_sdk, monkeypatch):
+    sdk, _, ports, _ = constructor_sdk(patched_sdk, monkeypatch)
+    def fail(port):
+        raise OSError("offline exclusive failure")
+    monkeypatch.setattr(sdk, "claim_linux_exclusive", fail)
+    with pytest.raises(OSError):
+        sdk.Board(maintenance_tx_timeout_s=.05)
+    assert ports[0].closed and ports[0].frames == []
+
+
+def test_maintenance_motion_blocked_and_fault_disables_read_gate(
+        patched_sdk, monkeypatch):
+    sdk, helper, ports, _ = constructor_sdk(patched_sdk, monkeypatch)
+    board = sdk.Board(maintenance_tx_timeout_s=.05)
+    with pytest.raises(helper.ReadbackFault) as error:
+        board.bus_servo_set_position(.5, [[1, 500]])
+    assert error.value.code == "MAINTENANCE_COMMAND_FORBIDDEN"
+    assert ports[0].frames == []
+    assert board._bounded_bus_feedback.status()["state"] == "FAULT"
+
+
+def test_maintenance_buzzer_allowed_but_read_remains_disarmed(
+        patched_sdk, monkeypatch):
+    sdk, helper, ports, _ = constructor_sdk(patched_sdk, monkeypatch)
+    board = sdk.Board(maintenance_tx_timeout_s=.05)
+    board.set_buzzer(1900, .2, .01, 1)
+    assert len(ports[0].frames) == 1 and ports[0].frames[0][2] == 2
+    with pytest.raises(helper.ReadbackFault) as error:
+        board.bus_servo_read_position(1)
+    assert error.value.code == "DISARMED" and len(ports[0].frames) == 1
+
+
+def fake_node_class(source, mode):
+    """Execute exact candidate constructor against fake Node/Board, not ROS."""
+    calls, subscriptions, services = [], [], []
+    class BoardStub:
+        def __init__(self, **kwargs):
+            calls.append(("Board", kwargs))
+        def enable_reception(self):
+            calls.append(("enable", None))
+        def pwm_servo_set_offset(self, *args):
+            calls.append(("pwm", args))
+        def set_motor_speed(self, *args):
+            calls.append(("motor", args))
+    class Base:
+        def __init__(self, name):
+            self.name = name
+            self.parameters = {"readback_maintenance": mode}
+        def declare_parameter(self, name, value):
+            self.parameters.setdefault(name, value)
+        def get_parameter(self, name):
+            return S(value=self.parameters[name])
+        def create_publisher(self, *args):
+            return S()
+        def create_subscription(self, message, topic, *args):
+            subscriptions.append(topic)
+        def create_service(self, message, name, *args):
+            services.append(name)
+        def get_clock(self):
+            return S()
+        def get_logger(self):
+            return S(info=lambda *_: None)
+    namespace = dict(Node=Base, Board=BoardStub,
+        rclpy=S(init=lambda: None),
+        threading=S(Thread=lambda **_: S(start=lambda: None)))
+    for name in ("Imu Joy Sbus ButtonState UInt16 LedState BuzzerState OLEDState "
+                 "MotorsState Bool SetBusServoState ServosPosition "
+                 "SetPWMServoState GetBusServoState GetPWMServoState Trigger").split():
+        namespace[name] = type(name, (), {})
+    tree = ast.parse(source)
+    class_node = next(n for n in tree.body if isinstance(n, ast.ClassDef))
+    exec(compile(ast.Module(body=[class_node], type_ignores=[]),
+                 "offline_maintenance_node.py", "exec"), namespace)
+    return namespace["RosRobotController"], calls, subscriptions, services
+
+
+@pytest.mark.parametrize("mode", [False, True])
+def test_exact_node_constructor_has_no_maintenance_actuator_interfaces(
+        patched_sdk, mode):
+    _, _, source, _ = patched_sdk
+    cls, calls, topics, services = fake_node_class(source, mode)
+    node = cls("offline")
+    if mode:
+        assert calls == [("Board", {"maintenance_tx_timeout_s": .05}), ("enable", None)]
+        assert topics == ["~/set_buzzer"]
+        assert services == ["~/bus_servo/get_state", "~/init_finish"]
+    else:
+        assert calls == [("Board", {}), ("enable", None),
+            ("pwm", (1, 0)), ("motor", ([[1, 0], [2, 0], [3, 0], [4, 0]],))]
+        assert len(topics) == 8 and len(services) == 3
+
+
+@pytest.mark.parametrize("mode", [False, True])
+def test_exact_main_interrupt_does_not_write_motor_in_maintenance(
+        patched_sdk, mode):
+    _, _, source, _ = patched_sdk
+    calls = []
+    node = S(readback_maintenance=mode,
+        board=S(set_motor_speed=lambda *_: calls.append("motor")),
+        destroy_node=lambda: calls.append("destroy"))
+    def interrupt(_):
+        raise KeyboardInterrupt()
+    namespace = dict(RosRobotController=lambda _: node,
+        rclpy=S(spin=interrupt, shutdown=lambda: calls.append("shutdown")))
+    main = next(n for n in ast.parse(source).body
+                if isinstance(n, ast.FunctionDef) and n.name == "main")
+    exec(compile(ast.Module(body=[main], type_ignores=[]),
+                 "offline_main.py", "exec"), namespace)
+    namespace["main"]()
+    assert calls == (["destroy", "shutdown"] if mode
+                     else ["motor", "destroy", "shutdown"])
+
+
+
+def test_maintenance_writer_existing_crc_path_and_key_reuse_guard(
+        patched_sdk, monkeypatch):
+    sdk, helper, ports, _ = constructor_sdk(patched_sdk, monkeypatch)
+    board = sdk.Board(maintenance_tx_timeout_s=.05)
+    board.enable_reception()
+    board._bounded_bus_feedback.arm("OFFLINE_ONLY_NOT_HARDWARE_PROOF",
+        clean_epoch_verified=True, exclusive_owner_verified=True,
+        echo_contract_verified=True, write_bound_verified=True,
+        inner_response_match_verified=True)
+    def respond(raw):
+        servo_id = raw[5]
+        board.port.incoming = list(wire_response(sdk, servo_id))
+        try:
+            board.recv_task()
+        except StopFixture:
+            pass
+    board.port.on_write = respond
+    assert [board.bus_servo_read_position(i) for i in [1, 2, 3, 4, 5, 10]] == [
+        [601], [602], [603], [604], [605], [610]]
+    with pytest.raises(helper.ReadbackFault) as error:
+        board.bus_servo_read_position(1)
+    assert error.value.code == "KEY_REUSE_UNSAFE"
+    assert len(ports[0].frames) == 6
+
+
+def test_maintenance_short_write_buzzer_error_latches_position_path(
+        patched_sdk, monkeypatch):
+    sdk, helper, ports, _ = constructor_sdk(patched_sdk, monkeypatch)
+    board = sdk.Board(maintenance_tx_timeout_s=.05)
+    ports[0].write = lambda _: 0
+    with pytest.raises(helper.ReadbackFault) as error:
+        board.set_buzzer(1900, .2, .01, 1)
+    assert error.value.code == "MAINTENANCE_TX_SHORT_WRITE"
+    assert board._bounded_bus_feedback.status()["error"] == error.value.code
+    assert board.servo_read_lock.acquire(blocking=False)
+    board.servo_read_lock.release()

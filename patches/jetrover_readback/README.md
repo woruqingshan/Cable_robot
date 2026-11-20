@@ -98,3 +98,13 @@ button_scan.service drop-in only. It never installs files or invokes systemctl.
 Backups and source/unit hashes are mandatory. Deployment and restarting the
 button service require separate approval; start_app_node and SDK remain untouched.
 Read docs/real_operation/R1_OWNER_STAGE_A_PLAN.md before considering deployment.
+
+## 2026-11-20维护模式候选与Stage A状态
+
+Stage A按键ROS代理已单独批准部署，来源94a4e449；不包含SDK修改/驱动重启/舵机RPC授权。
+SDK补丁新增显式readback_maintenance参数（默认false），仅用于后续审阅；
+有限TX、既有FD独占申请、无运动启动/中断分支均仅在Mock/PTY中验证。
+默认DISARMED且KEY_REUSE_UNSAFE保留，不具备连续读取能力或自动arming入口。
+原正常控制方法AST与字节兼容测试保留；维护模式则有意禁止执行器指令。
+所有物理串口操作均NOT_RUN；不能把虚拟PTY的独占结果记为实机PASS。
+详见../../docs/real_operation/R1_SDK_MAINTENANCE_PLAN.md。

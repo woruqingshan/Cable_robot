@@ -1,14 +1,49 @@
 --- a/ros_robot_controller/ros_robot_controller_sdk.py
 +++ b/ros_robot_controller/ros_robot_controller_sdk.py
-@@ -7,6 +7,7 @@
+@@ -7,6 +7,9 @@
  import struct
  import serial
  import threading
-+from .guarded_readback import ReadbackGate
++from .guarded_readback import (ReadbackGate, MaintenanceFrameWriter,
++    claim_linux_exclusive, ReadbackFault)
++import math
  
  class PacketControllerState(enum.IntEnum):
      # 通信协议的格式(the format of communication protocol)
-@@ -109,6 +110,8 @@
+@@ -95,20 +98,39 @@
+             'GAMEPAD_BUTTON_MASK_R1':        0x8000
+     }
+ 
+-    def __init__(self, device="/dev/rrc", baudrate=1000000, timeout=5):
++    def __init__(self, device="/dev/rrc", baudrate=1000000, timeout=5, *,
++                 maintenance_tx_timeout_s=None):
++        self._maintenance_writer = None
++        options = {}
++        if maintenance_tx_timeout_s is not None:
++            if (type(maintenance_tx_timeout_s) not in (int, float)
++                    or not math.isfinite(maintenance_tx_timeout_s)
++                    or not 0 < maintenance_tx_timeout_s <= .05):
++                raise ValueError('invalid maintenance TX timeout')
++            options['write_timeout'] = maintenance_tx_timeout_s
+         self.enable_recv = False
+         self.frame = []
+         self.recv_count = 0
+ 
+-        self.port = serial.Serial(None, baudrate, timeout=timeout)
++        self.port = serial.Serial(None, baudrate, timeout=timeout, **options)
+         self.port.rts = False
+         self.port.dtr = False
+         self.port.setPort(device)
+         self.port.open()
++        if maintenance_tx_timeout_s is not None:
++            try:
++                claim_linux_exclusive(self.port)
++            except Exception:
++                self.port.close()
++                raise
++            self._maintenance_writer = MaintenanceFrameWriter(
++                self.port, checksum_crc8)
+ 
          self.state = PacketControllerState.PACKET_CONTROLLER_STATE_STARTBYTE1
          self.servo_read_lock = threading.Lock()
          self.pwm_servo_read_lock = threading.Lock()
@@ -17,7 +52,7 @@
  
          # 队列用来存储数据(queues are used to store data)
          self.sys_queue = queue.Queue(maxsize=1)
-@@ -130,7 +133,7 @@
+@@ -130,7 +152,7 @@
          }
  
          time.sleep(0.5)
@@ -26,7 +61,7 @@
  
  
      def packet_report_sys(self, data):
-@@ -158,10 +161,7 @@
+@@ -158,10 +180,7 @@
              pass
  
      def packet_report_serial_servo(self, data):
@@ -38,24 +73,32 @@
  
      def packet_report_pwm_servo(self, data):
          try:
-@@ -315,12 +315,14 @@
+@@ -315,12 +334,22 @@
              print('get_sbus enable reception first!')
              return None
  
 -    def buf_write(self, func, data):
-+    def buf_write(self, func, data, *, require_complete=False):
++    def buf_write(self, func, data, *, require_complete=False, deadline_ns=None):
          buf = [0xAA, 0x55, int(func)]
          buf.append(len(data))
          buf.extend(data)
          buf.append(checksum_crc8(bytes(buf[2:])))
 -        self.port.write(buf)
-+        written = self.port.write(buf)
++        writer = getattr(self, '_maintenance_writer', None)
++        if writer is None:
++            written = self.port.write(buf)
++        else:
++            try:
++                written = writer.write(buf, deadline_ns=deadline_ns)
++            except ReadbackFault as error:
++                self._bounded_bus_feedback.fail(error.code)
++                raise
 +        if require_complete and (type(written) is not int or written != len(buf)):
 +            raise RuntimeError("READBACK_TX_INCOMPLETE")
  
      def set_led(self, on_time, off_time, repeat=1, led_id=1):
          on_time = int(on_time*1000)
-@@ -418,12 +420,14 @@
+@@ -418,12 +447,15 @@
          self.buf_write(PacketFunction.PACKET_FUNC_BUS_SERVO, data)
  
      def bus_servo_read_and_unpack(self, servo_id, cmd, unpack):
@@ -68,15 +111,16 @@
 +        self.last_bus_position_sample = None
 +        sample = self._bounded_bus_feedback.read_position(
 +            servo_id, cmd, unpack,
-+            lambda: self.buf_write(PacketFunction.PACKET_FUNC_BUS_SERVO, [cmd, servo_id], require_complete=True),
++            lambda deadline: self.buf_write(PacketFunction.PACKET_FUNC_BUS_SERVO,
++            [cmd, servo_id], require_complete=True, deadline_ns=deadline),
 +            timeout_s=0.1, write_timeout_s=self.port.write_timeout,
-+            reception_enabled=self.enable_recv)
++            reception_enabled=self.enable_recv, send_with_deadline=True)
 +        self.last_bus_position_sample = sample
 +        return [sample.raw_pulse]
  
      def bus_servo_read_id(self, servo_id=254):
          return self.bus_servo_read_and_unpack(servo_id, 0x12, "<BBbB")
-@@ -454,6 +458,14 @@
+@@ -454,6 +486,14 @@
  
      def enable_reception(self, enable=True):
          self.enable_recv = enable
@@ -101,7 +145,76 @@
  from ros_robot_controller_msgs.srv import GetBusServoState, GetPWMServoState
  from ros_robot_controller_msgs.msg import ButtonState, BuzzerState, LedState, MotorsState, BusServoState, SetBusServoState, ServosPosition, SetPWMServoState, Sbus, OLEDState
  
-@@ -162,6 +163,32 @@
+@@ -21,7 +22,12 @@
+     def __init__(self, name):
+         rclpy.init()
+         super().__init__(name)
+-        self.board = Board()
++        self.declare_parameter('readback_maintenance', False)
++        self.readback_maintenance = self.get_parameter('readback_maintenance').value
++        if type(self.readback_maintenance) is not bool:
++            raise ValueError('readback_maintenance must be bool')
++        self.board = (Board(maintenance_tx_timeout_s=.05)
++            if self.readback_maintenance else Board())
+         self.board.enable_reception()
+         self.running = True
+ 
+@@ -35,19 +41,29 @@
+         self.sbus_pub = self.create_publisher(Sbus, '~/sbus', 1)
+         self.button_pub = self.create_publisher(ButtonState, '~/button', 1)
+         self.battery_pub = self.create_publisher(UInt16, '~/battery', 1)
+-        self.create_subscription(LedState, '~/set_led', self.set_led_state, 5)
++        if not self.readback_maintenance:
++            self.create_subscription(LedState, '~/set_led', self.set_led_state, 5)
+         self.create_subscription(BuzzerState, '~/set_buzzer', self.set_buzzer_state, 5)
+-        self.create_subscription(OLEDState, '~/set_oled', self.set_oled_state, 5)
+-        self.create_subscription(MotorsState, '~/set_motor', self.set_motor_state, 10)
+-        self.create_subscription(Bool, '~/enable_reception', self.enable_reception, 1)
+-        self.create_subscription(SetBusServoState, '~/bus_servo/set_state', self.set_bus_servo_state, 10)
+-        self.create_subscription(ServosPosition, '~/bus_servo/set_position', self.set_bus_servo_position, 10)
+-        self.create_subscription(SetPWMServoState, '~/pwm_servo/set_state', self.set_pwm_servo_state, 10)
++        if not self.readback_maintenance:
++            self.create_subscription(OLEDState, '~/set_oled', self.set_oled_state, 5)
++        if not self.readback_maintenance:
++            self.create_subscription(MotorsState, '~/set_motor', self.set_motor_state, 10)
++        if not self.readback_maintenance:
++            self.create_subscription(Bool, '~/enable_reception', self.enable_reception, 1)
++        if not self.readback_maintenance:
++            self.create_subscription(SetBusServoState, '~/bus_servo/set_state', self.set_bus_servo_state, 10)
++        if not self.readback_maintenance:
++            self.create_subscription(ServosPosition, '~/bus_servo/set_position', self.set_bus_servo_position, 10)
++        if not self.readback_maintenance:
++            self.create_subscription(SetPWMServoState, '~/pwm_servo/set_state', self.set_pwm_servo_state, 10)
+         self.create_service(GetBusServoState, '~/bus_servo/get_state', self.get_bus_servo_state)
+-        self.create_service(GetPWMServoState, '~/pwm_servo/get_state', self.get_pwm_servo_state)
+-
+-        self.board.pwm_servo_set_offset(1, 0)
+-        self.board.set_motor_speed([[1, 0], [2, 0], [3, 0], [4, 0]])
++        if not self.readback_maintenance:
++            self.create_service(GetPWMServoState, '~/pwm_servo/get_state', self.get_pwm_servo_state)
++
++        if not self.readback_maintenance:
++            self.board.pwm_servo_set_offset(1, 0)
++        if not self.readback_maintenance:
++            self.board.set_motor_speed([[1, 0], [2, 0], [3, 0], [4, 0]])
+         self.clock = self.get_clock()
+         threading.Thread(target=self.pub_callback, daemon=True).start()
+         self.create_service(Trigger, '~/init_finish', self.get_node_state)
+@@ -79,7 +95,12 @@
+         self.board.set_led(msg.on_time, msg.off_time, msg.repeat, msg.id)
+ 
+     def set_buzzer_state(self, msg):
+-        self.board.set_buzzer(msg.freq, msg.on_time, msg.off_time, msg.repeat)
++        try:
++            self.board.set_buzzer(msg.freq, msg.on_time, msg.off_time, msg.repeat)
++        except ReadbackFault as error:
++            if not self.readback_maintenance:
++                raise
++            self.get_logger().error("Maintenance TX refused: " + error.code)
+ 
+     def set_motor_state(self, msg):
+         data = []
+@@ -162,6 +183,32 @@
              self.board.bus_servo_stop(servo_id)
  
      def get_bus_servo_state(self, request, response):
@@ -134,9 +247,19 @@
          states = []
          for i in request.cmd:
              data = BusServoState()
+@@ -270,7 +317,8 @@
+     try:
+         rclpy.spin(node)
+     except KeyboardInterrupt:
+-        node.board.set_motor_speed([[1, 0], [2, 0], [3, 0], [4, 0]])
++        if not node.readback_maintenance:
++            node.board.set_motor_speed([[1, 0], [2, 0], [3, 0], [4, 0]])
+         node.destroy_node()
+         rclpy.shutdown()
+         print('shutdown')
 --- /dev/null
 +++ b/ros_robot_controller/guarded_readback.py
-@@ -0,0 +1,161 @@
+@@ -0,0 +1,231 @@
 +"""OFFLINE CANDIDATE. No serial driver, ROS client, automatic arming or recovery."""
 +from dataclasses import dataclass
 +import math
@@ -247,7 +370,7 @@
 +                self.condition.notify_all()
 +
 +    def read_position(self, servo_id, command, unpack, send, *, timeout_s=0.1,
-+                      write_timeout_s=None, reception_enabled=False):
++                      write_timeout_s=None, reception_enabled=False, send_with_deadline=False):
 +        if type(servo_id) is not int or servo_id not in SERVO_IDS or command != 0x05 or unpack != "<BBbh":
 +            raise ReadbackFault("POSITION_ONLY_SCOPE")
 +        if not math.isfinite(timeout_s) or not 0 < timeout_s <= 5:
@@ -278,7 +401,10 @@
 +            try:
 +                # Existing SDK buf_write only. No extra serial port or worker.
 +                # A finite, independently verified serial write bound is required.
-+                send()
++                if send_with_deadline:
++                    send(deadline)
++                else:
++                    send()
 +            except Exception as error:
 +                self.fail("SEND_FAILED")
 +                raise ReadbackFault("SEND_FAILED") from error
@@ -297,4 +423,71 @@
 +            with self.condition:
 +                self.pending = None
 +                self.reply = None
++            self.lock.release()
++
++
++def claim_linux_exclusive(port):
++    """Claim the EXISTING fd only; never opens a second serial device.
++
++    TIOCEXCL rejects later ordinary opens, but does not revoke older descriptors
++    and privileged callers can bypass it. Owner preflight is still mandatory.
++    """
++    import fcntl
++    import termios
++    fcntl.ioctl(port.fileno(), termios.TIOCEXCL)
++
++
++class MaintenanceFrameWriter:
++    """Bounded opt-in maintenance TX using the one existing PySerial instance.
++
++    Only buzzer and position-query frames are permitted. No reset/retry exists.
++    Software deadlines are checked; this is not a hard-real-time guarantee.
++    """
++    def __init__(self, port, crc_function, *, clock_ns=time.monotonic_ns):
++        self.port, self.crc_function, self.clock_ns = port, crc_function, clock_ns
++        self.lock = threading.Lock()
++        self.fault = None
++
++    def write(self, frame, *, deadline_ns=None):
++        raw = bytes(frame)
++        if (len(raw) < 5 or raw[:2] != b"\xaa\x55"
++                or raw[3] != len(raw)-5 or self.crc_function(raw[2:-1]) != raw[-1]):
++            raise ReadbackFault("MAINTENANCE_INVALID_TX_FRAME")
++        function, payload = raw[2], raw[4:-1]
++        allowed = (function == 2 and len(payload) == 8) or (
++            function == 5 and len(payload) == 2 and payload[0] == 5 and payload[1] in SERVO_IDS)
++        if not allowed:
++            raise ReadbackFault("MAINTENANCE_COMMAND_FORBIDDEN")
++        timeout = self.port.write_timeout
++        if (type(timeout) not in (int, float) or not math.isfinite(timeout)
++                or not 0 < timeout <= .1):
++            raise ReadbackFault("MAINTENANCE_FINITE_WRITE_REQUIRED")
++        now = self.clock_ns()
++        if deadline_ns is None:
++            deadline_ns = now + 100_000_000
++        if type(deadline_ns) is not int:
++            raise ReadbackFault("MAINTENANCE_INVALID_TX_DEADLINE")
++        if self.fault:
++            raise ReadbackFault(self.fault)
++        lock_budget = (deadline_ns-now)/1e9-timeout
++        if lock_budget <= 0 or not self.lock.acquire(timeout=lock_budget):
++            raise ReadbackFault("MAINTENANCE_TX_LOCK_BUDGET")
++        try:
++            if self.fault:
++                raise ReadbackFault(self.fault)
++            if (deadline_ns-self.clock_ns())/1e9 < timeout:
++                raise ReadbackFault("MAINTENANCE_TX_BUDGET_EXHAUSTED")
++            try:
++                written = self.port.write(raw)
++            except Exception as error:
++                self.fault = "MAINTENANCE_TX_IO_FAILED"
++                raise ReadbackFault(self.fault) from error
++            if type(written) is not int or written != len(raw):
++                self.fault = "MAINTENANCE_TX_SHORT_WRITE"
++                raise ReadbackFault(self.fault)
++            if self.clock_ns() >= deadline_ns:
++                self.fault = "MAINTENANCE_TX_DEADLINE_OVERRUN"
++                raise ReadbackFault(self.fault)
++            return written
++        finally:
 +            self.lock.release()

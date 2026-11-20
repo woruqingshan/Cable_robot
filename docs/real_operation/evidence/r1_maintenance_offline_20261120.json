@@ -1,0 +1,24 @@
+{
+  "recorded_utc": "2026-11-20T11:07:35.762849+00:00",
+  "status": "OFFLINE_TESTED_NOT_DEPLOYED",
+  "full_selected_regression": {
+    "passed": 306,
+    "skipped": 1,
+    "seconds": 12.25,
+    "skip_reason": "FastAPI unavailable"
+  },
+  "new_tests_since_stage_a_commit": 43,
+  "sdk_patch_sha256": "0ef5decd928521d931dde747a205cffb0f5472dee21e3d92919bffca6009e9f1",
+  "vendor_original_files_verified": 53,
+  "hardware_serial_opened_by_tests": false,
+  "virtual_linux_pty_test": "PASS_NOT_PHYSICAL_PROOF",
+  "real_driver_signal_or_restart_test": "NOT_RUN",
+  "firmware_identity": "UNKNOWN",
+  "stm32_uart_connector": "UNKNOWN",
+  "hardware_readback_rpc_sent": 0,
+  "r1_single_id": "NOT_RUN",
+  "r1_continuous": "BLOCKED",
+  "r2_valid_complete_real_observations": 0,
+  "physical_execution": "DISABLED",
+  "service_status_after_tests": "MainPID=9606\nNRestarts=0\nId=button_scan.service\nActiveState=active\nSubState=running\n\nMainPID=815\nNRestarts=0\nId=start_app_node.service\nActiveState=active\nSubState=running\n"
+}

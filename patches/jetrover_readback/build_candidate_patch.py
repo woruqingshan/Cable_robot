@@ -99,9 +99,108 @@ def bus_servo_read_and_unpack(self, servo_id, cmd, unpack):
 
 """
     node = node.replace(anchor, wrapper+anchor, 1)
+    sdk, node = maintenance_sources(sdk, node)
     ast.parse(sdk)
     ast.parse(node)
     return sdk, node
+
+
+
+def maintenance_sources(sdk, node):
+    """Opt-in transport sandbox; never arms reads or installs runtime files."""
+    sdk = sdk.replace(
+        "from .guarded_readback import ReadbackGate",
+        "from .guarded_readback import (ReadbackGate, MaintenanceFrameWriter,\n"
+        "    claim_linux_exclusive, ReadbackFault)\nimport math", 1)
+    sdk = sdk.replace(
+        'def __init__(self, device="/dev/rrc", baudrate=1000000, timeout=5):',
+        'def __init__(self, device="/dev/rrc", baudrate=1000000, timeout=5, *,\n'
+        '                 maintenance_tx_timeout_s=None):', 1)
+    sdk = sdk.replace("        self.enable_recv = False",
+        "        self._maintenance_writer = None\n"
+        "        options = {}\n"
+        "        if maintenance_tx_timeout_s is not None:\n"
+        "            if (type(maintenance_tx_timeout_s) not in (int, float)\n"
+        "                    or not math.isfinite(maintenance_tx_timeout_s)\n"
+        "                    or not 0 < maintenance_tx_timeout_s <= .05):\n"
+        "                raise ValueError('invalid maintenance TX timeout')\n"
+        "            options['write_timeout'] = maintenance_tx_timeout_s\n"
+        "        self.enable_recv = False", 1)
+    sdk = sdk.replace("serial.Serial(None, baudrate, timeout=timeout)",
+        "serial.Serial(None, baudrate, timeout=timeout, **options)", 1)
+    sdk = sdk.replace("        self.port.open()",
+        "        self.port.open()\n"
+        "        if maintenance_tx_timeout_s is not None:\n"
+        "            try:\n"
+        "                claim_linux_exclusive(self.port)\n"
+        "            except Exception:\n"
+        "                self.port.close()\n"
+        "                raise\n"
+        "            self._maintenance_writer = MaintenanceFrameWriter(\n"
+        "                self.port, checksum_crc8)", 1)
+    sdk = sdk.replace("def buf_write(self, func, data, *, require_complete=False):",
+        "def buf_write(self, func, data, *, require_complete=False, deadline_ns=None):", 1)
+    sdk = replace_method(sdk, "buf_write", """
+def buf_write(self, func, data, *, require_complete=False, deadline_ns=None):
+    buf = [0xAA, 0x55, int(func)]
+    buf.append(len(data))
+    buf.extend(data)
+    buf.append(checksum_crc8(bytes(buf[2:])))
+    writer = getattr(self, '_maintenance_writer', None)
+    if writer is None:
+        written = self.port.write(buf)
+    else:
+        try:
+            written = writer.write(buf, deadline_ns=deadline_ns)
+        except ReadbackFault as error:
+            self._bounded_bus_feedback.fail(error.code)
+            raise
+    if require_complete and (type(written) is not int or written != len(buf)):
+        raise RuntimeError("READBACK_TX_INCOMPLETE")
+""")
+    sdk = sdk.replace(
+        "lambda: self.buf_write(PacketFunction.PACKET_FUNC_BUS_SERVO, [cmd, servo_id], require_complete=True),",
+        "lambda deadline: self.buf_write(PacketFunction.PACKET_FUNC_BUS_SERVO,\n"
+        "            [cmd, servo_id], require_complete=True, deadline_ns=deadline),", 1)
+    sdk = sdk.replace("reception_enabled=self.enable_recv)",
+        "reception_enabled=self.enable_recv, send_with_deadline=True)", 1)
+    node = node.replace("        self.board = Board()",
+        "        self.declare_parameter('readback_maintenance', False)\n"
+        "        self.readback_maintenance = self.get_parameter('readback_maintenance').value\n"
+        "        if type(self.readback_maintenance) is not bool:\n"
+        "            raise ValueError('readback_maintenance must be bool')\n"
+        "        self.board = (Board(maintenance_tx_timeout_s=.05)\n"
+        "            if self.readback_maintenance else Board())", 1)
+    # Preserve the buzzer only. Do not expose any actuator or PWM read callback.
+    lines = node.splitlines(keepends=True)
+    selected = []
+    for line in lines:
+        gated = (("self.create_subscription(" in line and "'~/set_buzzer'" not in line)
+                 or "self.create_service(GetPWMServoState," in line
+                 or "self.board.pwm_servo_set_offset(1, 0)" in line
+                 or "self.board.set_motor_speed([[1, 0]" in line)
+        if gated:
+            selected.append(" "*(len(line)-len(line.lstrip()))+
+                            "if not self.readback_maintenance:\n")
+            selected.append("    "+line)
+        else:
+            selected.append(line)
+    node = "".join(selected)
+    node = node.replace(
+        "        node.board.set_motor_speed([[1, 0], [2, 0], [3, 0], [4, 0]])",
+        "        if not node.readback_maintenance:\n"
+        "            node.board.set_motor_speed([[1, 0], [2, 0], [3, 0], [4, 0]])", 1)
+    node = replace_method(node, "set_buzzer_state", """
+def set_buzzer_state(self, msg):
+    try:
+        self.board.set_buzzer(msg.freq, msg.on_time, msg.off_time, msg.repeat)
+    except ReadbackFault as error:
+        if not self.readback_maintenance:
+            raise
+        self.get_logger().error("Maintenance TX refused: " + error.code)
+""")
+    return sdk, node
+
 
 
 def build_patch(sdk, node):
@@ -133,6 +232,7 @@ def main():
     metadata = {"schema_version":1, "sdk_sha256":SDK_SHA, "node_sha256":NODE_SHA,
         "patch_sha256":sha256(patch.encode()).hexdigest(), "applied_to_vendor":False,
         "default_state":"DISARMED", "continuous_readback_supported":False,
+        "maintenance_mode_default":False, "maintenance_candidate_hardware_validated":False,
         "review_required":["clean/exclusive epoch evidence","actual response echo contract",
             "finite serial write bound","verified inner servo ID/command/transaction matching",
             "separate live-test authorization"]}
