@@ -99,3 +99,18 @@ ROS_DOMAIN_ID=117 RMW_IMPLEMENTATION=rmw_fastrtps_cpp python3 -m pytest -q -rs -
 
 当前不具备申请直接执行单舵机读回的充分技术条件。下一步优先补身份与协议保证，
 不是批准调用已知可能阻塞的原接口。
+
+
+## 新一轮拥有者修复准备（2026-11-20）
+
+- 备份及SHA核验：PASS（53文件/134,200字节；不是整机或凭据备份）。
+- 已知串口竞争来源定位：PASS；移除与实际独占验证：NOT_RUN。
+- 按键维护适配器：33项离线测试通过；实机提示音/按键验证NOT_RUN。
+- 部署包准备：只生成固定SHA副本与单个button_scan drop-in，禁止自动安装。
+- 本轮完整回归：263 passed、1 skipped（FastAPI缺失）；保留原隔离断言。
+- 没有重启驱动、修改原厂文件、发送位置读RPC或调用运动接口。
+- R1读回及R2矩阵维持BLOCKED，历史相机/GPU证据不改记为本轮通过。
+
+待授权的首项实机维护仅为
+[R1_OWNER_STAGE_A_PLAN.md](R1_OWNER_STAGE_A_PLAN.md)中的按键服务单独变更，
+不包含SDK部署、start_app_node重启、首次ID1读取或固件操作。

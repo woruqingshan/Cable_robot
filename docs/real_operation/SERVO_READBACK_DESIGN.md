@@ -274,3 +274,22 @@ Single-ID controlled test readiness: NOT_READY
 R1 status: OFFLINE_PREPARED; FIRMWARE_IDENTITY_AND_TRANSACTION_GUARANTEES_BLOCKED
 R2 readiness: BLOCKED
 Robot Execution: DISABLED
+
+
+## 11. 串口拥有者Stage A准备（2026-11-20，基线e0f151e）
+
+新一轮已核对真实加载路径及button_scan/start_app_node两个systemd服务；
+启动链包含init_pose，因此不重启整车bringup。
+相关53文件已备份并逐文件校验，清单为evidence/r1_predeployment_backup_20261120.json。
+管理员只读/proc快照无不可读FD目录，当前已知两个打开者仍存在；
+该快照不是内核独占机制。
+
+已完成仅通过现有BuzzerState话题替代按键程序Board依赖的维护适配器，
+原按键脚本不改写。源码SHA锁定且默认只检查，--run才运行原GPIO/Wi-Fi/关机逻辑。
+部署包只生成，不安装、不重启。完整范围、风险、回滚与授权前条件见
+[R1_OWNER_STAGE_A_PLAN.md](R1_OWNER_STAGE_A_PLAN.md)。
+
+新增33项离线测试及1项隔离ROS生命周期测试；完整回归263 passed、1 skipped in 8.84s。
+VLA隔离断言原样保留，硬件维护工具位于patches目录。
+SDK候选未部署、未激活，KEY_REUSE_UNSAFE未解除。Stage A部署等待用户单独授权，
+单ID读回仍NOT_RUN，R1连续读取与R2仍BLOCKED。

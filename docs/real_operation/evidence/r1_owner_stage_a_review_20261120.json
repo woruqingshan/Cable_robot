@@ -1,0 +1,33 @@
+{
+  "implementation_base_sha": "e0f151e2cceff86815cef8d9f8b1ae387e4eb750",
+  "status": "OFFLINE_TESTED_AWAITING_SEPARATE_APPROVAL",
+  "tests": {
+    "passed": 263,
+    "skipped": 1,
+    "new_offline_cases": 33,
+    "new_isolated_ros_lifecycle_cases": 1,
+    "new_total_cases": 34,
+    "isolated_test_domain": 117,
+    "actuator_messages_published": 0
+  },
+  "inspection": {
+    "script": "/home/ubuntu/wifi_manager/button_scan.py",
+    "source_sha256": "ea04002b6b5095c4224706639ad5da0f821fdf3c22ea7a4ecd018acbe9b7e4dc",
+    "transformed_ast_sha256": "541afd86bc554b9d797a89bbc1d089b7e58200365785d18b2419072e6da087d0",
+    "replaced_interface": "Board.set_buzzer via existing ROS BuzzerState",
+    "buzzer_topic": "/ros_robot_controller/set_buzzer",
+    "vendor_modified": false,
+    "run_enabled": false,
+    "serial_device_opened": false
+  },
+  "runtime_files_modified": false,
+  "services_restarted": [],
+  "hardware_rpc_sent": 0,
+  "buzzer_test_published": false,
+  "source_files": {
+    "patches/jetrover_readback/wifi_button_adapter.py": "1c7ff05a179b077d901d886a400721a95ec387d19f134780d82a65fa1569635d",
+    "patches/jetrover_readback/prepare_button_stage.py": "2b7834a6cdf3cb40ae30a7f1aca14d5e9a008febe2281968c2a0733a598d5194",
+    "/etc/systemd/system/button_scan.service": "45972d2cc0f5b995cb7232f9aae8d464c732b62581e70389b8a779a4d8dca635",
+    "/etc/systemd/system/start_app_node.service": "0864520f9d24a20ec7938cc2f551ac43a336698f40752b963a0b33a61294c35e"
+  }
+}

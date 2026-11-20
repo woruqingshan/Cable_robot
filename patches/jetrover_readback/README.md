@@ -83,3 +83,18 @@ not hardware safety. JETROVER_STM32_REFERENCE_ROOT selects the supplied
 teaching project root; exact source SHA checks are mandatory.
 All four R1 suites total 90 passing cases on JetRover. See the design and
 acceptance documents for why live single-ID testing remains NOT_READY.
+
+
+## Button-only owner migration candidate
+
+wifi_button_adapter.py is a separate maintenance tool outside the VLA package.
+By default it inspects a SHA-pinned vendor button script without importing GPIO,
+ROS or the hardware SDK. Only explicit --run executes preserved button behavior.
+A bounded asynchronous ROS buzzer relay replaces the one Board import in memory.
+There is no serial fallback. Existing Wi-Fi and halt button logic is unchanged.
+
+prepare_button_stage.py generates a fixed-commit review package and a proposed
+button_scan.service drop-in only. It never installs files or invokes systemctl.
+Backups and source/unit hashes are mandatory. Deployment and restarting the
+button service require separate approval; start_app_node and SDK remain untouched.
+Read docs/real_operation/R1_OWNER_STAGE_A_PLAN.md before considering deployment.

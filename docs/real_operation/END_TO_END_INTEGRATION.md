@@ -114,3 +114,13 @@ JetRover的synthetic验证入口为deployment/local/verify_shadow_link.py；指�
 固件身份UNKNOWN，单ID实测NOT_READY，R1连续读取/R2真实状态与同步均BLOCKED，
 Robot Execution保持DISABLED。继续复用现有相机、Observation、PolicyClient及服务模块。
 最新验收矩阵和复现命令见[R1_R2_ACCEPTANCE.md](R1_R2_ACCEPTANCE.md)。
+
+
+## 串口拥有者Stage A待授权（2026-11-20）
+
+本轮继续推进R1，已完成相关备份、仅蜂鸣器ROS代理、固定版本部署包准备和离线测试。
+263 passed、1 skipped；用户按键/Wi-Fi/关机分支均用Mock验证，实际均未触发。
+维护工具放在patches/jetrover_readback/，没有向VLA观察/推理包引入硬件消息依赖。隔离ROS生命周期测试只创建domain117发布端，不发送任何命令。
+此轮没有AutoDL部署或端到端请求。真实反馈未验证，完整真实Observation仍为0。
+Stage A只处理已知额外串口打开者，部署/按键服务重启仍需用户单独授权；
+SDK与固件前提保持原保护，不能由Stage A批准推导为真实舵机读取批准。
