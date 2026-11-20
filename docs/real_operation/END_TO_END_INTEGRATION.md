@@ -1,0 +1,103 @@
+# JetRover → AutoDL Shadow 联调：2026-11-20
+
+## 版本与原则
+
+继续开发分支为 feat/real-operation-pipeline。原 feat/real-shadow-e2e-integration 已快进合入并删除；代码提交 e6c62779791bfe92ba8a54b496b01c957301d8a4 已推送，双端本次联调检出同一 SHA。正式源码只在 JetRover 改动，AutoDL 仅从 GitHub 检出指定提交，没有修改厂商源码或训练 checkpoint。
+
+JetRover：Jetson Orin NX / Ubuntu 22.04 / ROS2 Humble / Python 3.10；NumPy1.26.4、OpenCV4.10.0-dev、CvBridge。AutoDL本次实际GPU为RTX4080、32760MiB；Python3.12.3、Torch2.8.0+cu128，LeRobot锁定ff0acf5ee6434369eeeb9d26e76d1e2ddc20c0d2。历史4090D报告仅作历史资料，不能算本实例验收。
+
+复用现有 real_observation_node、SensorObservationSource、ObservationAdapter、vla_protocol、PolicyClient 与 vla_server；没有第二套HTTP服务/协议。CameraRecordAdapter保存独立RGB/Depth/CameraInfo证据，RobotStateProvider暴露缓存来源质量；完整Observation仍由既有校验器拒绝不可信状态。Depth不进入SmolVLA RGB特征。
+
+## 本地真实采集与测试
+
+Level1 Camera Ready：PASS。已知四话题实际采集成功。整合只录制运行保存14张RGB和14张16位深度图，原始元数据与CameraInfo保留。完整Observation=0，因为当前状态只能确认为缓存；这不是Real Observation Ready。
+
+自动化：139 passed, 1 skipped，4.91秒。跳过项为小车缺少FastAPI的服务测试；没有为消除跳过安装GPU/服务栈。
+
+测试环境：source /opt/ros/humble/setup.bash；source ~/ros2_ws/install/setup.bash；PYTHONPATH包含仓库根、vla_protocol/src、vla_server/src、cable_robot_vla、workspace_analysis/src及原ROS路径；PYTHONDONTWRITEBYTECODE=1；PYTEST_DISABLE_PLUGIN_AUTOLOAD=1。仅测试进程使用ROS_DOMAIN_ID=117。
+
+执行：python3 -m pytest -q -rs -p no:cacheprovider cable_robot_vla/test/test_real_sensor_quality.py cable_robot_vla/test/test_real_observation.py cable_robot_vla/test/test_real_node_ros.py vla_protocol/tests cable_robot_vla/test/test_edge_core.py cable_robot_vla/test/test_isolation.py cable_robot_vla/test/test_p2_adapter.py cable_robot_vla/test/test_stage15_adaptation_preview.py cable_robot_vla/test/test_stage23_boundaries.py vla_server/tests/test_shadow_diagnostics.py。
+
+新增覆盖CvBridge RGB转换、16位Depth无损保存、独立传感器证据、抽样跳帧与未知驱动丢帧区分、缓存值/ID/单位/发布时间保留、缺失与重复ID、禁止动作方法。保留原时间偏差20ms、最大年龄0.5秒，以及未知模型动作拒绝。
+
+## 网络与部署
+
+最初AutoDL直连github.com:443在130秒后超时。复用了已有Mihomo回环代理17890，并按用户指示 source /root/autodl-tmp/idc-vla/runs/bootstrap/use_proxy.sh；GitHub拉取随后恢复。没有复制源码绕过GitHub流程。
+
+云端推理仅监听127.0.0.1:8000，JetRover通过SSH将本地127.0.0.1:18000转发到该地址。账号密码不写入源码、环境文件或报告；主机密钥验证保持启用。独立的部署配置和证据目录不覆盖旧synthetic报告。
+
+## 验收边界
+
+Test A采用显式synthetic_uncalibrated_v1，检验远程真实GPU及完整原生50×6返回，不代表实机状态已验证。
+
+Test B（真实RGB+合成state）：BLOCKED_PROTOCOL。当前共享协议只有synthetic/real未标定/real已标定三个来源配置，不能诚实表示混合来源；不将真实图像藏在synthetic profile下，也不为过关随意扩展schema。
+
+Test C及Level3：BLOCKED。厂商SDK持锁无界等待，尚无可信六维测量、采样时间及Pulse→rad标定。硬件RPC为NOT_RUN；没有新车实测卡死的断言。模型六个通道的单位/语义仍Unknown，不能映射到舵机。
+
+本轮没有运动/舵机/夹爪/底盘命令，没有执行旧轨迹或Torque Release/Hold，没有重启厂商服务。全部动作返回只进JSON诊断。
+
+## 修改文件
+
+- cable_robot_vla/cable_robot_vla/real_camera.py：新相机证据适配。
+- cable_robot_vla/cable_robot_vla/robot_state_provider.py：新只读来源质量接口。
+- cable_robot_vla/cable_robot_vla/real_observation_node.py：接入相机、CameraInfo、Depth与缓存诊断。
+- cable_robot_vla/config/real_observation.yaml：既有实测话题与抽样参数。
+- cable_robot_vla/package.xml：CvBridge和消息运行时依赖声明。
+- cable_robot_vla/test/test_real_sensor_quality.py：相机/状态质量测试。
+- deployment/local/probe_real_sensors.py：阻断已知无界舵机RPC循环。
+- deployment/local/verify_shadow_link.py：使用现有PolicyClient的单条/重复synthetic真实GPU链路验证及完整动作记录。
+- docs/real_operation/HARDWARE_INTERFACE_AUDIT.md。
+- docs/real_operation/CAMERA_AND_JOINT_STATE.md。
+- docs/real_operation/END_TO_END_INTEGRATION.md。
+
+联调结果和精确部署文件路径在完成后追加于下文。所有PASS只覆盖已执行项目；相机外参、TCP及真实执行继续待验证。
+
+## 实际云端联调结果
+
+Level2 Communication Ready：PASS。代码SHA为e6c62779791bfe92ba8a54b496b01c957301d8a4，云端新GPU报告status=PASS、genuine_forward_pass_verified=true；五组含单相机的真实forward均[1,50,6]且finite，首组约0.975秒、单相机约0.255秒。
+
+JetRover通过私有SSH隧道发起3次Synthetic Observation，全部返回完整50×6原生动作；相机槽位名real_rgb是逻辑绑定，此测试像素和state均为合成夹具，明确使用synthetic_uncalibrated_v1，没有混入真实图像。
+
+客户端完整动作与元数据：~/zsy_projects/real_operation_evidence/synthetic_http_e6c6277_20261120.json。
+云端证据根：/root/autodl-tmp/idc-vla/runs/real_shadow_e2e_20261120_e6c6277/。
+GPU报告gpu_forward.json；清单deployment-runtime/manifest.real-shadow.yaml；配置server.real-shadow.pinned.yaml；服务日志http_service_pinned.log；动作诊断diagnostics/inference_998bbb64c0784b15a52595aed8a2e6f1.jsonl。云端3条请求ID与客户端对应，全部finite、execution_enabled=false。
+
+此前两个启动错误都保留：installed-freeze的PYTHONPATH呈现差异，通过在与启动器相同的环境中重新生成清单解决，没有安装包或绕过哈希检查；复制旧部署配置导致checkpoint receipt路径与新清单不同，通过使用同一新清单的配置基底及绝对路径解决。没有修改checkpoint。
+
+最终文档提交后，双端正式检出同一最终SHA；最终服务来源及一次同SHA请求记录在外部final_source_report.json/ synthetic_http_final_20261120.json，避免在Git文档内自引用其提交哈希。
+
+请求详情（合成数据通信验收）：
+- 21f78fdc66d1445d9196c119e3e129ea: RTT=0.368539s，policy=0.307926s，shape=[50, 6]，finite=True，映射拒绝=UNSUPPORTED_ACTION_PROFILE。
+- 50f37a6a45aa4ef8822e4ccbb12c33a0: RTT=0.322782s，policy=0.302336s，shape=[50, 6]，finite=True，映射拒绝=UNSUPPORTED_ACTION_PROFILE。
+- b03e6506e41e4e468c299d880ef92089: RTT=0.347555s，policy=0.328231s，shape=[50, 6]，finite=True，映射拒绝=UNSUPPORTED_ACTION_PROFILE。
+
+## G0–G7状态与复现
+
+|阶段|状态|证据边界|
+|---|---|---|
+|G0环境/历史|PASS|远程最新基线、Notion/官方教程/厂商源码已审计|
+|G1相机|PASS|实际RGB/Depth/CameraInfo及接收统计|
+|G2硬件state|BLOCKED|缓存诊断PASS；无界服务端读取不发RPC，原始测量NOT_RUN|
+|G3本地Observation|BLOCKED（完整）；PASS（独立传感器录制）|valid=0，拒绝缓存来源|
+|G4GitHub|PASS|代码已提交推送；转入real-operation分支|
+|G5通信/GPU|PASS|3次真实GPU HTTP请求，完整50×6动作和双端记录|
+|G6真实联调|BLOCKED|Test B混合来源无法由现有schema诚实表达；Test C测量质量未满足|
+|G7初步稳定性|PASS（限定范围）|3次低频真实请求；单元测试断网/超时/队列边界。长时间流和真实混合数据NOT_RUN|
+
+JetRover只录制启动（Ctrl+C退出，不启动厂商驱动）：
+
+```bash
+cd /home/ubuntu/zsy_projects/Cable_robot
+source /opt/ros/humble/setup.bash
+source ~/ros2_ws/install/setup.bash
+export PYTHONPATH="$PWD:$PWD/vla_protocol/src:$PWD/vla_server/src:$PWD/cable_robot_vla:$PYTHONPATH"
+python3 -m cable_robot_vla.real_observation_node --ros-args --params-file /home/ubuntu/zsy_projects/real_operation_evidence/real_observation_20261120.yaml
+```
+
+该配置固定已验证话题，场景清单明确unknown/uncalibrated，推理关闭。实际原始传感器可以录制，可信state证据缺失时完整Observation继续拒绝。
+
+云端代理先执行用户提供的source脚本；部署清单生成前先设置VLA_PYTHON并在同一子shell source deployment/cloud/scripts/common.sh，以保持pip freeze的PYTHONPATH与启动器一致。后续启动使用独立manifest/config，不覆盖旧报告。最终配置路径记录在外部final_source_report.json。
+
+JetRover的synthetic验证入口为deployment/local/verify_shadow_link.py；指定--url http://127.0.0.1:18000、--server-sha当前双端SHA、--camera-id real_rgb、--report全新JSON路径。它只接收并记录原生动作，没有执行器。此前3次使用--count 3 --interval 2。
+
+下一步优先请求厂商提供可恢复、有界的硬件读回路径，先验证单ID请求及超时后的驱动恢复，再验证六ID完整性、实际单位和采样区间；不并行占用串口，不改本轮vendor源码，不用缓存FK充当测量。然后处理Pulse到协议rad、模型训练state语义、同步证据，最后才做Level3。混合来源schema须另行设计审查，不能靠改标记通过。
