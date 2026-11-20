@@ -66,26 +66,8 @@ def main():
                 min_stamp_ns=min(stamps[topic]),max_stamp_ns=max(stamps[topic]))
             report["streams"][topic]=row
         if args.read_servo_positions:
-            from ros_robot_controller_msgs.srv import GetBusServoState
-            from ros_robot_controller_msgs.msg import GetBusServoCmd
-            client=node.create_client(GetBusServoState,"/ros_robot_controller/bus_servo/get_state")
-            if not client.wait_for_service(timeout_sec=2):
-                report["servo_read_status"]="service_not_discovered; no request sent"
-            else:
-                for sample in range(3):
-                    req=GetBusServoState.Request()
-                    for servo_id in (1,2,3,4,5,10):
-                        command=GetBusServoCmd();command.id=servo_id;command.get_position=1;req.cmd.append(command)
-                    start_ns=node.get_clock().now().nanoseconds;tick=time.monotonic()
-                    future=client.call_async(req);rclpy.spin_until_future_complete(node,future,timeout_sec=3)
-                    row={"sample":sample,"requested_ids":[1,2,3,4,5,10],"request_ns":start_ns,
-                        "response_ns":node.get_clock().now().nanoseconds,"duration_s":time.monotonic()-tick,
-                        "acquisition_timestamp":None,"valid_canonical_state":False}
-                    if future.done() and future.result():
-                        response=future.result();row.update(success=response.success,
-                            states=[{"present_id":list(s.present_id),"position":list(s.position)} for s in response.state])
-                    else:row["error"]="response_timeout"
-                    report["servo_reads"].append(row)
+            from cable_robot_vla.robot_state_provider import SDK_BLOCK
+            report["servo_read_status"] = "BLOCKED: " + SDK_BLOCK
         report["finished_utc"]=datetime.now(timezone.utc).isoformat()
     finally:
         (output/"audit.json").write_text(json.dumps(report,ensure_ascii=False,allow_nan=False,indent=2)+"\n")

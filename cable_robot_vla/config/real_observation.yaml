@@ -2,7 +2,7 @@
 /idc_vla/real/real_observation:
   ros__parameters:
     use_sim_time: false
-    camera_topic: ""
+    camera_topic: /depth_cam/rgb/image_raw
     joint_state_topic: /controller_manager/joint_states
     gripper_state_topic: ""
     state_evidence_path: ""
@@ -18,3 +18,9 @@
     enable_inference: false
     server_url: http://127.0.0.1:8000
     request_timeout_s: 30.0
+
+    rgb_camera_info_topic: /depth_cam/rgb/camera_info
+    depth_topic: /depth_cam/depth/image_raw
+    depth_camera_info_topic: /depth_cam/depth/camera_info
+    controller_cache_topic: /controller_manager/servo_states
+    sensor_record_hz: 2.0

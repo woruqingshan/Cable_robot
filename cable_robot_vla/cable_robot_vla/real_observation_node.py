@@ -6,7 +6,7 @@ from time import monotonic
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
-from sensor_msgs.msg import Image, JointState
+from sensor_msgs.msg import Image, JointState, CameraInfo
 from std_msgs.msg import String
 from rcl_interfaces.msg import ParameterDescriptor, SetParametersResult
 
@@ -15,6 +15,8 @@ from vla_protocol.profiles import RuntimeLimits
 from .policy_client import PolicyClient
 from .real_observation import RealObservationCore, load_evidence
 from .real_recording import RealRecorder
+from .real_camera import CameraRecordAdapter
+from .robot_state_provider import RobotStateProvider
 
 NAMESPACE = "/idc_vla/real"
 
@@ -37,7 +39,7 @@ class RealObservationNode(Node):
         if self.get_namespace() != NAMESPACE or self.get_parameter("use_sim_time").value:
             raise VLAError("INVALID_REAL_RUNTIME", "physical namespace and system clock required")
         self.add_on_set_parameters_callback(self._validate_clock_parameter)
-        camera = param("camera_topic", "")
+        camera = param("camera_topic", "/depth_cam/rgb/image_raw")
         joint = param("joint_state_topic", "/controller_manager/joint_states")
         gripper = param("gripper_state_topic", "")
         if not camera.startswith("/") or not joint.startswith("/") or gripper and not gripper.startswith("/"):
@@ -63,6 +65,12 @@ class RealObservationNode(Node):
             **context, "camera_topic": camera, "joint_state_topic": joint, "gripper_state_topic": gripper,
             "state_evidence_sha256": evidence_sha or None, "state_evidence": evidence,
             "limits": limits.model_dump(), "motion_status": "unknown"})
+        self.camera = CameraRecordAdapter(self.recorder, sample_hz=param("sensor_record_hz", 2.0))
+        self.state_provider = RobotStateProvider()
+        info_topic = param("rgb_camera_info_topic", "/depth_cam/rgb/camera_info")
+        depth_topic = param("depth_topic", "")
+        depth_info_topic = param("depth_camera_info_topic", "")
+        cache_topic = param("controller_cache_topic", "")
         enable = param("enable_inference", False)
         endpoint = param("server_url", "http://127.0.0.1:8000")
         if enable:
@@ -85,6 +93,19 @@ class RealObservationNode(Node):
         if gripper:
             self.subscriptions_owned.append(self.create_subscription(JointState, gripper,
                 lambda m: self._sensor("gripper", m), qos_profile_sensor_data))
+        if info_topic:
+            self.subscriptions_owned.append(self.create_subscription(CameraInfo, info_topic,
+                lambda m: self._camera_info("rgb", m), qos_profile_sensor_data))
+        if depth_topic:
+            self.subscriptions_owned.append(self.create_subscription(Image, depth_topic,
+                self._depth, qos_profile_sensor_data))
+        if depth_info_topic:
+            self.subscriptions_owned.append(self.create_subscription(CameraInfo, depth_info_topic,
+                lambda m: self._camera_info("depth", m), qos_profile_sensor_data))
+        if cache_topic:
+            from rosidl_runtime_py.utilities import get_message
+            self.subscriptions_owned.append(self.create_subscription(get_message("servo_controller_msgs/msg/ServoStateList"),
+                cache_topic, self._controller_cache, qos_profile_sensor_data))
         self.timer = self.create_timer(1/hz, self._tick)
         self.recorder.event("startup", inference_enabled=enable, motion_status="unknown", execution_enabled=False)
         self.get_logger().info("SHADOW observation run: " + str(self.recorder.path))
@@ -96,7 +117,34 @@ class RealObservationNode(Node):
 
     def _sensor(self, kind, message):
         try:
-            getattr(self.core, kind)(message)
+            if kind == "image":
+                converted = self.camera.rgb(message)
+                if converted is None:
+                    return
+                self.core.image(converted)
+                self.core.image_provenance.update(self.camera.provenance)
+            else:
+                getattr(self.core, kind)(message)
+        except Exception as exc:
+            if kind == "image":
+                self.core.source.collector.parts.pop("image", None)
+            self._reject(exc)
+
+    def _camera_info(self, kind, message):
+        try:
+            self.camera.camera_info(kind, message)
+        except Exception as exc:
+            self._reject(exc)
+
+    def _depth(self, message):
+        try:
+            self.camera.depth(message)
+        except Exception as exc:
+            self._reject(exc)
+
+    def _controller_cache(self, message):
+        try:
+            self.state_provider.offer_controller_cache(message)
         except Exception as exc:
             self._reject(exc)
 
@@ -142,6 +190,8 @@ class RealObservationNode(Node):
             self._reject(exc)
         status = {"mode": "shadow_only", "execution_enabled": False, "counts": self.counts,
             "last_rejection": self.last_rejection, "run": str(self.recorder.path), "motion_status": "unknown"}
+        sensor_status = {"camera": self.camera.status(), "robot_state": self.state_provider.get_source_status()}
+        self.recorder.event("sensor_status", **sensor_status)
         self.status_publisher.publish(String(data=json.dumps(status)))
 
     def close(self):
