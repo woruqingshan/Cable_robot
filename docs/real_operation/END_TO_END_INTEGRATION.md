@@ -101,3 +101,16 @@ python3 -m cable_robot_vla.real_observation_node --ros-args --params-file /home/
 JetRover的synthetic验证入口为deployment/local/verify_shadow_link.py；指定--url http://127.0.0.1:18000、--server-sha当前双端SHA、--camera-id real_rgb、--report全新JSON路径。它只接收并记录原生动作，没有执行器。此前3次使用--count 3 --interval 2。
 
 下一步优先请求厂商提供可恢复、有界的硬件读回路径，先验证单ID请求及超时后的驱动恢复，再验证六ID完整性、实际单位和采样区间；不并行占用串口，不改本轮vendor源码，不用缓存FK充当测量。然后处理Pulse到协议rad、模型训练state语义、同步证据，最后才做Level3。混合来源schema须另行设计审查，不能靠改标记通过。
+
+
+## R1固件身份续审后的当前边界（2026-11-20，基线e86d0e6）
+
+本轮只有只读元数据、参考协议分析、候选补丁及原始状态离线准备；
+没有新云端请求、AutoDL检出、服务部署或重启。
+以上GPU/50×6 PASS属于历史验证，不代表本轮真实六执行器状态推理已通过。
+
+本轮选定回归229 passed、1 skipped；R1专项90 passed。
+参考C桩复现错配回复和迟到完成风险，不是本车固件行为的实测证明。
+固件身份UNKNOWN，单ID实测NOT_READY，R1连续读取/R2真实状态与同步均BLOCKED，
+Robot Execution保持DISABLED。继续复用现有相机、Observation、PolicyClient及服务模块。
+最新验收矩阵和复现命令见[R1_R2_ACCEPTANCE.md](R1_R2_ACCEPTANCE.md)。

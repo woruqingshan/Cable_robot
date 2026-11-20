@@ -31,6 +31,16 @@ def candidate_sources(sdk, node):
         "        self._bounded_bus_feedback = ReadbackGate(self.servo_read_lock)\n"
         "        self.last_bus_position_sample = None", 1)
     sdk = sdk.replace("threading.Thread(target=self.recv_task,", "threading.Thread(target=self._recv_task_guarded,", 1)
+    sdk = replace_method(sdk, "buf_write", """
+def buf_write(self, func, data, *, require_complete=False):
+    buf = [0xAA, 0x55, int(func)]
+    buf.append(len(data))
+    buf.extend(data)
+    buf.append(checksum_crc8(bytes(buf[2:])))
+    written = self.port.write(buf)
+    if require_complete and (type(written) is not int or written != len(buf)):
+        raise RuntimeError("READBACK_TX_INCOMPLETE")
+""")
     sdk = replace_method(sdk, "packet_report_serial_servo", """
 def packet_report_serial_servo(self, data):
     self._bounded_bus_feedback.receive(data, crc_checked=True)
@@ -40,7 +50,7 @@ def bus_servo_read_and_unpack(self, servo_id, cmd, unpack):
     self.last_bus_position_sample = None
     sample = self._bounded_bus_feedback.read_position(
         servo_id, cmd, unpack,
-        lambda: self.buf_write(PacketFunction.PACKET_FUNC_BUS_SERVO, [cmd, servo_id]),
+        lambda: self.buf_write(PacketFunction.PACKET_FUNC_BUS_SERVO, [cmd, servo_id], require_complete=True),
         timeout_s=0.1, write_timeout_s=self.port.write_timeout,
         reception_enabled=self.enable_recv)
     self.last_bus_position_sample = sample
@@ -124,7 +134,8 @@ def main():
         "patch_sha256":sha256(patch.encode()).hexdigest(), "applied_to_vendor":False,
         "default_state":"DISARMED", "continuous_readback_supported":False,
         "review_required":["clean/exclusive epoch evidence","actual response echo contract",
-            "finite serial write bound","separate live-test authorization"]}
+            "finite serial write bound","verified inner servo ID/command/transaction matching",
+            "separate live-test authorization"]}
     (HERE/"baseline.json").write_text(json.dumps(metadata,indent=2)+"\n")
     print(json.dumps({"patch":str(path),"patch_sha256":metadata["patch_sha256"],"vendor_modified":False}))
 

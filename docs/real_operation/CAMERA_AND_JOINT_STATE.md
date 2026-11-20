@@ -23,3 +23,16 @@
 ## 安全与边界
 
 节点只创建 /idc_vla/real/diagnostics 与标准 /parameter_events 发布器，未创建GPU客户端（只录制）。没有厂商动作发布器、轨迹/夹爪/底盘请求，没有ArmInterface实例。原始Depth不进入SmolVLA RGB特征。record_only传感器证据为PASS，完整真实Observation录制/回放仍BLOCKED。
+
+
+## R1/R2离线准备续更（2026-11-20）
+
+本轮未重测相机；以上相机PASS属于此前实际采集。
+新增RawFeedbackAdapter通过RobotStateProvider显式提供六ID原始Pulse诊断，
+不替代controller_cached、不发布测量话题、不转换rad、不补齐夹爪。
+source_type保持unknown、canonical_observation_eligible=False。
+
+主机读取开始/解析回调时间不等于设备采样时间；精确TX时刻、采样区间与相机同步偏差保持未知。
+30项原始反馈/进程元数据测试覆盖缺失、过期、重放、错误字段、时间倒序、
+事务重叠、来源冒升、失败清除旧状态及缓存隔离。
+20ms/0.5s规则未改；完整真实Observation=0，完整Record-Only仍BLOCKED。

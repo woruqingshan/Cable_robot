@@ -29,3 +29,19 @@ bus_servo_read_position -> bus_servo_read_and_unpack，在 servo_read_lock 内�
 SDK 除同步查询队列外未建立已验证的独立测量发布路径。厂商 ServoManager.get_position 返回内部 servos 缓存；FK 也必须追溯输入，不能将缓存 FK 作为硬件实测。本轮未调用 FK/IK。
 
 这些约束已落实进 RobotStateProvider 和探针：缓存只进诊断、无弧度/时间戳伪装、硬件 RPC 不自动发送、无连续重试。五关节 ID 1–5，夹爪 ID 10；Pulse 范围按当前配置 0–1000，不等于已验证关节零位/方向。
+
+
+## R1续审：固件身份（2026-11-20，基线e86d0e6）
+
+本车PCB型号、精确MCU和运行固件版本仍UNKNOWN。USB 1a86:55d4 / bcdDevice=0444
+仅为串口侧标识，参考.ioc的STM32F407VET6不能作为本车身份证明。
+实际SDK和3秒DDS图没有发现控制板固件版本查询接口；
+相机/ROS版本接口和直接返回success=True的init_finish均已排除，未调用任何服务。
+
+当前仍有两个可见串口打开者：PID790 button_scan.py、PID3189 ros_robot_contr，
+另247个进程FD目录不可见，未取得唯一拥有者证明，也未停止或修改进程。
+限定目录未发现固件文件，相关已读ROS日志为空；不据此推断没有其它版本记录。
+
+R1专项90项离线测试通过，包含参考C的缺陷复现，不是本车协议安全PASS。
+最新证据、方案和实测准入条件见[SERVO_READBACK_DESIGN.md](SERVO_READBACK_DESIGN.md)
+及[R1_R2_ACCEPTANCE.md](R1_R2_ACCEPTANCE.md)。单ID实测仍NOT_READY。

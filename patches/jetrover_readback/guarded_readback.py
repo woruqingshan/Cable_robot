@@ -31,7 +31,8 @@ class ReadbackGate:
 
     No request nonce is present in the audited protocol. Repeated keys cannot
     distinguish a fresh reply from a delayed duplicate. This intentionally is
-    NOT a continuous readback implementation. Arming arguments are assertions
+    NOT a continuous readback implementation. Outer request echo alone does not
+    prove inner servo reply association. Arming arguments are assertions
     supplied by an external reviewed procedure, not proof created by this code.
     """
     def __init__(self, transaction_lock=None, clock_ns=time.monotonic_ns):
@@ -47,12 +48,13 @@ class ReadbackGate:
         self.evidence_reference = None
 
     def arm(self, reference, *, clean_epoch_verified=False, exclusive_owner_verified=False,
-            echo_contract_verified=False, write_bound_verified=False):
+            echo_contract_verified=False, write_bound_verified=False,
+            inner_response_match_verified=False):
         with self.condition:
             if self.armed or self.fault or self.used:
                 raise ReadbackFault("REARM_FORBIDDEN")
             assertions = (clean_epoch_verified, exclusive_owner_verified,
-                          echo_contract_verified, write_bound_verified)
+                          echo_contract_verified, write_bound_verified, inner_response_match_verified)
             if (not isinstance(reference, str) or not reference.strip() or len(reference) > 512
                     or any(value is not True for value in assertions)):
                 raise ReadbackFault("ARMING_EVIDENCE_REQUIRED")

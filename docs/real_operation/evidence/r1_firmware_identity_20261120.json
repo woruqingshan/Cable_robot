@@ -1,0 +1,147 @@
+{
+  "scope": "read_only_metadata_no_hardware_rpc",
+  "time_utc": "2026-11-20T08:40:37.507572+00:00",
+  "device_alias": "/dev/rrc",
+  "device_path": "/dev/ttyACM0",
+  "usb_descriptors": {
+    "idVendor": "1a86",
+    "idProduct": "55d4",
+    "product": "USB Single Serial",
+    "bcdDevice": "0444",
+    "serial_sha256": "d0c5d0d83aeafb64ba3f23c7806a6ee333e670ebe5c6e3818c408a5021b50632"
+  },
+  "source_methods": {
+    "ros_robot_controller_sdk.py": {
+      "sha256": "c4dd48f3176a5dce1e8331846691ce995c0b3c2f79341cfc6c9e89dce1418a89",
+      "methods": [
+        "checksum_crc8",
+        "bus_servo_test",
+        "pwm_servo_test",
+        "__init__",
+        "__init__",
+        "packet_report_sys",
+        "packet_report_key",
+        "packet_report_imu",
+        "packet_report_gamepad",
+        "packet_report_serial_servo",
+        "packet_report_pwm_servo",
+        "packet_report_sbus",
+        "get_battery",
+        "get_button",
+        "get_imu",
+        "get_gamepad",
+        "get_sbus",
+        "buf_write",
+        "set_led",
+        "set_buzzer",
+        "set_motor_speed",
+        "set_oled_text",
+        "pwm_servo_set_position",
+        "pwm_servo_set_offset",
+        "pwm_servo_read_and_unpack",
+        "pwm_servo_read_offset",
+        "pwm_servo_read_position",
+        "bus_servo_enable_torque",
+        "bus_servo_set_id",
+        "bus_servo_set_offset",
+        "bus_servo_save_offset",
+        "bus_servo_set_angle_limit",
+        "bus_servo_set_vin_limit",
+        "bus_servo_set_temp_limit",
+        "bus_servo_stop",
+        "bus_servo_set_position",
+        "bus_servo_read_and_unpack",
+        "bus_servo_read_id",
+        "bus_servo_read_offset",
+        "bus_servo_read_position",
+        "bus_servo_read_vin",
+        "bus_servo_read_temp",
+        "bus_servo_read_temp_limit",
+        "bus_servo_read_angle_limit",
+        "bus_servo_read_vin_limit",
+        "bus_servo_read_torque_state",
+        "enable_reception",
+        "recv_task"
+      ]
+    },
+    "ros_robot_controller_node.py": {
+      "sha256": "4d37d84c6eff0629f5f73ddca2b140cc0af555175fe3f68f8a3359123a716627",
+      "methods": [
+        "main",
+        "__init__",
+        "get_node_state",
+        "pub_callback",
+        "enable_reception",
+        "set_led_state",
+        "set_buzzer_state",
+        "set_motor_state",
+        "set_oled_state",
+        "set_pwm_servo_state",
+        "get_pwm_servo_state",
+        "set_bus_servo_position",
+        "set_bus_servo_state",
+        "get_bus_servo_state",
+        "pub_battery_data",
+        "pub_button_data",
+        "pub_joy_data",
+        "pub_sbus_data",
+        "pub_imu_data"
+      ]
+    }
+  },
+  "firmware_candidates": [],
+  "searched_roots": [
+    "/home/ubuntu/ros2_ws/src",
+    "/home/ubuntu/software",
+    "/home/ubuntu/Desktop",
+    "/home/ubuntu/Downloads",
+    "/home/ubuntu/Documents",
+    "/opt/hiwonder"
+  ],
+  "firmware_identity": "UNKNOWN",
+  "board_pcb_model": "UNKNOWN",
+  "hardware_rpc_requests_sent": 0,
+  "root_existence": {
+    "/home/ubuntu/ros2_ws/src": true,
+    "/home/ubuntu/software": true,
+    "/home/ubuntu/Desktop": true,
+    "/home/ubuntu/Downloads": true,
+    "/home/ubuntu/Documents": true,
+    "/opt/hiwonder": false
+  },
+  "negative_search_limitations": "Scoped filename search of existing listed roots; metadata walk errors recorded separately. Excludes specified build/model/log directories, archives are identified by filename only, and flashed memory is not inspected. No matching file is not proof of firmware absence.",
+  "scoped_ros_log_records": [
+    {
+      "path": "/home/ubuntu/.ros/log/python3_3189_1795159594220.log",
+      "bytes": 0,
+      "firmware_mentions": []
+    },
+    {
+      "path": "/home/ubuntu/.ros/log/python3_3189_1750492655062.log",
+      "bytes": 0,
+      "firmware_mentions": []
+    },
+    {
+      "path": "/home/ubuntu/.ros/log/python3_3189_1750492648690.log",
+      "bytes": 0,
+      "firmware_mentions": []
+    },
+    {
+      "path": "/home/ubuntu/.ros/log/python3_3461_1747731331896.log",
+      "bytes": 0,
+      "firmware_mentions": []
+    }
+  ],
+  "version_interface_findings": {
+    "installed_sdk_firmware_query_found": false,
+    "dds_inventory_window_s": 3,
+    "dds_firmware_interface_found": false,
+    "unrelated_version_services": [
+      "/depth_cam/get_sdk_version",
+      "/rosapi/get_ros_version"
+    ],
+    "get_node_state": "returns success=True without reading board version",
+    "usb_bcdDevice_is_not_stm32_firmware": true
+  },
+  "walk_errors": []
+}

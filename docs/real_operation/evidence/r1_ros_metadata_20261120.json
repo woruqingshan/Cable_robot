@@ -1,0 +1,207 @@
+{
+  "services": [
+    {
+      "name": "/controller_manager/describe_parameters",
+      "types": [
+        "rcl_interfaces/srv/DescribeParameters"
+      ]
+    },
+    {
+      "name": "/controller_manager/get_parameter_types",
+      "types": [
+        "rcl_interfaces/srv/GetParameterTypes"
+      ]
+    },
+    {
+      "name": "/controller_manager/get_parameters",
+      "types": [
+        "rcl_interfaces/srv/GetParameters"
+      ]
+    },
+    {
+      "name": "/controller_manager/init_finish",
+      "types": [
+        "std_srvs/srv/Trigger"
+      ]
+    },
+    {
+      "name": "/controller_manager/list_parameters",
+      "types": [
+        "rcl_interfaces/srv/ListParameters"
+      ]
+    },
+    {
+      "name": "/controller_manager/set_parameters",
+      "types": [
+        "rcl_interfaces/srv/SetParameters"
+      ]
+    },
+    {
+      "name": "/controller_manager/set_parameters_atomically",
+      "types": [
+        "rcl_interfaces/srv/SetParametersAtomically"
+      ]
+    },
+    {
+      "name": "/depth_cam/get_sdk_version",
+      "types": [
+        "orbbec_camera_msgs/srv/GetString"
+      ]
+    },
+    {
+      "name": "/ros_robot_controller/bus_servo/get_state",
+      "types": [
+        "ros_robot_controller_msgs/srv/GetBusServoState"
+      ]
+    },
+    {
+      "name": "/ros_robot_controller/describe_parameters",
+      "types": [
+        "rcl_interfaces/srv/DescribeParameters"
+      ]
+    },
+    {
+      "name": "/ros_robot_controller/get_parameter_types",
+      "types": [
+        "rcl_interfaces/srv/GetParameterTypes"
+      ]
+    },
+    {
+      "name": "/ros_robot_controller/get_parameters",
+      "types": [
+        "rcl_interfaces/srv/GetParameters"
+      ]
+    },
+    {
+      "name": "/ros_robot_controller/init_finish",
+      "types": [
+        "std_srvs/srv/Trigger"
+      ]
+    },
+    {
+      "name": "/ros_robot_controller/list_parameters",
+      "types": [
+        "rcl_interfaces/srv/ListParameters"
+      ]
+    },
+    {
+      "name": "/ros_robot_controller/pwm_servo/get_state",
+      "types": [
+        "ros_robot_controller_msgs/srv/GetPWMServoState"
+      ]
+    },
+    {
+      "name": "/ros_robot_controller/set_parameters",
+      "types": [
+        "rcl_interfaces/srv/SetParameters"
+      ]
+    },
+    {
+      "name": "/ros_robot_controller/set_parameters_atomically",
+      "types": [
+        "rcl_interfaces/srv/SetParametersAtomically"
+      ]
+    },
+    {
+      "name": "/rosapi/get_ros_version",
+      "types": [
+        "rosapi_msgs/srv/GetROSVersion"
+      ]
+    }
+  ],
+  "topics": [
+    {
+      "name": "/controller_manager/joint_states",
+      "types": [
+        "sensor_msgs/msg/JointState"
+      ]
+    },
+    {
+      "name": "/controller_manager/servo_states",
+      "types": [
+        "servo_controller_msgs/msg/ServoStateList"
+      ]
+    },
+    {
+      "name": "/ros_robot_controller/battery",
+      "types": [
+        "std_msgs/msg/UInt16"
+      ]
+    },
+    {
+      "name": "/ros_robot_controller/bus_servo/set_position",
+      "types": [
+        "ros_robot_controller_msgs/msg/ServosPosition"
+      ]
+    },
+    {
+      "name": "/ros_robot_controller/bus_servo/set_state",
+      "types": [
+        "ros_robot_controller_msgs/msg/SetBusServoState"
+      ]
+    },
+    {
+      "name": "/ros_robot_controller/button",
+      "types": [
+        "ros_robot_controller_msgs/msg/ButtonState"
+      ]
+    },
+    {
+      "name": "/ros_robot_controller/enable_reception",
+      "types": [
+        "std_msgs/msg/Bool"
+      ]
+    },
+    {
+      "name": "/ros_robot_controller/imu_raw",
+      "types": [
+        "sensor_msgs/msg/Imu"
+      ]
+    },
+    {
+      "name": "/ros_robot_controller/joy",
+      "types": [
+        "sensor_msgs/msg/Joy"
+      ]
+    },
+    {
+      "name": "/ros_robot_controller/pwm_servo/set_state",
+      "types": [
+        "ros_robot_controller_msgs/msg/SetPWMServoState"
+      ]
+    },
+    {
+      "name": "/ros_robot_controller/sbus",
+      "types": [
+        "ros_robot_controller_msgs/msg/Sbus"
+      ]
+    },
+    {
+      "name": "/ros_robot_controller/set_buzzer",
+      "types": [
+        "ros_robot_controller_msgs/msg/BuzzerState"
+      ]
+    },
+    {
+      "name": "/ros_robot_controller/set_led",
+      "types": [
+        "ros_robot_controller_msgs/msg/LedState"
+      ]
+    },
+    {
+      "name": "/ros_robot_controller/set_motor",
+      "types": [
+        "ros_robot_controller_msgs/msg/MotorsState"
+      ]
+    },
+    {
+      "name": "/ros_robot_controller/set_oled",
+      "types": [
+        "ros_robot_controller_msgs/msg/OLEDState"
+      ]
+    }
+  ],
+  "service_calls_sent": 0,
+  "hardware_rpc_requests_sent": 0,
+  "scope": "DDS_graph_metadata_only"
+}

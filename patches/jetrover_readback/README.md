@@ -55,3 +55,31 @@ No live installer, arming service, reset service or automatic recovery is
 provided. Application, package rebuild, supervised arming and rollback are
 separate future maintenance actions. Read the full constraints and remaining
 blockers in docs/real_operation/SERVO_READBACK_DESIGN.md before considering them.
+
+
+## Firmware identity follow-up (2026-11-20)
+
+Arming now also requires inner_response_match_verified. A host report echoing
+the request ID/command does not prove the inner servo reply belongs to it.
+All arming flags remain external review assertions, never hardware proof
+established by passing True. Current device firmware identity is UNKNOWN.
+
+The optional buf_write(require_complete=True) check is used only by candidate
+position reads. Original callers retain default behavior and packet bytes.
+Short or invalid byte counts fault even if a reply arrived. No port setting is
+changed; the actual default None write timeout still blocks activation.
+KEY_REUSE_UNSAFE remains enforced. No live arming or installation is provided.
+
+audit_environment.py reads only source files and /proc metadata. It does not
+open the device or create Board. One visible FD never proves exclusivity.
+
+Additional offline suites:
+- cable_robot_vla/test/test_r1_raw_feedback.py (30 cases).
+- cable_robot_vla/test/test_r1_reference_protocol.py (7 cases).
+
+Reference C tests compile only a host executable with no-op UART/GPIO/RTOS
+stubs, never app.c or a flashable image. PASS reproduces reference defects,
+not hardware safety. JETROVER_STM32_REFERENCE_ROOT selects the supplied
+teaching project root; exact source SHA checks are mandatory.
+All four R1 suites total 90 passing cases on JetRover. See the design and
+acceptance documents for why live single-ID testing remains NOT_READY.

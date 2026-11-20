@@ -31,6 +31,7 @@ def test_patch_applies_and_reverses_only_in_temporary_copy(tmp_path,audited_sour
     root=tmp_path/"ros_robot_controller";root.mkdir()
     (root/"ros_robot_controller_sdk.py").write_text(sdk)
     (root/"ros_robot_controller_node.py").write_text(node)
+    assert (HERE/"sdk_bounded_readback_candidate.patch").read_text()==build_patch(sdk,node)
     patch=tmp_path/"candidate.patch";patch.write_text(build_patch(sdk,node))
     subprocess.run(["git","apply","--check",str(patch)],cwd=tmp_path,check=True)
     subprocess.run(["git","apply",str(patch)],cwd=tmp_path,check=True)
@@ -91,7 +92,7 @@ def board_fixture(sdk,helper,*,arm=True):
     board._bounded_bus_feedback=helper.ReadbackGate(board.servo_read_lock)
     board.last_bus_position_sample=None
     if arm:board._bounded_bus_feedback.arm("OFFLINE_FIXTURE_ONLY",clean_epoch_verified=True,
-        exclusive_owner_verified=True,echo_contract_verified=True,write_bound_verified=True)
+        exclusive_owner_verified=True,echo_contract_verified=True,write_bound_verified=True,inner_response_match_verified=True)
     board.frame=[];board.recv_count=0
     board.state=sdk.PacketControllerState.PACKET_CONTROLLER_STATE_STARTBYTE1
     board.parsers={sdk.PacketFunction.PACKET_FUNC_BUS_SERVO:board.packet_report_serial_servo}
@@ -165,7 +166,7 @@ def test_control_packet_generation_unchanged_even_after_read_fault(patched_sdk,a
             if isinstance(n,ast.FunctionDef)}
     old=methods(original);new=methods(candidate_sources(original,audited_sources[1])[0])
     for name in old:
-        if name not in ("__init__","bus_servo_read_and_unpack","packet_report_serial_servo"):
+        if name not in ("__init__","bus_servo_read_and_unpack","packet_report_serial_servo","buf_write"):
             assert new[name]==old[name],name
 
 
@@ -233,3 +234,24 @@ def test_failed_new_sdk_read_clears_previous_diagnostic_sample(patched_sdk):
     board.port.on_write=None
     with pytest.raises(helper.ReadbackFault):board.bus_servo_read_position(2)
     assert board.last_bus_position_sample is None
+
+
+@pytest.mark.parametrize("written", [0, 1, None, True, 8])
+def test_incomplete_write_cannot_return_even_with_a_reply(patched_sdk, written):
+    sdk,helper,_,_=patched_sdk;board=board_fixture(sdk,helper)
+    def partial_write(frame):
+        board.packet_report_serial_servo(struct.pack("<BBbh",1,5,0,500))
+        return written
+    board.port.write=partial_write
+    with pytest.raises(helper.ReadbackFault) as error:board.bus_servo_read_position(1)
+    assert error.value.code=="SEND_FAILED"
+    assert str(error.value.__cause__)=="READBACK_TX_INCOMPLETE"
+    assert board.last_bus_position_sample is None
+    assert board._bounded_bus_feedback.status()["state"]=="FAULT"
+    assert board.servo_read_lock.acquire(blocking=False);board.servo_read_lock.release()
+
+
+def test_legacy_write_default_return_semantics_unchanged(patched_sdk):
+    sdk,helper,_,_=patched_sdk;board=board_fixture(sdk,helper)
+    board.port.write=lambda frame:0
+    assert board.buf_write(sdk.PacketFunction.PACKET_FUNC_BUS_SERVO,[1,1]) is None

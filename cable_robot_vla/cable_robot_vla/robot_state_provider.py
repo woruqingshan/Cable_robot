@@ -1,6 +1,8 @@
 """Passive state quality. Never constructs ArmInterface or an actuator client."""
 from time import monotonic
 
+from .hardware_feedback import RawFeedbackAdapter
+
 SDK_BLOCK = "SDK_UNBOUNDED_QUEUE: bus_servo_read_and_unpack uses queue.get(block=True) under servo_read_lock; client timeout cannot release server"
 IDS = (1, 2, 3, 4, 5, 10)
 NAMES = ("joint1", "joint2", "joint3", "joint4", "joint5", "r_joint")
@@ -9,6 +11,7 @@ NAMES = ("joint1", "joint2", "joint3", "joint4", "joint5", "r_joint")
 class RobotStateProvider:
     def __init__(self, clock=monotonic):
         self.clock = clock
+        self.raw_feedback = RawFeedbackAdapter(clock_ns=lambda: int(self.clock()*1e9))
         self.cache = {}
         self.stamp_ns = None
         self.received = None
@@ -46,7 +49,15 @@ class RobotStateProvider:
     def read_state_snapshot(self):
         return self._read(IDS)
 
+    def offer_raw_readback_snapshot(self, samples, *, sequence):
+        """Explicit diagnostic ingestion; never replaces cache with claimed measurements."""
+        self.raw_feedback.offer(samples, sequence=sequence)
+
+    def read_raw_feedback(self):
+        return self.raw_feedback.snapshot()
+
     def get_source_status(self):
         return {"hardware_readback": "BLOCKED", "reason": SDK_BLOCK,
             "rpc_requests_sent": 0, "controller": self.read_state_snapshot(),
+            "raw_feedback": self.read_raw_feedback(),
             "kinematics_pose": "not_measured_without_input_provenance"}

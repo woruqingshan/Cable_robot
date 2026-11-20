@@ -38,7 +38,24 @@
  
      def packet_report_pwm_servo(self, data):
          try:
-@@ -418,12 +418,14 @@
+@@ -315,12 +315,14 @@
+             print('get_sbus enable reception first!')
+             return None
+ 
+-    def buf_write(self, func, data):
++    def buf_write(self, func, data, *, require_complete=False):
+         buf = [0xAA, 0x55, int(func)]
+         buf.append(len(data))
+         buf.extend(data)
+         buf.append(checksum_crc8(bytes(buf[2:])))
+-        self.port.write(buf)
++        written = self.port.write(buf)
++        if require_complete and (type(written) is not int or written != len(buf)):
++            raise RuntimeError("READBACK_TX_INCOMPLETE")
+ 
+     def set_led(self, on_time, off_time, repeat=1, led_id=1):
+         on_time = int(on_time*1000)
+@@ -418,12 +420,14 @@
          self.buf_write(PacketFunction.PACKET_FUNC_BUS_SERVO, data)
  
      def bus_servo_read_and_unpack(self, servo_id, cmd, unpack):
@@ -51,7 +68,7 @@
 +        self.last_bus_position_sample = None
 +        sample = self._bounded_bus_feedback.read_position(
 +            servo_id, cmd, unpack,
-+            lambda: self.buf_write(PacketFunction.PACKET_FUNC_BUS_SERVO, [cmd, servo_id]),
++            lambda: self.buf_write(PacketFunction.PACKET_FUNC_BUS_SERVO, [cmd, servo_id], require_complete=True),
 +            timeout_s=0.1, write_timeout_s=self.port.write_timeout,
 +            reception_enabled=self.enable_recv)
 +        self.last_bus_position_sample = sample
@@ -59,7 +76,7 @@
  
      def bus_servo_read_id(self, servo_id=254):
          return self.bus_servo_read_and_unpack(servo_id, 0x12, "<BBbB")
-@@ -454,6 +456,14 @@
+@@ -454,6 +458,14 @@
  
      def enable_reception(self, enable=True):
          self.enable_recv = enable
@@ -119,7 +136,7 @@
              data = BusServoState()
 --- /dev/null
 +++ b/ros_robot_controller/guarded_readback.py
-@@ -0,0 +1,159 @@
+@@ -0,0 +1,161 @@
 +"""OFFLINE CANDIDATE. No serial driver, ROS client, automatic arming or recovery."""
 +from dataclasses import dataclass
 +import math
@@ -153,7 +170,8 @@
 +
 +    No request nonce is present in the audited protocol. Repeated keys cannot
 +    distinguish a fresh reply from a delayed duplicate. This intentionally is
-+    NOT a continuous readback implementation. Arming arguments are assertions
++    NOT a continuous readback implementation. Outer request echo alone does not
++    prove inner servo reply association. Arming arguments are assertions
 +    supplied by an external reviewed procedure, not proof created by this code.
 +    """
 +    def __init__(self, transaction_lock=None, clock_ns=time.monotonic_ns):
@@ -169,12 +187,13 @@
 +        self.evidence_reference = None
 +
 +    def arm(self, reference, *, clean_epoch_verified=False, exclusive_owner_verified=False,
-+            echo_contract_verified=False, write_bound_verified=False):
++            echo_contract_verified=False, write_bound_verified=False,
++            inner_response_match_verified=False):
 +        with self.condition:
 +            if self.armed or self.fault or self.used:
 +                raise ReadbackFault("REARM_FORBIDDEN")
 +            assertions = (clean_epoch_verified, exclusive_owner_verified,
-+                          echo_contract_verified, write_bound_verified)
++                          echo_contract_verified, write_bound_verified, inner_response_match_verified)
 +            if (not isinstance(reference, str) or not reference.strip() or len(reference) > 512
 +                    or any(value is not True for value in assertions)):
 +                raise ReadbackFault("ARMING_EVIDENCE_REQUIRED")

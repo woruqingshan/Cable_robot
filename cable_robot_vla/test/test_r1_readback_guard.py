@@ -10,7 +10,7 @@ from patches.jetrover_readback.guarded_readback import ReadbackGate, ReadbackFau
 def armed():
     gate = ReadbackGate()
     gate.arm("OFFLINE_FIXTURE_ONLY", clean_epoch_verified=True, exclusive_owner_verified=True,
-        echo_contract_verified=True, write_bound_verified=True)
+        echo_contract_verified=True, write_bound_verified=True,inner_response_match_verified=True)
     return gate
 
 
@@ -156,3 +156,11 @@ def test_reply_after_deadline_never_returns_even_if_send_completes():
 @pytest.mark.parametrize("servo_id",[0,6,9,254,True])
 def test_no_sixth_arm_or_broadcast_id(servo_id):
     assert_fault("POSITION_ONLY_SCOPE",lambda:read(armed(),servo_id=servo_id))
+
+
+def test_outer_request_echo_is_insufficient_without_inner_response_matching_evidence():
+    gate=ReadbackGate()
+    assert_fault("ARMING_EVIDENCE_REQUIRED",lambda:gate.arm("OFFLINE_OUTER_ECHO_ONLY",
+        clean_epoch_verified=True,exclusive_owner_verified=True,
+        echo_contract_verified=True,write_bound_verified=True))
+    assert gate.status()["state"]=="DISARMED"

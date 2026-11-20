@@ -1,0 +1,20 @@
+{
+  "source_kind": "official_reference_archive_not_device_firmware",
+  "original_user_url_status": 404,
+  "reference_repository": "Hiwonder-docs/JetRover",
+  "reference_commit": "7c588ee70145aa3408a3dcba52161ea77a3123a8",
+  "blob_sha": "0f46ff61b129696dad32beffe6f8247f7e658a32",
+  "archive_sha256": "a673f23ead59b1c5fc9a0b6dc0c1e28048a9c543f0614721fc788dfd853f1ae4",
+  "archive_bytes": 79020,
+  "entries": [
+    {
+      "name": "RosRobotControllerM4.hex",
+      "bytes": 231098,
+      "sha256": "c1b9983050d2d192809850d1e548bcfae2adf544eed1f90e9df87198c38394c2"
+    }
+  ],
+  "c_cpp_project_present": false,
+  "matches_flashed_firmware": "UNKNOWN",
+  "hardware_rpc_requests_sent": 0,
+  "flashed": false
+}

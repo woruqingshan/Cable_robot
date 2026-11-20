@@ -1,0 +1,246 @@
+{
+  "bundle_sha256": "0caac47f2ab0e9a48f440c8c172db74b5750605e0de479dcd35ed0bc8cf21fe2",
+  "reference_root": "/home/ubuntu/zsy_projects/real_operation_references/supplied_bundle_0caac47f2ab0/unpacked",
+  "reference_files": [
+    {
+      "path": "jetrover_stm32_reference_20261120/Misc_items.json",
+      "sha256": "0a33c912ba5e0de343f1f6d9fd955b71370555a33772c67ad2dc80663cae30f9",
+      "bytes": 1045
+    },
+    {
+      "path": "jetrover_stm32_reference_20261120/System_items.json",
+      "sha256": "26a4ebc8b1eb33df3610e53f08e0f2e5af70fd0d87c37631e7ac6fb3c051ff63",
+      "bytes": 729
+    },
+    {
+      "path": "jetrover_stm32_reference_20261120/Portings_items.json",
+      "sha256": "93a0f2fcbdbe00f48e95a7f774840b25bc42c27d6daabd091bb077c0fdf26c2a",
+      "bytes": 1713
+    },
+    {
+      "path": "jetrover_stm32_reference_20261120/research_findings_20261120.json",
+      "sha256": "206421982b1917ed9d577ae650639aa8e810beb653132bd08c71b7e485702ec3",
+      "bytes": 4442
+    },
+    {
+      "path": "jetrover_stm32_reference_20261120/Peripherals_items.json",
+      "sha256": "4bd9c4072f2417e804631ed8dba91adb7a6926130eee035477a3b5e1f62e5e83",
+      "bytes": 1895
+    },
+    {
+      "path": "jetrover_stm32_reference_20261120/source_download_manifest.json",
+      "sha256": "bb93d1c53883d3ad18f193bfc205fab0db958fe0906b203c9ed261a6b4e08d43",
+      "bytes": 2090
+    },
+    {
+      "path": "jetrover_stm32_reference_20261120/seven_in_one/reference_manifest.json",
+      "sha256": "3c1ae7e7bc004b88e435bc8e1d97a2e47e58f755a8ba9b6d4663df494d3f155f",
+      "bytes": 2486
+    },
+    {
+      "path": "jetrover_stm32_reference_20261120/servo_read_example/reference_manifest.json",
+      "sha256": "61abb50337672b6f2f899d3646039a62a7ed101ba5854a954e438e84a8c7009f",
+      "bytes": 3064
+    },
+    {
+      "path": "jetrover_stm32_reference_20261120/factory_reference/Hiwonder/Misc/packet.c",
+      "sha256": "b0044ff863f1a0c6f648c057eab244ff2c56f0ca8ede3941d83e7f1a6f0a3715",
+      "bytes": 4720
+    },
+    {
+      "path": "jetrover_stm32_reference_20261120/factory_reference/Hiwonder/Misc/packet.h",
+      "sha256": "955ef513cf34bf38b43428d57aabca31b79d2fd83d552577792357452587d821",
+      "bytes": 3303
+    },
+    {
+      "path": "jetrover_stm32_reference_20261120/factory_reference/Hiwonder/Portings/packet_porting.c",
+      "sha256": "d077458fcec8f827451fe820cce09f88d5c7b8b179643c5df4a27cb3356e1dfc",
+      "bytes": 6475
+    },
+    {
+      "path": "jetrover_stm32_reference_20261120/factory_reference/Hiwonder/Portings/serial_servo.h",
+      "sha256": "8ac7cb6423a9670d088bfaf00e83acba49c16f64dc36db3249c067b56034a788",
+      "bytes": 2022
+    },
+    {
+      "path": "jetrover_stm32_reference_20261120/factory_reference/Hiwonder/Portings/packet_reports.h",
+      "sha256": "98ef31b03e9445614453378d7a1621fa87f5d2be9b7e212a2c074a13d28e9510",
+      "bytes": 470
+    },
+    {
+      "path": "jetrover_stm32_reference_20261120/factory_reference/Hiwonder/System/global_conf.h",
+      "sha256": "51db850b1d5837e1f1eee0cddb7196b8cc3ccdb46c187404a9b13409d532284e",
+      "bytes": 1080
+    },
+    {
+      "path": "jetrover_stm32_reference_20261120/factory_reference/Hiwonder/System/app.c",
+      "sha256": "4ec6847b1bafb96524a26b02d53082ab5a25928542c0e76bd2c076d35ce59f6d",
+      "bytes": 11500
+    },
+    {
+      "path": "jetrover_stm32_reference_20261120/factory_reference/Hiwonder/Peripherals/serial_servo.c",
+      "sha256": "607395915496be4eb5ffa6d1387151a3b0ae4ae9f49a8c80a6c1ab594c0d56b3",
+      "bytes": 6902
+    },
+    {
+      "path": "jetrover_stm32_reference_20261120/seven_in_one/rosrobotcontrollerm4_7in1/Core/Src/freertos.c",
+      "sha256": "e3ff4080d3e7e00fdfc717105e7177f250cc96cc86afc0524f525a4d7b4aa34e",
+      "bytes": 22570
+    },
+    {
+      "path": "jetrover_stm32_reference_20261120/seven_in_one/rosrobotcontrollerm4_7in1/Core/Src/usart.c",
+      "sha256": "51c6504d87bc8a9809ac129a0f9f43b8f6589c22e9f4a6a48b9ea0071c45eb17",
+      "bytes": 15544
+    },
+    {
+      "path": "jetrover_stm32_reference_20261120/seven_in_one/rosrobotcontrollerm4_7in1/Core/Src/stm32f4xx_it.c",
+      "sha256": "0cc47ee0648aa97066038be94c4ae539cf3b1a2a79dd0c6eacd9aadc0e81ca86",
+      "bytes": 15818
+    },
+    {
+      "path": "jetrover_stm32_reference_20261120/seven_in_one/rosrobotcontrollerm4_7in1/Hiwonder/Misc/packet.c",
+      "sha256": "b0044ff863f1a0c6f648c057eab244ff2c56f0ca8ede3941d83e7f1a6f0a3715",
+      "bytes": 4720
+    },
+    {
+      "path": "jetrover_stm32_reference_20261120/seven_in_one/rosrobotcontrollerm4_7in1/Hiwonder/Misc/packet.h",
+      "sha256": "955ef513cf34bf38b43428d57aabca31b79d2fd83d552577792357452587d821",
+      "bytes": 3303
+    },
+    {
+      "path": "jetrover_stm32_reference_20261120/seven_in_one/rosrobotcontrollerm4_7in1/Hiwonder/Portings/packet_porting.c",
+      "sha256": "d077458fcec8f827451fe820cce09f88d5c7b8b179643c5df4a27cb3356e1dfc",
+      "bytes": 6475
+    },
+    {
+      "path": "jetrover_stm32_reference_20261120/seven_in_one/rosrobotcontrollerm4_7in1/Hiwonder/Portings/serial_servo.h",
+      "sha256": "8ac7cb6423a9670d088bfaf00e83acba49c16f64dc36db3249c067b56034a788",
+      "bytes": 2022
+    },
+    {
+      "path": "jetrover_stm32_reference_20261120/seven_in_one/rosrobotcontrollerm4_7in1/Hiwonder/Portings/packet_reports.h",
+      "sha256": "98ef31b03e9445614453378d7a1621fa87f5d2be9b7e212a2c074a13d28e9510",
+      "bytes": 470
+    },
+    {
+      "path": "jetrover_stm32_reference_20261120/seven_in_one/rosrobotcontrollerm4_7in1/Hiwonder/System/global_conf.h",
+      "sha256": "661f2384dbf64b533fdf0a13556d1ae4fa6b7155be0ae04ecadbd65ad2ad3b40",
+      "bytes": 1153
+    },
+    {
+      "path": "jetrover_stm32_reference_20261120/seven_in_one/rosrobotcontrollerm4_7in1/Hiwonder/System/app.c",
+      "sha256": "edeca3a533aa3aee6f19a6e41278812443b1d5196e9c8763849a6e9dbe93326b",
+      "bytes": 34350
+    },
+    {
+      "path": "jetrover_stm32_reference_20261120/seven_in_one/rosrobotcontrollerm4_7in1/Hiwonder/Peripherals/serial_servo.c",
+      "sha256": "a40003cc0f30b368790c6fb13b340ed0af6779b8b3c7dbded6f8deaf1c45924d",
+      "bytes": 6895
+    },
+    {
+      "path": "jetrover_stm32_reference_20261120/servo_read_example/RosRobotControllerM4_serial_servo_read/Core/Src/freertos.c",
+      "sha256": "c3fbfb31741f04e90f33b30244e045a623e417d722f35cee944925f33d2834e7",
+      "bytes": 19962
+    },
+    {
+      "path": "jetrover_stm32_reference_20261120/servo_read_example/RosRobotControllerM4_serial_servo_read/Core/Src/usart.c",
+      "sha256": "14751d52a1bd90e73a4f3c4ace8465cce53f89c3f2b94ac4393332af3fea12ab",
+      "bytes": 15542
+    },
+    {
+      "path": "jetrover_stm32_reference_20261120/servo_read_example/RosRobotControllerM4_serial_servo_read/Core/Src/stm32f4xx_it.c",
+      "sha256": "d19e6c75fce52f8c5328de60bacdca4b353649626d1a32d5000fae3bd2642235",
+      "bytes": 17406
+    },
+    {
+      "path": "jetrover_stm32_reference_20261120/servo_read_example/RosRobotControllerM4_serial_servo_read/Hiwonder/Misc/packet.c",
+      "sha256": "d25001cf6d7cfedf3a0c22b7bd38d78ae3e4c7e6852306f98949bbc7d6f8407f",
+      "bytes": 4752
+    },
+    {
+      "path": "jetrover_stm32_reference_20261120/servo_read_example/RosRobotControllerM4_serial_servo_read/Hiwonder/Misc/packet.h",
+      "sha256": "955ef513cf34bf38b43428d57aabca31b79d2fd83d552577792357452587d821",
+      "bytes": 3303
+    },
+    {
+      "path": "jetrover_stm32_reference_20261120/servo_read_example/RosRobotControllerM4_serial_servo_read/Hiwonder/Portings/packet_porting.c",
+      "sha256": "5989386495a311429e073963783bc7894021a98edc1fac2628324f7f69f48254",
+      "bytes": 7100
+    },
+    {
+      "path": "jetrover_stm32_reference_20261120/servo_read_example/RosRobotControllerM4_serial_servo_read/Hiwonder/Portings/serial_servo_porting.c",
+      "sha256": "fd722c3a724d5038a9ced66803dabfa62d6630426c7b45ee143691ceaa1a1288",
+      "bytes": 2127
+    },
+    {
+      "path": "jetrover_stm32_reference_20261120/servo_read_example/RosRobotControllerM4_serial_servo_read/Hiwonder/Portings/serial_servo.h",
+      "sha256": "cb4dfbf4bc655efcab235ad0a74f86d83fc9228fcf3a394816f5008b396408b5",
+      "bytes": 7185
+    },
+    {
+      "path": "jetrover_stm32_reference_20261120/servo_read_example/RosRobotControllerM4_serial_servo_read/Hiwonder/Portings/packet_reports.h",
+      "sha256": "695a4b1b31895b519767a13f6c7bf5839cfdeabdc344311e6080c2c996f5e597",
+      "bytes": 1444
+    },
+    {
+      "path": "jetrover_stm32_reference_20261120/servo_read_example/RosRobotControllerM4_serial_servo_read/Hiwonder/System/global_conf.h",
+      "sha256": "548092f87896bdd1bf842203ad045db961dd7c4f639e2492e031d31fe03ac5fe",
+      "bytes": 989
+    },
+    {
+      "path": "jetrover_stm32_reference_20261120/servo_read_example/RosRobotControllerM4_serial_servo_read/Hiwonder/System/packet_handle.c",
+      "sha256": "8551fcd19d5786b3d666fc48de04941074c64bfeced156a604bca87a3875903f",
+      "bytes": 14700
+    },
+    {
+      "path": "jetrover_stm32_reference_20261120/servo_read_example/RosRobotControllerM4_serial_servo_read/Hiwonder/System/app.c",
+      "sha256": "ce29c174e34c6d1709510c8f92cd5c02c4970710e416f4584bf9655cd5e1a034",
+      "bytes": 5440
+    },
+    {
+      "path": "jetrover_stm32_reference_20261120/servo_read_example/RosRobotControllerM4_serial_servo_read/Hiwonder/Peripherals/serial_servo.c",
+      "sha256": "80443ffc2e456a47f65e7accdab1a79ae72ae6406a5f446802b6f3dc899f026d",
+      "bytes": 9578
+    }
+  ],
+  "project_targets": [
+    {
+      "reference": "serial_servo_read",
+      "path": "RosRobotControllerM4_serial_servo_read/Core/Inc/FreeRTOSConfig.h",
+      "sha256": "774f1ed2e7558a1540a5a12cc9aee83893ee332fb85c23e6a916f87e0ea89cb5",
+      "target_metadata": [
+        "#define configTICK_RATE_HZ                       ((TickType_t)1000)"
+      ]
+    },
+    {
+      "reference": "serial_servo_read",
+      "path": "RosRobotControllerM4_serial_servo_read/RosRobotControllerM4.ioc",
+      "sha256": "43b2ff7321f3aa6c7640213def896710a2affa160a81e819464fe65cb11a8daf",
+      "target_metadata": [
+        "Mcu.CPN=STM32F407VET6",
+        "Mcu.Name=STM32F407V(E-G)Tx",
+        "ProjectManager.ProjectName=RosRobotControllerM4"
+      ]
+    },
+    {
+      "reference": "jetrover_7in1",
+      "path": "rosrobotcontrollerm4_7in1/Core/Inc/FreeRTOSConfig.h",
+      "sha256": "6b2a4c966e8380e1366f7739b662482cd190536c55cca51a041f961d2457bc95",
+      "target_metadata": [
+        "#define configTICK_RATE_HZ                       ((TickType_t)1000)"
+      ]
+    },
+    {
+      "reference": "jetrover_7in1",
+      "path": "rosrobotcontrollerm4_7in1/RosRobotControllerM4.ioc",
+      "sha256": "8837bb60c5347bc5bf344e97d298874c3e31c8af27ed154628bf1b244f654101",
+      "target_metadata": [
+        "Mcu.CPN=STM32F407VET6",
+        "Mcu.Name=STM32F407V(E-G)Tx",
+        "ProjectManager.ProjectName=RosRobotControllerM4"
+      ]
+    }
+  ],
+  "matches_actual_firmware": "UNKNOWN",
+  "reference_programs_executed": false
+}
