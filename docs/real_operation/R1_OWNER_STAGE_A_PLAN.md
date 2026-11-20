@@ -1,4 +1,4 @@
-# R1 Stage A：移除按键程序的已知串口竞争（待授权）
+# R1 Stage A：移除按键程序的已知串口竞争（已按授权部署）
 
 日期：2026-11-20。唯一分支feat/real-operation-pipeline；本轮起点e0f151e。
 本方案只处理已知的第二个串口打开者，不代表SDK、固件或舵机读回已经修复。
@@ -7,7 +7,7 @@
 
 - SDK和ROS节点实际从ros2_ws/build路径解析，最终resolve到ros2_ws/src/driver/ros_robot_controller。
   SDK SHA c4dd48f3…、节点SHA 4d37d84c…均未改。
-- 当前button_scan.service：PID809，User=ubuntu，Restart=always，KillMode=control-group。
+- 部署前button_scan.service：PID809，User=ubuntu，Restart=always，KillMode=control-group。
 - 当前start_app_node.service：PID815；其中ros_robot_controller PID3756持有串口。
 - 管理员只读/proc快照中只有按键PID809和驱动PID3756打开ttyACM0，不可读FD目录数=0。
   这是时点观察，不证明未来无法再打开串口。
@@ -102,7 +102,7 @@ manifest记录代码SHA、模块/配置哈希、备份哈希、操作范围及�
    不能以恢复按键为由继续已故障的舵机事务。
 
 没有自动应用/回滚开关；准备工具只生成数据。
-当前尚未安装drop-in，也未重启任何服务。
+部署前状态如上；下文实测结果取代原待授权状态。
 
 ## 7. 测试与后续
 
@@ -123,7 +123,7 @@ export PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1
 export PYTHONPATH="$PWD:$PWD/cable_robot_vla:$PWD/vla_protocol/src:$PYTHONPATH"
 ROS_DOMAIN_ID=117 RMW_IMPLEMENTATION=rmw_fastrtps_cpp python3 -m pytest -q -rs -p no:cacheprovider cable_robot_vla/test/test_wifi_button_adapter.py
 
-本轮Stage A状态：OFFLINE_TESTED; DEPLOYMENT_AWAITING_SEPARATE_APPROVAL。
+本轮Stage A状态：PASS_KNOWN_EXTRA_OPENER_REMOVED；详见实测结果。
 R1实际单ID/六ID/连续读取：NOT_RUN / BLOCKED / BLOCKED。
 R2真实Observation、云端真实状态推理：BLOCKED。没有以合成state代替实际反馈。
 
@@ -146,3 +146,20 @@ python3 patches/jetrover_readback/prepare_button_stage.py \
 
 生成后先审阅manifest和override文件。安装该override、daemon-reload和重启按键服务均是
 待单独批准的后续操作。不得将准备工具成功当作部署成功或硬件验证成功。
+
+## 9. 已授权的Stage A实测结果
+
+用户单独批准Stage A，并确认小车静止、按键释放后，已完成：
+- 新增唯一drop-in、daemon-reload、仅重启button_scan.service。
+- 固定部署来源94a4e449b76949dea6bbfa965f73030c550eb08d。
+- 新按键代理PID9606，active/running、NRestarts=0。
+- 整车服务PID815与ROS驱动PID3756保持不变。
+- 管理员/proc快照无不可读FD目录，仅驱动PID3756的fd38打开串口。
+- 原53文件SHA全部不变，原按键脚本/SDK/ROS节点未修改。
+- DDS可见/idc_vla/real/wifi_button_buzzer_proxy，蜂鸣器发布端连接原驱动。
+- 没有主动提示音、真实按键、Wi-Fi/关机测试；物理功能验证NOT_RUN。
+- 没有舵机RPC；SDK未部署，内核独占尚未在物理端口验证。
+
+证据：evidence/r1_owner_stage_a_live_20261120.json及post_proc/post_dds两份快照。
+固定部署包及回滚范围仍按上文；后续文档提交不改变运行包来源。
+SDK后续准备见[R1_SDK_MAINTENANCE_PLAN.md](R1_SDK_MAINTENANCE_PLAN.md)。

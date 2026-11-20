@@ -1,0 +1,28 @@
+{
+  "scope": "physical_domain_DDS_metadata_only_no_publish_or_service_call",
+  "ros_domain_id": "0",
+  "proxy_node_visible": true,
+  "proxy_publishers": [
+    {
+      "topic": "/parameter_events",
+      "types": [
+        "rcl_interfaces/msg/ParameterEvent"
+      ]
+    },
+    {
+      "topic": "/ros_robot_controller/set_buzzer",
+      "types": [
+        "ros_robot_controller_msgs/msg/BuzzerState"
+      ]
+    }
+  ],
+  "buzzer_consumers": [
+    {
+      "node": "ros_robot_controller",
+      "namespace": "/",
+      "type": "ros_robot_controller_msgs/msg/BuzzerState"
+    }
+  ],
+  "hardware_rpc_sent": 0,
+  "buzzer_command_published": false
+}

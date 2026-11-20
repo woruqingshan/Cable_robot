@@ -1,0 +1,22 @@
+{
+  "device_path": "/dev/rrc",
+  "resolved_path": "/dev/ttyACM0",
+  "visible_openers": [
+    {
+      "pid": 3756,
+      "process_name": "ros_robot_contr",
+      "script_paths": [],
+      "fds": [
+        "38"
+      ],
+      "cgroup": "0::/system.slice/start_app_node.service"
+    }
+  ],
+  "inaccessible_process_fd_directories": 0,
+  "ownership_assessment": "NOT_PROVEN_EXCLUSIVE",
+  "visibility_complete": false,
+  "receive_or_write_activity_proven": false,
+  "safe_to_read": false,
+  "scope": "approved_stage_a_post_restart_proc_metadata_only",
+  "hardware_rpc_sent": 0
+}

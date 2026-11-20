@@ -1,0 +1,33 @@
+{
+  "status": "PASS_KNOWN_EXTRA_OPENER_REMOVED",
+  "time_utc": "2026-11-20T10:50:50.718144+00:00",
+  "explicit_stage_a_approval_received": true,
+  "deployed_source_sha": "94a4e449b76949dea6bbfa965f73030c550eb08d",
+  "deployed_module_sha256": "1c7ff05a179b077d901d886a400721a95ec387d19f134780d82a65fa1569635d",
+  "installed_dropin": "/etc/systemd/system/button_scan.service.d/90-idc-serial-owner.conf",
+  "only_restarted_service": "button_scan.service",
+  "start_app_mainpid_unchanged": 815,
+  "ros_driver_pid_unchanged": 3756,
+  "all_53_original_backup_sources_unchanged": true,
+  "current_serial_openers": [
+    {
+      "pid": 3756,
+      "process_name": "ros_robot_contr",
+      "script_paths": [],
+      "fds": [
+        "38"
+      ],
+      "cgroup": "0::/system.slice/start_app_node.service"
+    }
+  ],
+  "kernel_exclusivity_verified": false,
+  "proxy_dds_visible": true,
+  "physical_buzzer_test": "NOT_RUN",
+  "button_wifi_halt_test": "NOT_RUN",
+  "hardware_readback_rpc_sent": 0,
+  "r1_single_servo": "NOT_RUN",
+  "r2_real_observation": "BLOCKED",
+  "stm32_uart_connector": "UNKNOWN",
+  "operator_host_usb_port_suggestion": "port3; not STM32 UART identity evidence",
+  "installed_dropin_sha256": "8c91e8e104c0d0ac035f8c2d3849687265999618d477b34ff58a0372df446ff3"
+}
