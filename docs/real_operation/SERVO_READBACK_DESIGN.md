@@ -337,3 +337,11 @@ source_type仍unknown、设备采样时间未知，未接Observation；连续读
 当前保留维护模式及整车临时Restart=no，正常控制未恢复；后续与恢复须另行授权。
 之前本轮NOT_RUN/待授权文字属于执行前状态，以此段和R1_R2_ACCEPTANCE.md当前矩阵为准。
 原始帧及完整事实边界见R1_ID1_LIVE_RESULT_20261123.md、evidence/r1_m1_d1_20261123.json。
+
+## USB只读续审与应用层修补（2026-11-23）
+
+D1/D2串口构造函数AST相同；当前USB PM为on/active、挂起计数0；无新tty打开。
+用户确认16:46相机分支断开对应换相机操作，不能据此归因DTR超时。
+补充原顺序初始化错误分类、FD一次清理、维护接收线程取消/关闭和自有ROS关停；
+保留ioctl异常，不绕过DTR、不自动重试。382 passed/2 skipped，尚未部署或恢复硬件。
+恢复方案与证据见USB_CDC_DIAGNOSIS_AND_RECOVERY.md；C2及D2-D4均NOT_RUN待授权。

@@ -400,3 +400,74 @@ class BoundedDiagnosticSession:
             return dict(complete=False,error=self.board._bounded_bus_feedback.fault,batches=[])
         finally:
             self.operation_lock.release()
+
+
+def initialize_existing_serial(port, device, *, clock_ns=time.monotonic_ns):
+    """Configure ONE caller-owned Serial instance; keep DTR/RTS order unchanged.
+
+    Serial read/write timeouts do not bound open/modem-control ioctls. No worker,
+    abandoned operation, retry, reset or ignored ioctl exception is introduced.
+    """
+    import errno
+    import json
+    import sys
+    if getattr(port, "is_open", False) or getattr(port, "fd", None) is not None:
+        raise ValueError("SERIAL_INITIALIZATION_REQUIRES_CLOSED_INSTANCE")
+    started = clock_ns()
+    report = dict(device=str(device), stage="configure_rts", dtr=False, rts=False,
+                  open_attempts=0, success=False)
+    try:
+        port.rts = False
+        report["stage"] = "configure_dtr"
+        port.dtr = False
+        report["stage"] = "set_device"
+        port.setPort(device)
+        report["stage"] = "open"
+        report["open_attempts"] = 1
+        port.open()
+        report.update(stage="open_complete", success=True)
+        return report
+    except BaseException as error:
+        names = []
+        tb = error.__traceback__
+        while tb is not None:
+            names.append(tb.tb_frame.f_code.co_name)
+            tb = tb.tb_next
+        code = "SERIAL_INITIALIZATION_FAILED"
+        if isinstance(error, OSError) and error.errno == errno.ETIMEDOUT:
+            code = ("USB_DTR_CONTROL_TIMEOUT" if "_update_dtr_state" in names
+                    else "USB_RTS_CONTROL_TIMEOUT" if "_update_rts_state" in names
+                    else "SERIAL_OPEN_CONTROL_TIMEOUT")
+        elif isinstance(error, (KeyboardInterrupt, SystemExit)):
+            code = "SERIAL_INITIALIZATION_INTERRUPTED"
+        report.update(error_code=code, errno=getattr(error,"errno",None),
+                      exception_type=type(error).__name__, traceback_functions=names)
+        # PySerial.open already closes its raw FD on failure. Avoid a second close
+        # when is_open=False; never close an FD number independently of its owner.
+        if getattr(port, "is_open", False):
+            try:
+                port.close()
+                report["cleanup"] = "closed_open_port_once"
+            except Exception as cleanup_error:
+                report["cleanup"] = "close_failed_no_retry"
+                report["cleanup_exception_type"] = type(cleanup_error).__name__
+        else:
+            report["cleanup"] = "not_open_no_duplicate_close"
+        report["fd_cleared"] = getattr(port, "fd", None) is None
+        report["elapsed_ns"] = clock_ns()-started
+        error.serial_initialization_report = report
+        print(json.dumps({"event":"serial_initialization_failed","report":report}),
+              file=sys.stderr, flush=True)
+        raise
+    finally:
+        report["elapsed_ns"] = clock_ns()-started
+
+
+def close_existing_serial_once(port):
+    """Close only an open caller-owned port. Does not flush, reset, or toggle."""
+    if not getattr(port, "is_open", False):
+        return {"port_closed":getattr(port,"fd",None) is None,
+                "close_called":False,"status":"already_closed"}
+    port.close()
+    return {"port_closed":not port.is_open and getattr(port,"fd",None) is None,
+            "close_called":True,"status":"closed"}

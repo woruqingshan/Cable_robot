@@ -108,6 +108,7 @@ def bus_servo_read_and_unpack(self, servo_id, cmd, unpack):
     sdk, node = maintenance_sources(sdk, node)
     sdk, node = probe_sources(sdk, node)
     sdk, node = finite_sources(sdk, node)
+    sdk, node = lifecycle_sources(sdk, node)
     ast.parse(sdk)
     ast.parse(node)
     return sdk, node
@@ -346,6 +347,144 @@ def finite_sources(sdk, node):
 '''
     node = node.replace('    def probe_id1_once(self, request, response):',
                         methods+'    def probe_id1_once(self, request, response):',1)
+    return sdk, node
+
+
+
+def lifecycle_sources(sdk, node):
+    """Preserve signal policy; add explicit startup reporting and owned teardown."""
+    sdk = sdk.replace(
+        "    claim_linux_exclusive, ReadbackFault)",
+        "    claim_linux_exclusive, ReadbackFault, initialize_existing_serial, close_existing_serial_once)",1)
+    sdk = sdk.replace("        self._maintenance_writer = None",
+        "        self._maintenance_stop = False\n"
+        "        self._maintenance_close_attempted = False\n"
+        "        self._maintenance_close_report = None\n"
+        "        self._maintenance_lifecycle_lock = threading.Lock()\n"
+        "        self._maintenance_writer = None",1)
+    sdk = sdk.replace(
+        "        self.port.rts = False\n        self.port.dtr = False\n"
+        "        self.port.setPort(device)\n        self.port.open()",
+        "        self.serial_initialization_report = initialize_existing_serial(self.port, device)",1)
+    sdk = sdk.replace("                self.port.close()\n                raise",
+        "                close_existing_serial_once(self.port)\n                raise",1)
+    sdk = sdk.replace(
+        "        threading.Thread(target=self._recv_task_guarded, daemon=True).start()",
+        "        self._receiver_thread = threading.Thread(target=self._recv_task_guarded, daemon=True)\n"
+        "        self._receiver_thread.start()",1)
+    # recv_task keeps every parser statement. Intentional shutdown owns the only close.
+    sdk = sdk.replace("    def recv_task(self):\n        while True:",
+        "    def recv_task(self):\n        while not getattr(self, '_maintenance_stop', False):",1)
+    sdk = sdk.replace('        self.port.close()\n        print("END...")',
+        "        if getattr(self, '_maintenance_writer', None) is None:\n"
+        "            self.port.close()\n"
+        '        print("END...")',1)
+    method = '''    def close_maintenance_transport(self):
+        if self._maintenance_writer is None:
+            raise ReadbackFault("MAINTENANCE_CLOSE_ONLY")
+        with self._maintenance_lifecycle_lock:
+            if self._maintenance_close_attempted:
+                return dict(self._maintenance_close_report)
+            self._maintenance_close_attempted = True
+            self._maintenance_stop = True
+            self.enable_recv = False
+            self._bounded_bus_feedback.fail("TRANSPORT_CLOSING")
+            report = {"port_closed":False, "close_called":False}
+            self._maintenance_close_report = report
+            try:
+                receiver = self._receiver_thread
+                if receiver.is_alive():
+                    cancel = getattr(self.port, "cancel_read", None)
+                    if callable(cancel):
+                        cancel()  # PySerial internal abort pipe, no USB control request.
+                    receiver.join(timeout=.5)
+                if receiver.is_alive():
+                    report["error"] = "RECEIVER_STILL_RUNNING_NO_CLOSE"
+                    return dict(report)
+                report.update(close_existing_serial_once(self.port))
+            except Exception as error:
+                report.update(error="MAINTENANCE_CLOSE_FAILED_NO_RETRY",
+                              exception_type=type(error).__name__, errno=getattr(error,"errno",None))
+            return dict(report)
+
+'''
+    sdk = sdk.replace('    def _recv_task_guarded(self):',method+'    def _recv_task_guarded(self):',1)
+    sdk = sdk.replace('            self._bounded_bus_feedback.fail("RECEIVER_FAILED")',
+        '            if not getattr(self, "_maintenance_stop", False):\n'
+        '                self._bounded_bus_feedback.fail("RECEIVER_FAILED")',1)
+    sdk = sdk.replace('            self._bounded_bus_feedback.fail("RECEIVER_STOPPED")',
+        '            if not getattr(self, "_maintenance_stop", False):\n'
+        '                self._bounded_bus_feedback.fail("RECEIVER_STOPPED")',1)
+    node = node.replace('import rclpy', 'import rclpy\nfrom rclpy.executors import ExternalShutdownException, SingleThreadedExecutor\nfrom rclpy.impl.implementation_singleton import rclpy_implementation as _rclpy',1)
+    node = node.replace('        threading.Thread(target=self.pub_callback, daemon=True).start()',
+        '        self._publisher_thread = threading.Thread(\n'
+        '            target=self._pub_callback_guarded if self.readback_maintenance else self.pub_callback,\n'
+        '            daemon=True)\n'
+        '        self._publisher_thread.start()',1)
+    node = node.replace('    def pub_callback(self):\n        while self.running:',
+        '    def pub_callback(self):\n'
+        '        while self.running and (not self.readback_maintenance or rclpy.ok()):',1)
+    node = node.replace('        rclpy.shutdown()\n\n    def enable_reception',
+        '        if not self.readback_maintenance:\n'
+        '            rclpy.shutdown()\n\n    def enable_reception',1)
+    wrapper = '''    def _pub_callback_guarded(self):
+        try:
+            self.pub_callback()
+        except Exception:
+            if self.running and rclpy.ok():
+                raise
+
+'''
+    node = node.replace('    def pub_callback(self):',wrapper+'    def pub_callback(self):',1)
+    node = node.replace("import signal", "import signal\nfrom rclpy.signals import SignalHandlerOptions",1)
+    node = node.replace("        rclpy.init()", "        rclpy.init(signal_handler_options=SignalHandlerOptions.NO)",1)
+    node = replace_method(node, "main", """
+def main():
+    node = None
+    executor = None
+    shutdown_requested = False
+    def request_shutdown(signum, frame):
+        nonlocal shutdown_requested
+        shutdown_requested = True
+    previous_sigterm = signal.getsignal(signal.SIGTERM)
+    signal.signal(signal.SIGTERM, request_shutdown)
+    try:
+        node = RosRobotController('ros_robot_controller')
+        if not shutdown_requested and rclpy.ok():
+            executor = SingleThreadedExecutor(context=node.context)
+            executor.add_node(node)
+            while not shutdown_requested and rclpy.ok():
+                executor.spin_once(timeout_sec=.1)
+    except KeyboardInterrupt:
+        if node is not None and not node.readback_maintenance:
+            node.board.set_motor_speed([[1, 0], [2, 0], [3, 0], [4, 0]])
+    except (ExternalShutdownException, _rclpy.RCLError):
+        if node is None or not node.readback_maintenance or rclpy.ok():
+            raise
+    finally:
+        try:
+            try:
+                if executor is not None:
+                    executor.shutdown(timeout_sec=.5)
+            finally:
+                try:
+                    if node is not None and node.readback_maintenance:
+                        node.running = False
+                        publisher = getattr(node, '_publisher_thread', None)
+                        if publisher is not None:
+                            publisher.join(timeout=.5)
+                        report = node.board.close_maintenance_transport()
+                        print('maintenance transport close:', report, flush=True)
+                        if not report.get('port_closed'):
+                            raise RuntimeError('MAINTENANCE_TRANSPORT_CLOSE_UNCONFIRMED')
+                finally:
+                    if node is not None:
+                        node.destroy_node()
+                    if rclpy.ok():
+                        rclpy.shutdown()
+        finally:
+            signal.signal(signal.SIGTERM, previous_sigterm)
+""")
     return sdk, node
 
 

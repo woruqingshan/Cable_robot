@@ -5,18 +5,22 @@
  import serial
  import threading
 +from .guarded_readback import (ReadbackGate, MaintenanceFrameWriter,
-+    claim_linux_exclusive, ReadbackFault)
++    claim_linux_exclusive, ReadbackFault, initialize_existing_serial, close_existing_serial_once)
 +import math
  
  class PacketControllerState(enum.IntEnum):
      # 通信协议的格式(the format of communication protocol)
-@@ -95,20 +98,39 @@
+@@ -95,20 +98,40 @@
              'GAMEPAD_BUTTON_MASK_R1':        0x8000
      }
  
 -    def __init__(self, device="/dev/rrc", baudrate=1000000, timeout=5):
 +    def __init__(self, device="/dev/rrc", baudrate=1000000, timeout=5, *,
 +                 maintenance_tx_timeout_s=None):
++        self._maintenance_stop = False
++        self._maintenance_close_attempted = False
++        self._maintenance_close_report = None
++        self._maintenance_lifecycle_lock = threading.Lock()
 +        self._maintenance_writer = None
 +        options = {}
 +        if maintenance_tx_timeout_s is not None:
@@ -30,16 +34,17 @@
          self.recv_count = 0
  
 -        self.port = serial.Serial(None, baudrate, timeout=timeout)
+-        self.port.rts = False
+-        self.port.dtr = False
+-        self.port.setPort(device)
+-        self.port.open()
 +        self.port = serial.Serial(None, baudrate, timeout=timeout, **options)
-         self.port.rts = False
-         self.port.dtr = False
-         self.port.setPort(device)
-         self.port.open()
++        self.serial_initialization_report = initialize_existing_serial(self.port, device)
 +        if maintenance_tx_timeout_s is not None:
 +            try:
 +                claim_linux_exclusive(self.port)
 +            except Exception:
-+                self.port.close()
++                close_existing_serial_once(self.port)
 +                raise
 +            self._maintenance_writer = MaintenanceFrameWriter(
 +                self.port, checksum_crc8)
@@ -52,16 +57,17 @@
  
          # 队列用来存储数据(queues are used to store data)
          self.sys_queue = queue.Queue(maxsize=1)
-@@ -130,7 +152,7 @@
+@@ -130,7 +153,8 @@
          }
  
          time.sleep(0.5)
 -        threading.Thread(target=self.recv_task, daemon=True).start()
-+        threading.Thread(target=self._recv_task_guarded, daemon=True).start()
++        self._receiver_thread = threading.Thread(target=self._recv_task_guarded, daemon=True)
++        self._receiver_thread.start()
  
  
      def packet_report_sys(self, data):
-@@ -158,10 +180,7 @@
+@@ -158,10 +182,7 @@
              pass
  
      def packet_report_serial_servo(self, data):
@@ -73,7 +79,7 @@
  
      def packet_report_pwm_servo(self, data):
          try:
-@@ -315,12 +334,24 @@
+@@ -315,12 +336,24 @@
              print('get_sbus enable reception first!')
              return None
  
@@ -100,7 +106,7 @@
  
      def set_led(self, on_time, off_time, repeat=1, led_id=1):
          on_time = int(on_time*1000)
-@@ -417,13 +448,54 @@
+@@ -417,13 +450,54 @@
              data.extend(struct.pack("<BH", i[0], i[1]))
          self.buf_write(PacketFunction.PACKET_FUNC_BUS_SERVO, data)
  
@@ -162,22 +168,55 @@
  
      def bus_servo_read_id(self, servo_id=254):
          return self.bus_servo_read_and_unpack(servo_id, 0x12, "<BBbB")
-@@ -454,6 +526,14 @@
- 
+@@ -455,8 +529,46 @@
      def enable_reception(self, enable=True):
          self.enable_recv = enable
+ 
++    def close_maintenance_transport(self):
++        if self._maintenance_writer is None:
++            raise ReadbackFault("MAINTENANCE_CLOSE_ONLY")
++        with self._maintenance_lifecycle_lock:
++            if self._maintenance_close_attempted:
++                return dict(self._maintenance_close_report)
++            self._maintenance_close_attempted = True
++            self._maintenance_stop = True
++            self.enable_recv = False
++            self._bounded_bus_feedback.fail("TRANSPORT_CLOSING")
++            report = {"port_closed":False, "close_called":False}
++            self._maintenance_close_report = report
++            try:
++                receiver = self._receiver_thread
++                if receiver.is_alive():
++                    cancel = getattr(self.port, "cancel_read", None)
++                    if callable(cancel):
++                        cancel()  # PySerial internal abort pipe, no USB control request.
++                    receiver.join(timeout=.5)
++                if receiver.is_alive():
++                    report["error"] = "RECEIVER_STILL_RUNNING_NO_CLOSE"
++                    return dict(report)
++                report.update(close_existing_serial_once(self.port))
++            except Exception as error:
++                report.update(error="MAINTENANCE_CLOSE_FAILED_NO_RETRY",
++                              exception_type=type(error).__name__, errno=getattr(error,"errno",None))
++            return dict(report)
 +
 +    def _recv_task_guarded(self):
 +        try:
 +            self.recv_task()
 +        except Exception:
-+            self._bounded_bus_feedback.fail("RECEIVER_FAILED")
++            if not getattr(self, "_maintenance_stop", False):
++                self._bounded_bus_feedback.fail("RECEIVER_FAILED")
 +        else:
-+            self._bounded_bus_feedback.fail("RECEIVER_STOPPED")
- 
++            if not getattr(self, "_maintenance_stop", False):
++                self._bounded_bus_feedback.fail("RECEIVER_STOPPED")
++
      def recv_task(self):
-         while True:
-@@ -498,6 +578,9 @@
+-        while True:
++        while not getattr(self, '_maintenance_stop', False):
+             if self.enable_recv:
+                 recv_data = self.port.read()
+                 if recv_data:
+@@ -498,6 +610,9 @@
                              crc8 = checksum_crc8(bytes(self.frame))
                              if crc8 == dat:
                                  func = PacketFunction(self.frame[0])
@@ -187,9 +226,19 @@
                                  data = bytes(self.frame[2:])
                                  if func in self.parsers:
                                      self.parsers[func](data)
+@@ -507,7 +622,8 @@
+                             continue
+             else:
+                 time.sleep(0.01)
+-        self.port.close()
++        if getattr(self, '_maintenance_writer', None) is None:
++            self.port.close()
+         print("END...")
+ 
+ def bus_servo_test(board):
 --- a/ros_robot_controller/ros_robot_controller_node.py
 +++ b/ros_robot_controller/ros_robot_controller_node.py
-@@ -4,6 +4,9 @@
+@@ -4,24 +4,51 @@
  # @Date: 2023/08/28
  # stm32 ros2 package
  import math
@@ -198,8 +247,11 @@
 +from ros_robot_controller.guarded_readback import BoundedDiagnosticSession
  import time
  import rclpy
++from rclpy.executors import ExternalShutdownException, SingleThreadedExecutor
++from rclpy.impl.implementation_singleton import rclpy_implementation as _rclpy
  import signal
-@@ -11,8 +14,9 @@
++from rclpy.signals import SignalHandlerOptions
+ import threading
  from rclpy.node import Node
  from std_srvs.srv import Trigger
  from sensor_msgs.msg import Imu, Joy
@@ -210,9 +262,11 @@
  from ros_robot_controller_msgs.srv import GetBusServoState, GetPWMServoState
  from ros_robot_controller_msgs.msg import ButtonState, BuzzerState, LedState, MotorsState, BusServoState, SetBusServoState, ServosPosition, SetPWMServoState, Sbus, OLEDState
  
-@@ -21,7 +25,27 @@
+ class RosRobotController(Node):
+     gravity = 9.80665
      def __init__(self, name):
-         rclpy.init()
+-        rclpy.init()
++        rclpy.init(signal_handler_options=SignalHandlerOptions.NO)
          super().__init__(name)
 -        self.board = Board()
 +        self.declare_parameter('readback_maintenance', False)
@@ -239,7 +293,7 @@
          self.board.enable_reception()
          self.running = True
  
-@@ -35,26 +59,69 @@
+@@ -35,30 +62,83 @@
          self.sbus_pub = self.create_publisher(Sbus, '~/sbus', 1)
          self.button_pub = self.create_publisher(ButtonState, '~/button', 1)
          self.battery_pub = self.create_publisher(UInt16, '~/battery', 1)
@@ -284,7 +338,11 @@
 +            self.create_service(Trigger, '~/bus_servo/diagnostic_d2', self.diagnostic_d2)
 +            self.create_service(Trigger, '~/bus_servo/diagnostic_d3', self.diagnostic_d3)
          self.clock = self.get_clock()
-         threading.Thread(target=self.pub_callback, daemon=True).start()
+-        threading.Thread(target=self.pub_callback, daemon=True).start()
++        self._publisher_thread = threading.Thread(
++            target=self._pub_callback_guarded if self.readback_maintenance else self.pub_callback,
++            daemon=True)
++        self._publisher_thread.start()
 +        if self.readback_probe_reference:
 +            self.create_service(Trigger, '~/bus_servo/probe_id1_once', self.probe_id1_once)
          self.create_service(Trigger, '~/init_finish', self.get_node_state)
@@ -320,8 +378,30 @@
 +        response.success = not self.readback_maintenance
          return response
  
++    def _pub_callback_guarded(self):
++        try:
++            self.pub_callback()
++        except Exception:
++            if self.running and rclpy.ok():
++                raise
++
      def pub_callback(self):
-@@ -79,7 +146,12 @@
+-        while self.running:
++        while self.running and (not self.readback_maintenance or rclpy.ok()):
+             if self.enable_reception:
+                 self.pub_button_data(self.button_pub)
+                 self.pub_joy_data(self.joy_pub)
+@@ -68,7 +148,8 @@
+                 time.sleep(0.02)
+             else:
+                 time.sleep(0.02)
+-        rclpy.shutdown()
++        if not self.readback_maintenance:
++            rclpy.shutdown()
+ 
+     def enable_reception(self, msg):
+         self.get_logger().info('\033[1;32m%s\033[0m' % ('enable_reception ' + str(msg.data)))
+@@ -79,7 +160,12 @@
          self.board.set_led(msg.on_time, msg.off_time, msg.repeat, msg.id)
  
      def set_buzzer_state(self, msg):
@@ -335,7 +415,7 @@
  
      def set_motor_state(self, msg):
          data = []
-@@ -162,6 +234,38 @@
+@@ -162,6 +248,38 @@
              self.board.bus_servo_stop(servo_id)
  
      def get_bus_servo_state(self, request, response):
@@ -374,19 +454,67 @@
          states = []
          for i in request.cmd:
              data = BusServoState()
-@@ -270,7 +374,8 @@
+@@ -266,16 +384,50 @@
+             pub.publish(msg)
+ 
+ def main():
+-    node = RosRobotController('ros_robot_controller')
++    node = None
++    executor = None
++    shutdown_requested = False
++    def request_shutdown(signum, frame):
++        nonlocal shutdown_requested
++        shutdown_requested = True
++    previous_sigterm = signal.getsignal(signal.SIGTERM)
++    signal.signal(signal.SIGTERM, request_shutdown)
      try:
-         rclpy.spin(node)
+-        rclpy.spin(node)
++        node = RosRobotController('ros_robot_controller')
++        if not shutdown_requested and rclpy.ok():
++            executor = SingleThreadedExecutor(context=node.context)
++            executor.add_node(node)
++            while not shutdown_requested and rclpy.ok():
++                executor.spin_once(timeout_sec=.1)
      except KeyboardInterrupt:
 -        node.board.set_motor_speed([[1, 0], [2, 0], [3, 0], [4, 0]])
-+        if not node.readback_maintenance:
+-        node.destroy_node()
+-        rclpy.shutdown()
+-        print('shutdown')
++        if node is not None and not node.readback_maintenance:
 +            node.board.set_motor_speed([[1, 0], [2, 0], [3, 0], [4, 0]])
-         node.destroy_node()
-         rclpy.shutdown()
-         print('shutdown')
++    except (ExternalShutdownException, _rclpy.RCLError):
++        if node is None or not node.readback_maintenance or rclpy.ok():
++            raise
+     finally:
+-        print('shutdown finish')
++        try:
++            try:
++                if executor is not None:
++                    executor.shutdown(timeout_sec=.5)
++            finally:
++                try:
++                    if node is not None and node.readback_maintenance:
++                        node.running = False
++                        publisher = getattr(node, '_publisher_thread', None)
++                        if publisher is not None:
++                            publisher.join(timeout=.5)
++                        report = node.board.close_maintenance_transport()
++                        print('maintenance transport close:', report, flush=True)
++                        if not report.get('port_closed'):
++                            raise RuntimeError('MAINTENANCE_TRANSPORT_CLOSE_UNCONFIRMED')
++                finally:
++                    if node is not None:
++                        node.destroy_node()
++                    if rclpy.ok():
++                        rclpy.shutdown()
++        finally:
++            signal.signal(signal.SIGTERM, previous_sigterm)
+ 
+ if __name__ == '__main__':
+     main()
 --- /dev/null
 +++ b/ros_robot_controller/guarded_readback.py
-@@ -0,0 +1,402 @@
+@@ -0,0 +1,473 @@
 +"""OFFLINE CANDIDATE. No serial driver, ROS client, automatic arming or recovery."""
 +from dataclasses import dataclass
 +import math
@@ -789,3 +917,74 @@
 +            return dict(complete=False,error=self.board._bounded_bus_feedback.fault,batches=[])
 +        finally:
 +            self.operation_lock.release()
++
++
++def initialize_existing_serial(port, device, *, clock_ns=time.monotonic_ns):
++    """Configure ONE caller-owned Serial instance; keep DTR/RTS order unchanged.
++
++    Serial read/write timeouts do not bound open/modem-control ioctls. No worker,
++    abandoned operation, retry, reset or ignored ioctl exception is introduced.
++    """
++    import errno
++    import json
++    import sys
++    if getattr(port, "is_open", False) or getattr(port, "fd", None) is not None:
++        raise ValueError("SERIAL_INITIALIZATION_REQUIRES_CLOSED_INSTANCE")
++    started = clock_ns()
++    report = dict(device=str(device), stage="configure_rts", dtr=False, rts=False,
++                  open_attempts=0, success=False)
++    try:
++        port.rts = False
++        report["stage"] = "configure_dtr"
++        port.dtr = False
++        report["stage"] = "set_device"
++        port.setPort(device)
++        report["stage"] = "open"
++        report["open_attempts"] = 1
++        port.open()
++        report.update(stage="open_complete", success=True)
++        return report
++    except BaseException as error:
++        names = []
++        tb = error.__traceback__
++        while tb is not None:
++            names.append(tb.tb_frame.f_code.co_name)
++            tb = tb.tb_next
++        code = "SERIAL_INITIALIZATION_FAILED"
++        if isinstance(error, OSError) and error.errno == errno.ETIMEDOUT:
++            code = ("USB_DTR_CONTROL_TIMEOUT" if "_update_dtr_state" in names
++                    else "USB_RTS_CONTROL_TIMEOUT" if "_update_rts_state" in names
++                    else "SERIAL_OPEN_CONTROL_TIMEOUT")
++        elif isinstance(error, (KeyboardInterrupt, SystemExit)):
++            code = "SERIAL_INITIALIZATION_INTERRUPTED"
++        report.update(error_code=code, errno=getattr(error,"errno",None),
++                      exception_type=type(error).__name__, traceback_functions=names)
++        # PySerial.open already closes its raw FD on failure. Avoid a second close
++        # when is_open=False; never close an FD number independently of its owner.
++        if getattr(port, "is_open", False):
++            try:
++                port.close()
++                report["cleanup"] = "closed_open_port_once"
++            except Exception as cleanup_error:
++                report["cleanup"] = "close_failed_no_retry"
++                report["cleanup_exception_type"] = type(cleanup_error).__name__
++        else:
++            report["cleanup"] = "not_open_no_duplicate_close"
++        report["fd_cleared"] = getattr(port, "fd", None) is None
++        report["elapsed_ns"] = clock_ns()-started
++        error.serial_initialization_report = report
++        print(json.dumps({"event":"serial_initialization_failed","report":report}),
++              file=sys.stderr, flush=True)
++        raise
++    finally:
++        report["elapsed_ns"] = clock_ns()-started
++
++
++def close_existing_serial_once(port):
++    """Close only an open caller-owned port. Does not flush, reset, or toggle."""
++    if not getattr(port, "is_open", False):
++        return {"port_closed":getattr(port,"fd",None) is None,
++                "close_called":False,"status":"already_closed"}
++    port.close()
++    return {"port_closed":not port.is_open and getattr(port,"fd",None) is None,
++            "close_called":True,"status":"closed"}

@@ -118,3 +118,13 @@ prepare_sdk_stage仅生成固定来源覆盖包，原厂源码不改、不开串
 完整操作、端口重开风险、临时禁止整车自动重启及退出维护限制见
 ../../docs/real_operation/R1_SDK_MAINTENANCE_PLAN.md。
 相关选定回归332 passed/1 skipped；实机RPC=0，需用户单独批准后开始。
+
+## USB初始化和维护退出修补（2026-11-23）
+
+initialize_existing_serial只包装既有Serial实例，不改DTR/RTS策略、不忽略Errno110。
+close_maintenance_transport先停止读取并取消内部read等待、确认线程退出后关闭一次；
+主进程拥有SIGTERM、执行器和ROS上下文的退出次序，避免全局执行器关停竞态。
+USB内核ioctl/open/close不受read/write timeout覆盖，不能把软件测试视为设备已恢复。
+probe_serial_open_close.py默认仅检查；--execute-once必须另获授权并固定完整Git SHA。
+该探测无数据写入/舵机查询/接收线程，无reset、解绑、重试或原控制器自动恢复。
+详细计划：../../docs/real_operation/USB_CDC_DIAGNOSIS_AND_RECOVERY.md。

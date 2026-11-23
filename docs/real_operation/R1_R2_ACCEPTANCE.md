@@ -1,5 +1,13 @@
 # R1 / R2 当前验收与交接：2026-11-23
 
+最新USB续审：设备1a86:55d4仍绑定cdc_acm；PM control=on、active、挂起计数0，
+无串口打开者。D1与D2的Board构造函数AST一致。最可能是关闭/重开相关的USB控制应答/
+状态路径异常，具体责任设备/桥接/内核仍Unknown；不能归因到STM32舵机命令。
+应用初始化/退出候选修补和离线验证完成：382 passed/2 skipped。
+本轮真实串口打开、USB reset、D2/D3查询均0；C2与恢复后D2-D4为NOT_RUN待授权。
+见[USB_CDC_DIAGNOSIS_AND_RECOVERY.md](USB_CDC_DIAGNOSIS_AND_RECOVERY.md)。
+
+
 最新状态：D2-D4软件已提交；获批切换后，新驱动在USB CDC ACM的DTR控制ioctl上超时。
 D2/D3实际查询0；当前串口无拥有者，正常硬件驱动未运行，父服务仍Restart=no。
 D1=502是历史单次回复，不能作为当前六路状态。R2未执行。

@@ -1,0 +1,170 @@
+{
+  "date": "2026-11-23",
+  "scope": "read_only_usb_audit_and_offline_code_only",
+  "physical_serial_open_calls": 0,
+  "physical_usb_control_requests": 0,
+  "servo_queries": 0,
+  "reset_or_unbind": false,
+  "firmware_flashed": false,
+  "classification": "USB_CDC_CONTROL_REQUEST_TIMEOUT",
+  "most_likely_layer": "close/reopen-associated USB control response/state path",
+  "responsible_component": "UNKNOWN",
+  "exact_running_tegra_source_verified": false,
+  "comparison": {
+    "board_constructor_ast_identical": true,
+    "node_main_ast_identical": true,
+    "dtr_rts_settings": "both False before open; PySerial open updates DTR then RTS",
+    "historical_pyserial_exact_hash_comparison": "unavailable; current file mtime predates sessions",
+    "physical_serial_open_calls": 0
+  },
+  "usb": {
+    "kernel": "5.15.136-tegra",
+    "rrc_target": "/dev/ttyACM0",
+    "tty_sysfs_path": "/sys/devices/platform/bus@0/3610000.usb/usb1/1-2/1-2.1/1-2.1:1.0",
+    "topology": [
+      {
+        "path": "/sys/devices/platform/bus@0/3610000.usb/usb1/1-2/1-2.1/1-2.1:1.0",
+        "authorized": "1",
+        "driver": "/sys/bus/usb/drivers/cdc_acm"
+      },
+      {
+        "path": "/sys/devices/platform/bus@0/3610000.usb/usb1/1-2/1-2.1",
+        "idVendor": "1a86",
+        "idProduct": "55d4",
+        "bcdDevice": "0444",
+        "busnum": "1",
+        "devnum": "4",
+        "devpath": "2.1",
+        "speed": "12",
+        "authorized": "1",
+        "bConfigurationValue": "1",
+        "bNumInterfaces": "2",
+        "product": "USB Single Serial",
+        "power": {
+          "control": "on",
+          "runtime_status": "active",
+          "autosuspend": "2",
+          "autosuspend_delay_ms": "2000",
+          "runtime_active_time": "6664841",
+          "runtime_suspended_time": "0",
+          "wakeup": "disabled"
+        },
+        "driver": "/sys/bus/usb/drivers/usb"
+      },
+      {
+        "path": "/sys/devices/platform/bus@0/3610000.usb/usb1/1-2",
+        "idVendor": "1a40",
+        "idProduct": "0101",
+        "bcdDevice": "0100",
+        "busnum": "1",
+        "devnum": "2",
+        "devpath": "2",
+        "speed": "480",
+        "authorized": "1",
+        "bConfigurationValue": "1",
+        "bNumInterfaces": "1",
+        "product": "USB2.0 HUB",
+        "power": {
+          "control": "auto",
+          "runtime_status": "active",
+          "autosuspend": "0",
+          "autosuspend_delay_ms": "0",
+          "runtime_active_time": "6665508",
+          "runtime_suspended_time": "0",
+          "wakeup": "disabled"
+        },
+        "driver": "/sys/bus/usb/drivers/usb"
+      },
+      {
+        "path": "/sys/devices/platform/bus@0/3610000.usb/usb1",
+        "idVendor": "1d6b",
+        "idProduct": "0002",
+        "bcdDevice": "0515",
+        "busnum": "1",
+        "devnum": "1",
+        "devpath": "0",
+        "speed": "480",
+        "authorized": "1",
+        "bConfigurationValue": "1",
+        "bNumInterfaces": "1",
+        "manufacturer": "Linux 5.15.136-tegra xhci-hcd",
+        "product": "xHCI Host Controller",
+        "power": {
+          "control": "auto",
+          "runtime_status": "active",
+          "autosuspend": "0",
+          "autosuspend_delay_ms": "0",
+          "runtime_active_time": "6665994",
+          "runtime_suspended_time": "0",
+          "wakeup": "enabled"
+        },
+        "driver": "/sys/bus/usb/drivers/usb"
+      },
+      {
+        "path": "/sys/devices/platform/bus@0/3610000.usb",
+        "power": {
+          "control": "auto",
+          "runtime_status": "active",
+          "autosuspend_delay_ms": "2000",
+          "runtime_active_time": "6665993",
+          "runtime_suspended_time": "0",
+          "wakeup": "enabled"
+        },
+        "driver": "/sys/bus/platform/drivers/tegra-xusb"
+      },
+      {
+        "path": "/sys/devices/platform/bus@0",
+        "power": {
+          "control": "auto",
+          "runtime_status": "unsupported",
+          "autosuspend_delay_ms": {
+            "error": "[Errno 5] Input/output error"
+          },
+          "runtime_active_time": "0",
+          "runtime_suspended_time": "0"
+        },
+        "driver": "/sys/bus/platform/drivers/simple-pm-bus"
+      },
+      {
+        "path": "/sys/devices/platform",
+        "power": {
+          "control": "auto",
+          "runtime_status": "unsupported",
+          "autosuspend_delay_ms": {
+            "error": "[Errno 5] Input/output error"
+          },
+          "runtime_active_time": "0",
+          "runtime_suspended_time": "0"
+        }
+      }
+    ],
+    "pyserial_version": "3.5",
+    "serial_module": "/home/ubuntu/.local/lib/python3.10/site-packages/serial/__init__.py",
+    "serialposix_file": "/home/ubuntu/.local/lib/python3.10/site-packages/serial/serialposix.py",
+    "serialposix_sha256": "5d56f98513391e1766a1847a04e2e1202ced4172a152803ba1c823a149a9b6f9",
+    "serialposix_mtime_ns": 1724405241607282522,
+    "serialbase_signature": "(self, port=None, baudrate=9600, bytesize=8, parity='N', stopbits=1, timeout=None, xonxoff=False, rtscts=False, write_timeout=None, dsrdtr=False, inter_byte_timeout=None, exclusive=None, **kwargs)",
+    "physical_serial_open_calls": 0,
+    "usb_control_requests_sent": 0
+  },
+  "operator_confirmation": "Camera was unplugged/replaced and connections adjusted",
+  "camera_event_causality": "not established; RRC sibling branch has no disconnect record",
+  "tests": {
+    "passed": 382,
+    "skipped": 2,
+    "seconds": 22.7,
+    "skip": [
+      "PyKDL",
+      "FastAPI"
+    ]
+  },
+  "live_open_close": "NOT_RUN_AWAITING_APPROVAL",
+  "restored_d2_d4": "NOT_RUN",
+  "application_fix_deployed": false,
+  "current_serial_owner_count": 0,
+  "original_driver_restart_enabled": false,
+  "evidence_directory": "/home/ubuntu/zsy_projects/real_operation_evidence/r1_usb_cdc_20261123T093735Z",
+  "original_and_backup_files_verified": 53,
+  "candidate_patch_sha256": "ba91491a68fe8155bea673b12e8cf564c90e19060271e6749ffc91dd9d91dc0f",
+  "evidence_manifest_sha256": "85ab41801c0de3ce52fa87c74d20ada8fea3b0adda623c9510950b136a6a66f4"
+}

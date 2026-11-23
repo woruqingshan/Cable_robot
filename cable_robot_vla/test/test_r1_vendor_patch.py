@@ -264,15 +264,23 @@ class ConstructorPort(FakePort):
         self.write_timeout = kwargs.get("write_timeout")
         self.closed = False
         self.opened = False
+        self.is_open = False
+        self.fd = None
+        self.close_calls = 0
 
     def setPort(self, device):
         self.device = device
 
     def open(self):
         self.opened = True
+        self.is_open = True
+        self.fd = object()
 
     def close(self):
         self.closed = True
+        self.is_open = False
+        self.fd = None
+        self.close_calls += 1
 
 
 def constructor_sdk(patched_sdk, monkeypatch):
@@ -284,7 +292,7 @@ def constructor_sdk(patched_sdk, monkeypatch):
         return port
     monkeypatch.setattr(sdk.serial, "Serial", make)
     monkeypatch.setattr(sdk.time, "sleep", lambda _: None)
-    monkeypatch.setattr(sdk.threading, "Thread", lambda **_: S(start=lambda: None))
+    monkeypatch.setattr(sdk.threading, "Thread", lambda **_: S(start=lambda: None, is_alive=lambda:False, join=lambda **_:None))
     monkeypatch.setattr(sdk, "claim_linux_exclusive", exclusive.append)
     return sdk, helper, ports, exclusive
 
@@ -378,7 +386,8 @@ def fake_node_class(source, mode, reference="", plan_path=""):
         def get_logger(self):
             return S(info=lambda *_: None)
     namespace = dict(Node=Base, Board=BoardStub,
-        rclpy=S(init=lambda: None),
+        rclpy=S(init=lambda **_: None),
+        SignalHandlerOptions=S(NO=0),
         threading=S(Thread=lambda **_: S(start=lambda: None)))
     for name in ("Imu Joy Sbus ButtonState UInt16 LedState BuzzerState OLEDState "
                  "MotorsState Bool SetBusServoState ServosPosition "
@@ -412,19 +421,23 @@ def test_exact_main_interrupt_does_not_write_motor_in_maintenance(
         patched_sdk, mode):
     _, _, source, _ = patched_sdk
     calls = []
-    node = S(readback_maintenance=mode,
-        board=S(set_motor_speed=lambda *_: calls.append("motor")),
+    node = S(readback_maintenance=mode, context=None,
+        board=S(set_motor_speed=lambda *_: calls.append("motor"),
+            close_maintenance_transport=lambda:(calls.append("close") or {"port_closed":True})),
         destroy_node=lambda: calls.append("destroy"))
     def interrupt(_):
         raise KeyboardInterrupt()
     namespace = dict(RosRobotController=lambda _: node,
-        rclpy=S(spin=interrupt, shutdown=lambda: calls.append("shutdown")))
+        signal=__import__("signal"),
+        SingleThreadedExecutor=lambda **_:S(add_node=lambda _:None,spin_once=lambda **_:interrupt(node),
+                                           shutdown=lambda **_:None),
+        rclpy=S(ok=lambda:True, shutdown=lambda: calls.append("shutdown")))
     main = next(n for n in ast.parse(source).body
                 if isinstance(n, ast.FunctionDef) and n.name == "main")
     exec(compile(ast.Module(body=[main], type_ignores=[]),
                  "offline_main.py", "exec"), namespace)
     namespace["main"]()
-    assert calls == (["destroy", "shutdown"] if mode
+    assert calls == (["close", "destroy", "shutdown"] if mode
                      else ["motor", "destroy", "shutdown"])
 
 
@@ -551,7 +564,13 @@ def test_parser_trace_insertion_preserves_every_original_parser_statement(audite
                     if isinstance(n, ast.FunctionDef) and n.name == "recv_task")
     current = method(new)
     class RemoveTrace(ast.NodeTransformer):
+        def visit_While(self, item):
+            if ast.unparse(item.test) == "not getattr(self, '_maintenance_stop', False)":
+                item.test = ast.Constant(value=True)
+            return self.generic_visit(item)
         def visit_If(self, item):
+            if ast.unparse(item.test) == "getattr(self, '_maintenance_writer', None) is None":
+                return item.body
             if ("_last_bus_rx_frame" in ast.unparse(item)
                     and isinstance(item.test, ast.Compare)
                     and ast.unparse(item.test) == "func == PacketFunction.PACKET_FUNC_BUS_SERVO"):
