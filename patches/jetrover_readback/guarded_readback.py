@@ -46,6 +46,7 @@ class ReadbackGate:
         self.used = set()
         self.discarded = 0
         self.evidence_reference = None
+        self.diagnostic_only = False
 
     def arm(self, reference, *, clean_epoch_verified=False, exclusive_owner_verified=False,
             echo_contract_verified=False, write_bound_verified=False,
@@ -61,6 +62,17 @@ class ReadbackGate:
             self.evidence_reference = reference
             self.armed = True
 
+    def arm_diagnostic_once(self, reference):
+        """Operator-approved ID1 capture, NOT proof of a fresh hardware sample."""
+        with self.condition:
+            if self.armed or self.fault or self.used:
+                raise ReadbackFault("REARM_FORBIDDEN")
+            if not isinstance(reference, str) or not reference.strip() or len(reference) > 512:
+                raise ReadbackFault("DIAGNOSTIC_REFERENCE_REQUIRED")
+            self.evidence_reference = reference
+            self.diagnostic_only = True
+            self.armed = True
+
     def fail(self, code):
         with self.condition:
             self.fault = self.fault or code
@@ -69,10 +81,13 @@ class ReadbackGate:
     def status(self):
         with self.condition:
             return {"state": "FAULT" if self.fault else "DISARMED" if not self.armed
-                    else "PENDING" if self.pending else "READY",
+                    else "PENDING" if self.pending else
+                    "COMPLETE_UNVERIFIED" if self.diagnostic_only and self.used else "READY",
                 "error": self.fault, "used_keys": sorted(self.used),
                 "discarded_packets": self.discarded, "evidence_reference": self.evidence_reference,
-                "continuous_readback_supported": False, "hardware_validated": False}
+                "continuous_readback_supported": False, "hardware_validated": False,
+                "diagnostic_only": self.diagnostic_only,
+                "canonical_observation_eligible": False}
 
     def receive(self, data, *, crc_checked=False):
         """Called only by the existing CRC-checked BUS_SERVO parser."""
@@ -108,7 +123,7 @@ class ReadbackGate:
                 self.condition.notify_all()
 
     def read_position(self, servo_id, command, unpack, send, *, timeout_s=0.1,
-                      write_timeout_s=None, reception_enabled=False, send_with_deadline=False):
+                      write_timeout_s=None, reception_enabled=False, send_with_deadline=False, diagnostic=False):
         if type(servo_id) is not int or servo_id not in SERVO_IDS or command != 0x05 or unpack != "<BBbh":
             raise ReadbackFault("POSITION_ONLY_SCOPE")
         if not math.isfinite(timeout_s) or not 0 < timeout_s <= 5:
@@ -124,6 +139,10 @@ class ReadbackGate:
                     raise ReadbackFault(self.fault)
                 if not self.armed:
                     raise ReadbackFault("DISARMED")
+                if self.diagnostic_only != diagnostic:
+                    raise ReadbackFault("DIAGNOSTIC_PATH_MISMATCH")
+                if diagnostic and servo_id != 1:
+                    raise ReadbackFault("DIAGNOSTIC_ID1_ONLY")
                 if not reception_enabled:
                     raise ReadbackFault("RECEPTION_DISABLED")
                 if (write_timeout_s is None or not math.isfinite(write_timeout_s)

@@ -92,7 +92,13 @@ def bus_servo_read_and_unpack(self, servo_id, cmd, unpack):
             response.success = False
             self.get_logger().error("Readback refused: " + error.code)
             return response
-        if len(result.state) != len(ids) or any(len(item.position) != 1 for item in result.state):
+        except Exception:
+            self.board._bounded_bus_feedback.fail("SERVICE_READ_FAILED")
+            response.state = []
+            response.success = False
+            self.get_logger().error("Readback refused: SERVICE_READ_FAILED")
+            return response
+        if not result.success or len(result.state) != len(ids) or any(len(item.position) != 1 for item in result.state):
             result.state = []
             result.success = False
         return result
@@ -100,6 +106,7 @@ def bus_servo_read_and_unpack(self, servo_id, cmd, unpack):
 """
     node = node.replace(anchor, wrapper+anchor, 1)
     sdk, node = maintenance_sources(sdk, node)
+    sdk, node = probe_sources(sdk, node)
     ast.parse(sdk)
     ast.parse(node)
     return sdk, node
@@ -203,6 +210,95 @@ def set_buzzer_state(self, msg):
 
 
 
+def probe_sources(sdk, node):
+    """Add one-shot unverified capture; never enable trusted/continuous reads."""
+    sdk = sdk.replace(
+        'def bus_servo_read_and_unpack(self, servo_id, cmd, unpack):',
+        'def bus_servo_read_and_unpack(self, servo_id, cmd, unpack, *, diagnostic=False):', 1)
+    sdk = sdk.replace(
+        'reception_enabled=self.enable_recv, send_with_deadline=True)',
+        'reception_enabled=self.enable_recv, send_with_deadline=True, diagnostic=diagnostic)', 1)
+    # Capture actual validated RX bytes, including the received CRC, in the existing parser.
+    anchor = '                                data = bytes(self.frame[2:])'
+    sdk = sdk.replace(anchor,
+        '                                if func == PacketFunction.PACKET_FUNC_BUS_SERVO:\n'
+        '                                    self._last_bus_rx_frame = (b"\\xaa\\x55"\n'
+        '                                        + bytes(self.frame) + bytes([dat]))\n'+anchor, 1)
+    anchor = "        writer = getattr(self, '_maintenance_writer', None)"
+    sdk = sdk.replace(anchor,
+        '        if int(func) == 5 and len(data) == 2 and data[0] == 5:\n'
+        '            self._last_bus_tx_frame = bytes(buf)\n'+anchor, 1)
+    anchor = '    def bus_servo_read_and_unpack('
+    method = '''    def probe_bus_servo_id1_once(self, reference):
+        """Capture through the official position path; source stays unknown."""
+        capture_started = time.monotonic_ns()
+        armed_here = False
+        report = dict(servo_id=1, raw_pulse=None, source_type="unknown",
+            canonical_observation_eligible=False, inner_association_verified=False,
+            device_sample_time_ns=None, outer_frame_validated=False,
+            read_started_at_ns=None, response_received_at_ns=None, read_latency_ns=None,
+            tx_frame_hex=None, rx_frame_hex=None, error=None)
+        try:
+            if getattr(self, '_maintenance_writer', None) is None:
+                raise ReadbackFault("MAINTENANCE_REQUIRED")
+            self._bounded_bus_feedback.arm_diagnostic_once(reference)
+            armed_here = True
+            self._last_bus_tx_frame = self._last_bus_rx_frame = None
+            self.bus_servo_read_and_unpack(1, 0x05, "<BBbh", diagnostic=True)
+            sample = self.last_bus_position_sample
+            report.update(raw_pulse=sample.raw_pulse,
+                read_started_at_ns=sample.read_started_at_ns,
+                response_received_at_ns=sample.response_received_at_ns,
+                read_latency_ns=sample.response_received_at_ns-sample.read_started_at_ns,
+                outer_frame_validated=True)
+        except ReadbackFault as error:
+            report["error"] = error.code
+        except Exception:
+            self._bounded_bus_feedback.fail("UNEXPECTED_PROBE_FAILURE")
+            report["error"] = "UNEXPECTED_PROBE_FAILURE"
+        for key, attr in (("tx_frame_hex", "_last_bus_tx_frame"),
+                          ("rx_frame_hex", "_last_bus_rx_frame")):
+            value = getattr(self, attr, None) if armed_here else None
+            report[key] = value.hex() if value is not None else None
+        report["gate_status"] = self._bounded_bus_feedback.status()
+        report["capture_started_at_ns"] = capture_started
+        report["capture_finished_at_ns"] = time.monotonic_ns()
+        report["capture_elapsed_ns"] = report["capture_finished_at_ns"]-capture_started
+        report["host_report_system_time_ns"] = time.time_ns()
+        return report
+
+'''
+    sdk = sdk.replace(anchor, method+anchor, 1)
+    node = node.replace('import math', 'import math\nimport json', 1)
+    anchor = '        self.board = (Board(maintenance_tx_timeout_s=.05)'
+    node = node.replace(anchor,
+        "        self.declare_parameter('readback_probe_reference', '')\n"
+        "        self.readback_probe_reference = self.get_parameter('readback_probe_reference').value\n"
+        "        ref = self.readback_probe_reference\n"
+        "        if not isinstance(ref, str) or len(ref) > 512:\n"
+        "            raise ValueError('invalid probe reference')\n"
+        "        if ref and (not ref.strip() or not self.readback_maintenance):\n"
+        "            raise ValueError('probe requires explicit maintenance mode')\n"+anchor, 1)
+    anchor = "        self.create_service(Trigger, '~/init_finish', self.get_node_state)"
+    node = node.replace(anchor,
+        "        if self.readback_probe_reference:\n"
+        "            self.create_service(Trigger, '~/bus_servo/probe_id1_once', self.probe_id1_once)\n"+anchor, 1)
+    method = '''    def probe_id1_once(self, request, response):
+        report = self.board.probe_bus_servo_id1_once(self.readback_probe_reference)
+        response.success = report["outer_frame_validated"]
+        response.message = json.dumps(report, sort_keys=True)
+        return response
+
+'''
+    node = node.replace('    def get_node_state(self, request, response):',
+                        method+'    def get_node_state(self, request, response):', 1)
+    # Do not announce controller readiness to a waiting motion initializer.
+    node = node.replace('        response.success = True\n        return response',
+                        '        response.success = not self.readback_maintenance\n        return response', 1)
+    return sdk, node
+
+
+
 def build_patch(sdk, node):
     modified = candidate_sources(sdk, node)
     chunks = []
@@ -232,6 +328,7 @@ def main():
     metadata = {"schema_version":1, "sdk_sha256":SDK_SHA, "node_sha256":NODE_SHA,
         "patch_sha256":sha256(patch.encode()).hexdigest(), "applied_to_vendor":False,
         "default_state":"DISARMED", "continuous_readback_supported":False,
+        "diagnostic_policy":"ID1_ONCE_UNVERIFIED", "diagnostic_source_type":"unknown",
         "maintenance_mode_default":False, "maintenance_candidate_hardware_validated":False,
         "review_required":["clean/exclusive epoch evidence","actual response echo contract",
             "finite serial write bound","verified inner servo ID/command/transaction matching",

@@ -1,0 +1,24 @@
+{
+  "date": "2026-11-23",
+  "baseline": "4f2ba9bf2744cb67b961f47c806bdc36636943bb",
+  "tests": {
+    "passed": 332,
+    "skipped": 1,
+    "seconds": 15.9,
+    "scope": "selected R1/protocol/Observation/boundary regression",
+    "skip": "FastAPI missing"
+  },
+  "new_tests": 26,
+  "vendor_modified": false,
+  "physical_serial_opened": false,
+  "hardware_rpc_sent": 0,
+  "real_ros_sigterm_test": "PASS_ISOLATED_FAKE_BOARD_CHILD_ONLY",
+  "real_ros_config_test": "PASS_DOMAIN117",
+  "diagnostic_policy": "ID1_ONCE_UNVERIFIED",
+  "continuous_readback": "BLOCKED",
+  "r2": "BLOCKED",
+  "physical_domain0_controller_visible": true,
+  "patch_sha256": "7c57e6bf829b264d8c8cbf2da23e44aa919c0d1199ed047b8cec27890c1b58bf",
+  "duplicate_probe_trace_reuse_prevented": true,
+  "backup_files_verified": 53
+}

@@ -149,3 +149,10 @@ R2：完整有效真实Observation=0，真实状态云端联调BLOCKED；无新A
 
 详见[R1_OWNER_STAGE_A_PLAN.md](R1_OWNER_STAGE_A_PLAN.md)实测追加、
 [R1_SDK_MAINTENANCE_PLAN.md](R1_SDK_MAINTENANCE_PLAN.md)及验收矩阵。
+
+## 2026-11-23 R1首帧诊断准备
+
+SDK维护覆盖候选已完成相关回归332 passed/1 skipped，固定版本包准备后等待单独授权。
+新增ID1一次诊断与实际外层帧证据；unknown来源不接Observation，保留KEY_REUSE_UNSAFE。
+没有新云端部署、GPU请求、真实state或50×6返回记录。
+详情见R1_R2_ACCEPTANCE.md及R1_SDK_MAINTENANCE_PLAN.md；R2保持BLOCKED。

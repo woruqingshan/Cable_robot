@@ -1,25 +1,25 @@
 # R1：舵机反馈协议、固件身份与离线读回设计
 
-更新：2026-11-20（Asia/Shanghai）。唯一分支 `feat/real-operation-pipeline`。
+更新：2026-11-23（Asia/Shanghai）。唯一分支 `feat/real-operation-pipeline`。
 本轮起点 `e86d0e6c784847e75b870ccc22f6dfcc272aba86`；此前候选起点为 `2da91cb`。
 本轮只读访问和离线开发，没有应用厂商补丁、硬件 RPC、驱动重启、Torque 操作、固件刷写或运动。
 
-## 1. 当前结论
+## 1. 当前结论（2026-11-23；起点4f2ba9b）
 
-- **Confirmed（本车元数据）**：安装的 SDK/节点仍是已审查哈希；当前两个状态 Topic 是控制器缓存。
-  `/dev/rrc -> /dev/ttyACM0`，两个可见进程持有打开的描述符，尚未建立唯一串口拥有者。
-- **Confirmed（参考源码及主机桩测试）**：教学工程的外层上报 ID/命令来自请求；
-  内层解析器不匹配请求 ID/命令。主机 C 测试复现了错误 ID/命令被接收、
-  以及特定模拟调度下旧完成信号使下一次调用取得旧位置。
-- **Unknown（本车固件）**：PCB 型号/修订、MCU 精确型号、运行固件版本/构建哈希、
-  与参考工程的对应关系均未确认。参考工程缺陷不能直接归因到本车。
-- **决策**：继续方案 B 的离线候选与证据准备；不能把仅修改 Python SDK 视为足够，
-  不能解除 `KEY_REUSE_UNSAFE`。候选默认 DISARMED，持续读回及 R2 都保持 BLOCKED。
-- **单舵机实测申请条件：NOT_READY**。当前缺少固件关联、内层匹配、独占拥有者和有界写入证据；
-  不建议现在仅批准调用原有 GetBusServoState。
+- 已按新技术参考收敛到Jetson SDK修复与首次实测准备，不要求先证明固件永远无错。
+- Stage A已生效；本轮管理员FD快照只见PID4186。此前双打开者描述是历史记录。
+- SDK/节点仍是原SHA，53份原文件匹配备份；本轮未修改运行驱动或发送硬件RPC。
+- 有界等待、完整TX、外层校验、部分服务失败清理与控制兼容测试通过。
+- 新增仅ID1一次的独立诊断服务：默认不开启，明确维护参数和显式RPC才发送。
+  source_type=unknown，不声称内层关联或新鲜采样，不进入Observation。
+- 保留原可信arming和KEY_REUSE_UNSAFE，没有以清队列或sleep解决重复事务关联。
+- 单ID诊断：READY_FOR_SEPARATE_APPROVAL（须接受端口重开复位未知风险并现场监督）。
+  六ID/连续/单位标定/R2仍BLOCKED，实际读回NOT_RUN。
+- 不因参考STM32缺陷直接修改或刷写本车固件；本车是否需改STM32为UNDETERMINED。
+- 相关回归332 passed、1 skipped；覆盖包及授权步骤见R1_SDK_MAINTENANCE_PLAN.md。
+  该计划取代历史首次诊断必须先确认固件全部关联的准入判断。
 
-本车固定为五自由度机械臂 ID1–5/joint1–joint5，独立夹爪 ID10/r_joint。
-配置中的可选 ID9/w_joint 不纳入这六个反馈通道，不增加 joint6，不映射 SmolVLA 六维动作。
+下文保留此前审计证据与源码行号；历史时间/拥有者不作为本轮现状。
 
 ## 2. 本车已安装实现与固件身份
 
@@ -320,3 +320,13 @@ R2：完整有效真实Observation=0，真实状态云端联调BLOCKED；无新A
 [R1_SDK_MAINTENANCE_PLAN.md](R1_SDK_MAINTENANCE_PLAN.md)及验收矩阵。
 
 最新项目候选补丁SHA256：0ef5decd928521d931dde747a205cffb0f5472dee21e3d92919bffca6009e9f1；未应用。
+
+## 2026-11-23 实现补充
+
+probe_sources复用原Board/接收线程，只增加完整CRC通过帧证据和独立ID1诊断方法。
+COMPLETE_UNVERIFIED不代表hardware_measured；服务success只代表外层校验通过。
+常规get_state不能使用诊断授权；未知错误清除部分状态并锁存SERVICE_READ_FAILED。
+精确原接收器AST在移除新增证据赋值后与原件一致，原控制兼容断言未放宽。
+prepare_sdk_stage只生成固定哈希覆盖包，不执行驱动/串口/服务操作。
+本轮首次读回、六路频率/成功率/跨度与Pulse→rad实物核验均NOT_RUN。
+原厂公式可作标定候选，不作为已核验的实物零位与方向。

@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "host_reported_time_utc": "2026-11-23T08:06:12.329305+00:00",
+  "vendor_sources": {
+    "ros_robot_controller_sdk.py": {
+      "path": "/home/ubuntu/ros2_ws/src/driver/ros_robot_controller/ros_robot_controller/ros_robot_controller_sdk.py",
+      "sha256": "c4dd48f3176a5dce1e8331846691ce995c0b3c2f79341cfc6c9e89dce1418a89"
+    },
+    "ros_robot_controller_node.py": {
+      "path": "/home/ubuntu/ros2_ws/src/driver/ros_robot_controller/ros_robot_controller/ros_robot_controller_node.py",
+      "sha256": "4d37d84c6eff0629f5f73ddca2b140cc0af555175fe3f68f8a3359123a716627"
+    }
+  },
+  "serial_ownership": {
+    "device_path": "/dev/rrc",
+    "resolved_path": "/dev/ttyACM0",
+    "visible_openers": [
+      {
+        "pid": 4186,
+        "process_name": "ros_robot_contr",
+        "script_paths": [],
+        "fds": [
+          "38"
+        ],
+        "parent_chain": [
+          {
+            "pid": 4186,
+            "name": "ros_robot_contr",
+            "ppid": 799
+          },
+          {
+            "pid": 799,
+            "name": "ros2",
+            "ppid": 1
+          },
+          {
+            "pid": 1,
+            "name": "systemd",
+            "ppid": 0
+          }
+        ]
+      }
+    ],
+    "inaccessible_process_fd_directories": 0,
+    "ownership_assessment": "NOT_PROVEN_EXCLUSIVE",
+    "visibility_complete": false,
+    "receive_or_write_activity_proven": false,
+    "safe_to_read": false
+  },
+  "hardware_rpc_requests_sent": 0,
+  "device_open_calls": 0,
+  "vendor_modified": false,
+  "scope": "filesystem_and_proc_metadata_only",
+  "user_reference_sha256": "f3cf242eb28026a2e0d459b34752b6aac4ba28ee58ec22c0f682dccefa6f275d",
+  "reference_preserved_unmodified": true
+}

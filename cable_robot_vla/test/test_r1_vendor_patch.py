@@ -166,7 +166,7 @@ def test_control_packet_generation_unchanged_even_after_read_fault(patched_sdk,a
             if isinstance(n,ast.FunctionDef)}
     old=methods(original);new=methods(candidate_sources(original,audited_sources[1])[0])
     for name in old:
-        if name not in ("__init__","bus_servo_read_and_unpack","packet_report_serial_servo","buf_write"):
+        if name not in ("__init__","bus_servo_read_and_unpack","packet_report_serial_servo","buf_write","recv_task"):
             assert new[name]==old[name],name
 
 
@@ -347,7 +347,7 @@ def test_maintenance_buzzer_allowed_but_read_remains_disarmed(
     assert error.value.code == "DISARMED" and len(ports[0].frames) == 1
 
 
-def fake_node_class(source, mode):
+def fake_node_class(source, mode, reference=""):
     """Execute exact candidate constructor against fake Node/Board, not ROS."""
     calls, subscriptions, services = [], [], []
     class BoardStub:
@@ -362,7 +362,7 @@ def fake_node_class(source, mode):
     class Base:
         def __init__(self, name):
             self.name = name
-            self.parameters = {"readback_maintenance": mode}
+            self.parameters = {"readback_maintenance": mode, "readback_probe_reference": reference}
         def declare_parameter(self, name, value):
             self.parameters.setdefault(name, value)
         def get_parameter(self, name):
@@ -465,3 +465,240 @@ def test_maintenance_short_write_buzzer_error_latches_position_path(
     assert board._bounded_bus_feedback.status()["error"] == error.value.code
     assert board.servo_read_lock.acquire(blocking=False)
     board.servo_read_lock.release()
+
+
+def test_probe_success_preserves_actual_outer_bytes_and_stays_unverified(patched_sdk):
+    sdk, helper, _, _ = patched_sdk
+    board = board_fixture(sdk, helper, arm=False)
+    board._maintenance_writer = helper.MaintenanceFrameWriter(board.port, sdk.checksum_crc8)
+    def reply(raw):
+        board.port.incoming = list(wire_response(sdk))
+        try:
+            board.recv_task()
+        except StopFixture:
+            pass
+    board.port.on_write = reply
+    report = board.probe_bus_servo_id1_once("review-id1")
+    assert report["raw_pulse"] == 601 and report["outer_frame_validated"]
+    assert report["rx_frame_hex"] == wire_response(sdk).hex()
+    assert report["tx_frame_hex"] == board.port.frames[0].hex()
+    assert report["source_type"] == "unknown"
+    assert not report["inner_association_verified"]
+    assert not report["canonical_observation_eligible"]
+    assert report["device_sample_time_ns"] is None
+    assert report["read_latency_ns"] >= 0
+    assert report["capture_elapsed_ns"] >= report["read_latency_ns"]
+    assert report["gate_status"]["state"] == "COMPLETE_UNVERIFIED"
+    second = board.probe_bus_servo_id1_once("do-not-retry")
+    assert second["error"] == "REARM_FORBIDDEN"
+    assert second["tx_frame_hex"] is None and second["rx_frame_hex"] is None
+    assert not second["outer_frame_validated"] and second["raw_pulse"] is None
+    assert len(board.port.frames) == 1
+    with pytest.raises(helper.ReadbackFault):
+        board.bus_servo_read_position(1)
+    assert len(board.port.frames) == 1
+
+
+@pytest.mark.parametrize("kind,error", [
+    ("none", "READ_TIMEOUT"), ("bad_crc", "READ_TIMEOUT"),
+    ("wrong_id", "SERVO_ID_MISMATCH"), ("wrong_cmd", "COMMAND_MISMATCH"),
+    ("bad_length", "INVALID_PAYLOAD_OR_CRC_PROVENANCE"),
+    ("device_error", "DEVICE_ERROR"), ("duplicate", "DUPLICATE_REPLY"),
+    ("io", "SEND_FAILED")])
+def test_probe_fault_never_returns_a_position_or_retries(patched_sdk, kind, error):
+    sdk, helper, _, _ = patched_sdk
+    board = board_fixture(sdk, helper, arm=False)
+    board._maintenance_writer = helper.MaintenanceFrameWriter(board.port, sdk.checksum_crc8)
+    def reply(raw):
+        if kind == "io":
+            raise OSError("offline")
+        payload = struct.pack("<BBbh", 2 if kind == "wrong_id" else 1,
+            6 if kind == "wrong_cmd" else 5, -1 if kind == "device_error" else 0, 500)
+        if kind == "none":
+            return
+        if kind == "bad_length":
+            payload = payload[:-1]
+        body = bytes([5, len(payload)])+payload
+        wire = b"\xaa\x55"+body+bytes([sdk.checksum_crc8(body) ^ (kind == "bad_crc")])
+        board.port.incoming = list(wire*(2 if kind == "duplicate" else 1))
+        try:
+            board.recv_task()
+        except StopFixture:
+            pass
+    board.port.on_write = reply
+    report = board.probe_bus_servo_id1_once("offline-case")
+    assert report["error"] == error and report["raw_pulse"] is None
+    assert not report["outer_frame_validated"]
+    assert report["gate_status"]["state"] == "FAULT"
+    assert board.probe_bus_servo_id1_once("no-retry")["error"] == "REARM_FORBIDDEN"
+    assert len(board.port.frames) == 1
+    assert board.servo_read_lock.acquire(blocking=False)
+    board.servo_read_lock.release()
+
+
+def test_probe_requires_existing_maintenance_writer(patched_sdk):
+    sdk, helper, _, _ = patched_sdk
+    board = board_fixture(sdk, helper, arm=False)
+    assert board.probe_bus_servo_id1_once("case")["error"] == "MAINTENANCE_REQUIRED"
+    assert board.port.frames == []
+
+
+def test_parser_trace_insertion_preserves_every_original_parser_statement(audited_sources):
+    old, node = audited_sources
+    new = candidate_sources(old, node)[0]
+    def method(text):
+        return next(n for n in ast.walk(ast.parse(text))
+                    if isinstance(n, ast.FunctionDef) and n.name == "recv_task")
+    current = method(new)
+    class RemoveTrace(ast.NodeTransformer):
+        def visit_If(self, item):
+            if ("_last_bus_rx_frame" in ast.unparse(item)
+                    and isinstance(item.test, ast.Compare)
+                    and ast.unparse(item.test) == "func == PacketFunction.PACKET_FUNC_BUS_SERVO"):
+                return None
+            return self.generic_visit(item)
+    assert ast.dump(RemoveTrace().visit(current)) == ast.dump(method(old))
+
+
+def test_service_unexpected_failure_clears_partial_data_and_latches(patched_sdk):
+    _, helper, source, _ = patched_sdk
+    gate = helper.ReadbackGate()
+    def broken(request, response):
+        response.state = [S(position=[500])]
+        raise OSError("offline")
+    owner = S(_get_bus_servo_state_legacy=broken,
+        board=S(_bounded_bus_feedback=gate),
+        get_logger=lambda: S(error=lambda _: None))
+    result = service_wrapper(source, helper.ReadbackFault)(
+        owner, S(cmd=[command(1)]), S(state=[], success=False))
+    assert result.state == [] and not result.success
+    assert gate.status()["error"] == "SERVICE_READ_FAILED"
+
+
+def test_staging_package_copies_only_reviewed_sources_and_refuses_overwrite(
+        tmp_path, audited_sources):
+    from patches.jetrover_readback.prepare_sdk_stage import prepare
+    vendor=tmp_path/"vendor";vendor.mkdir()
+    sdk,node=audited_sources
+    (vendor/"ros_robot_controller_sdk.py").write_text(sdk)
+    (vendor/"ros_robot_controller_node.py").write_text(node)
+    output=tmp_path/"staging"
+    report=prepare(output,vendor,"a"*40,"r1-id1-review")
+    assert report["prepared_only"] and not report["hardware_validated"]
+    assert report["diagnostic_id"]==1 and not report["continuous_readback_supported"]
+    import json
+    params=json.loads((output/"maintenance.json").read_text())
+    assert params["ros_robot_controller"]["ros__parameters"]=={
+        "readback_maintenance":True,"readback_probe_reference":"r1-id1-review"}
+    for name, expected in report["file_sha256"].items():
+        assert sha256((output/name).read_bytes()).hexdigest()==expected
+    assert (vendor/"ros_robot_controller_sdk.py").read_text()==sdk
+    with pytest.raises(FileExistsError):prepare(output,vendor,"a"*40)
+    (vendor/"ros_robot_controller_sdk.py").write_text(sdk+"\n")
+    with pytest.raises(ValueError):prepare(tmp_path/"rejected",vendor,"a"*40)
+    assert not (tmp_path/"rejected").exists()
+
+
+def test_probe_ros_wrapper_serializes_diagnostics_not_measured_state(patched_sdk):
+    import json
+    _,helper,source,_=patched_sdk
+    method=next(n for n in ast.walk(ast.parse(source))
+        if isinstance(n,ast.FunctionDef) and n.name=="probe_id1_once")
+    namespace={"json":json}
+    exec(compile(ast.Module(body=[method],type_ignores=[]),"probe_wrapper.py","exec"),namespace)
+    calls=[]
+    owner=S(readback_probe_reference="approved-case",
+        board=S(probe_bus_servo_id1_once=lambda ref:(calls.append(ref) or
+            {"outer_frame_validated":True,"source_type":"unknown",
+             "canonical_observation_eligible":False,"raw_pulse":500})))
+    result=namespace["probe_id1_once"](owner,S(),S())
+    assert result.success and calls==["approved-case"]
+    assert not json.loads(result.message)["canonical_observation_eligible"]
+
+
+def test_maintenance_readiness_cannot_release_a_motion_initializer(patched_sdk):
+    _,_,source,_=patched_sdk
+    method=next(n for n in ast.walk(ast.parse(source))
+        if isinstance(n,ast.FunctionDef) and n.name=="get_node_state")
+    namespace={}
+    exec(compile(ast.Module(body=[method],type_ignores=[]),"readiness.py","exec"),namespace)
+    assert not namespace["get_node_state"](S(readback_maintenance=True),S(),S()).success
+    assert namespace["get_node_state"](S(readback_maintenance=False),S(),S()).success
+
+
+def test_real_ros_sigterm_on_offline_main_has_no_motor_calls(
+        tmp_path, audited_sources):
+    pytest.importorskip("rclpy")
+    import os,select,signal
+    tree=ast.parse(audited_sources[1])
+    main=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=="main")
+    script=tmp_path/"offline_signal.py"
+    prelude='''import rclpy
+from rclpy.node import Node
+from types import SimpleNamespace as S
+class RosRobotController(Node):
+    def __init__(self,name):
+        rclpy.init()
+        super().__init__(name)
+        self.board=S(set_motor_speed=lambda *_:print("MOTOR_CALLED",flush=True))
+        print("OFFLINE_READY",flush=True)
+'''
+    script.write_text(prelude+ast.unparse(main)+"\nmain()\n")
+    env=dict(os.environ,ROS_DOMAIN_ID="117",RMW_IMPLEMENTATION="rmw_fastrtps_cpp")
+    child=subprocess.Popen([sys.executable,"-u",str(script)],stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,text=True,env=env)
+    output=""
+    try:
+        import time
+        end=time.monotonic()+8
+        while time.monotonic()<end:
+            ready,_,_=select.select([child.stdout],[],[],.2)
+            if ready:
+                line=child.stdout.readline();output+=line
+                if "OFFLINE_READY" in line:break
+            if child.poll() is not None:break
+        assert "OFFLINE_READY" in output,output
+        # Signal only the Popen child created by this test, never the real driver.
+        child.send_signal(signal.SIGTERM)
+        rest,_=child.communicate(timeout=5);output+=rest
+        assert "MOTOR_CALLED" not in output,output
+        assert "shutdown finish" in output,output
+    finally:
+        if child.poll() is None:
+            child.kill();child.communicate()
+
+
+
+def test_prepared_json_is_accepted_by_real_ros_parameter_parser(tmp_path):
+    rclpy=pytest.importorskip('rclpy')
+    from rclpy.context import Context
+    from rclpy.node import Node
+    import json
+    config=tmp_path/'maintenance.json'
+    config.write_text(json.dumps({'ros_robot_controller':{'ros__parameters':{
+        'readback_maintenance':True,'readback_probe_reference':'offline-id1'}}}))
+    context=Context();node=None
+    try:
+        rclpy.init(args=['--ros-args','--params-file',str(config)],context=context)
+        node=Node('ros_robot_controller',context=context)
+        node.declare_parameter('readback_maintenance',False)
+        node.declare_parameter('readback_probe_reference','')
+        assert node.get_parameter('readback_maintenance').value is True
+        assert node.get_parameter('readback_probe_reference').value=='offline-id1'
+    finally:
+        if node is not None:node.destroy_node()
+        if context.ok():context.shutdown()
+
+
+@pytest.mark.parametrize("mode",[False,True])
+def test_probe_reference_requires_maintenance_before_any_board_open(patched_sdk,mode):
+    _,_,source,_=patched_sdk
+    cls,calls,topics,services=fake_node_class(source,mode,"id1-review")
+    if not mode:
+        with pytest.raises(ValueError):cls("offline")
+        assert calls==[]
+    else:
+        cls("offline")
+        assert "~/bus_servo/probe_id1_once" in services
+        assert topics==["~/set_buzzer"]
+        assert all(kind not in ("pwm","motor") for kind,_ in calls)

@@ -2,10 +2,12 @@
   "schema_version": 1,
   "sdk_sha256": "c4dd48f3176a5dce1e8331846691ce995c0b3c2f79341cfc6c9e89dce1418a89",
   "node_sha256": "4d37d84c6eff0629f5f73ddca2b140cc0af555175fe3f68f8a3359123a716627",
-  "patch_sha256": "0ef5decd928521d931dde747a205cffb0f5472dee21e3d92919bffca6009e9f1",
+  "patch_sha256": "7c57e6bf829b264d8c8cbf2da23e44aa919c0d1199ed047b8cec27890c1b58bf",
   "applied_to_vendor": false,
   "default_state": "DISARMED",
   "continuous_readback_supported": false,
+  "diagnostic_policy": "ID1_ONCE_UNVERIFIED",
+  "diagnostic_source_type": "unknown",
   "maintenance_mode_default": false,
   "maintenance_candidate_hardware_validated": false,
   "review_required": [

@@ -164,3 +164,29 @@ def test_outer_request_echo_is_insufficient_without_inner_response_matching_evid
         clean_epoch_verified=True,exclusive_owner_verified=True,
         echo_contract_verified=True,write_bound_verified=True))
     assert gate.status()["state"]=="DISARMED"
+
+
+def test_diagnostic_id1_never_asserts_firmware_association_or_allows_second_id():
+    gate=ReadbackGate();gate.arm_diagnostic_once('operator-review')
+    sent=[]
+    assert_fault('DIAGNOSTIC_ID1_ONLY', lambda:read(gate,servo_id=2,diagnostic=True))
+    assert_fault('DIAGNOSTIC_PATH_MISMATCH', lambda:read(gate))
+    result=read(gate,diagnostic=True,send=lambda:gate.receive(packet(),crc_checked=True))
+    assert result.source_type=='unknown' and gate.status()['state']=='COMPLETE_UNVERIFIED'
+    assert not gate.status()['canonical_observation_eligible']
+    assert_fault('KEY_REUSE_UNSAFE',lambda:read(gate,diagnostic=True,send=lambda:sent.append(1)))
+    assert sent==[]
+
+
+@pytest.mark.parametrize('reference',['',' ',None,True,'a'*513])
+def test_diagnostic_reference_rejection_never_arms(reference):
+    gate=ReadbackGate()
+    assert_fault('DIAGNOSTIC_REFERENCE_REQUIRED',lambda:gate.arm_diagnostic_once(reference))
+    assert gate.status()['state']=='DISARMED'
+
+
+def test_diagnostic_cannot_override_unsolicited_fault_or_trusted_mode():
+    gate=ReadbackGate();gate.receive(packet(),crc_checked=True)
+    assert_fault('REARM_FORBIDDEN',lambda:gate.arm_diagnostic_once('case'))
+    gate=armed()
+    assert_fault('REARM_FORBIDDEN',lambda:gate.arm_diagnostic_once('case'))

@@ -108,3 +108,13 @@ SDK补丁新增显式readback_maintenance参数（默认false），仅用于后�
 原正常控制方法AST与字节兼容测试保留；维护模式则有意禁止执行器指令。
 所有物理串口操作均NOT_RUN；不能把虚拟PTY的独占结果记为实机PASS。
 详见../../docs/real_operation/R1_SDK_MAINTENANCE_PLAN.md。
+
+## 2026-11-23 ID1受控诊断准备
+
+新增维护模式专用probe_id1_once，仅ID1且一次；启动不发查询，显式RPC才arm诊断。
+报告包含实际接收的CRC通过外层帧和TX尝试帧；未知来源不能接入Observation。
+原可信arming和KEY_REUSE_UNSAFE未解除；不支持可靠同ID连续采集。
+prepare_sdk_stage仅生成固定来源覆盖包，原厂源码不改、不开串口、不重启服务。
+完整操作、端口重开风险、临时禁止整车自动重启及退出维护限制见
+../../docs/real_operation/R1_SDK_MAINTENANCE_PLAN.md。
+相关选定回归332 passed/1 skipped；实机RPC=0，需用户单独批准后开始。

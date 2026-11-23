@@ -73,7 +73,7 @@
  
      def packet_report_pwm_servo(self, data):
          try:
-@@ -315,12 +334,22 @@
+@@ -315,12 +334,24 @@
              print('get_sbus enable reception first!')
              return None
  
@@ -84,6 +84,8 @@
          buf.extend(data)
          buf.append(checksum_crc8(bytes(buf[2:])))
 -        self.port.write(buf)
++        if int(func) == 5 and len(data) == 2 and data[0] == 5:
++            self._last_bus_tx_frame = bytes(buf)
 +        writer = getattr(self, '_maintenance_writer', None)
 +        if writer is None:
 +            written = self.port.write(buf)
@@ -98,29 +100,69 @@
  
      def set_led(self, on_time, off_time, repeat=1, led_id=1):
          on_time = int(on_time*1000)
-@@ -418,12 +447,15 @@
+@@ -417,13 +448,54 @@
+             data.extend(struct.pack("<BH", i[0], i[1]))
          self.buf_write(PacketFunction.PACKET_FUNC_BUS_SERVO, data)
  
-     def bus_servo_read_and_unpack(self, servo_id, cmd, unpack):
+-    def bus_servo_read_and_unpack(self, servo_id, cmd, unpack):
 -        with self.servo_read_lock:
 -            self.buf_write(PacketFunction.PACKET_FUNC_BUS_SERVO, [cmd, servo_id])
 -            data = self.bus_servo_queue.get(block=True)
 -            servo_id, cmd, success, *info = struct.unpack(unpack, data)
 -            if success == 0:
 -                return info
++    def probe_bus_servo_id1_once(self, reference):
++        """Capture through the official position path; source stays unknown."""
++        capture_started = time.monotonic_ns()
++        armed_here = False
++        report = dict(servo_id=1, raw_pulse=None, source_type="unknown",
++            canonical_observation_eligible=False, inner_association_verified=False,
++            device_sample_time_ns=None, outer_frame_validated=False,
++            read_started_at_ns=None, response_received_at_ns=None, read_latency_ns=None,
++            tx_frame_hex=None, rx_frame_hex=None, error=None)
++        try:
++            if getattr(self, '_maintenance_writer', None) is None:
++                raise ReadbackFault("MAINTENANCE_REQUIRED")
++            self._bounded_bus_feedback.arm_diagnostic_once(reference)
++            armed_here = True
++            self._last_bus_tx_frame = self._last_bus_rx_frame = None
++            self.bus_servo_read_and_unpack(1, 0x05, "<BBbh", diagnostic=True)
++            sample = self.last_bus_position_sample
++            report.update(raw_pulse=sample.raw_pulse,
++                read_started_at_ns=sample.read_started_at_ns,
++                response_received_at_ns=sample.response_received_at_ns,
++                read_latency_ns=sample.response_received_at_ns-sample.read_started_at_ns,
++                outer_frame_validated=True)
++        except ReadbackFault as error:
++            report["error"] = error.code
++        except Exception:
++            self._bounded_bus_feedback.fail("UNEXPECTED_PROBE_FAILURE")
++            report["error"] = "UNEXPECTED_PROBE_FAILURE"
++        for key, attr in (("tx_frame_hex", "_last_bus_tx_frame"),
++                          ("rx_frame_hex", "_last_bus_rx_frame")):
++            value = getattr(self, attr, None) if armed_here else None
++            report[key] = value.hex() if value is not None else None
++        report["gate_status"] = self._bounded_bus_feedback.status()
++        report["capture_started_at_ns"] = capture_started
++        report["capture_finished_at_ns"] = time.monotonic_ns()
++        report["capture_elapsed_ns"] = report["capture_finished_at_ns"]-capture_started
++        report["host_report_system_time_ns"] = time.time_ns()
++        return report
++
++    def bus_servo_read_and_unpack(self, servo_id, cmd, unpack, *, diagnostic=False):
 +        self.last_bus_position_sample = None
 +        sample = self._bounded_bus_feedback.read_position(
 +            servo_id, cmd, unpack,
 +            lambda deadline: self.buf_write(PacketFunction.PACKET_FUNC_BUS_SERVO,
 +            [cmd, servo_id], require_complete=True, deadline_ns=deadline),
 +            timeout_s=0.1, write_timeout_s=self.port.write_timeout,
-+            reception_enabled=self.enable_recv, send_with_deadline=True)
++            reception_enabled=self.enable_recv, send_with_deadline=True, diagnostic=diagnostic)
 +        self.last_bus_position_sample = sample
 +        return [sample.raw_pulse]
  
      def bus_servo_read_id(self, servo_id=254):
          return self.bus_servo_read_and_unpack(servo_id, 0x12, "<BBbB")
-@@ -454,6 +486,14 @@
+@@ -454,6 +526,14 @@
  
      def enable_reception(self, enable=True):
          self.enable_recv = enable
@@ -135,9 +177,27 @@
  
      def recv_task(self):
          while True:
+@@ -498,6 +578,9 @@
+                             crc8 = checksum_crc8(bytes(self.frame))
+                             if crc8 == dat:
+                                 func = PacketFunction(self.frame[0])
++                                if func == PacketFunction.PACKET_FUNC_BUS_SERVO:
++                                    self._last_bus_rx_frame = (b"\xaa\x55"
++                                        + bytes(self.frame) + bytes([dat]))
+                                 data = bytes(self.frame[2:])
+                                 if func in self.parsers:
+                                     self.parsers[func](data)
 --- a/ros_robot_controller/ros_robot_controller_node.py
 +++ b/ros_robot_controller/ros_robot_controller_node.py
-@@ -13,6 +13,7 @@
+@@ -4,6 +4,7 @@
+ # @Date: 2023/08/28
+ # stm32 ros2 package
+ import math
++import json
+ import time
+ import rclpy
+ import signal
+@@ -13,6 +14,7 @@
  from sensor_msgs.msg import Imu, Joy
  from std_msgs.msg import UInt16, Bool
  from ros_robot_controller.ros_robot_controller_sdk import Board
@@ -145,7 +205,7 @@
  from ros_robot_controller_msgs.srv import GetBusServoState, GetPWMServoState
  from ros_robot_controller_msgs.msg import ButtonState, BuzzerState, LedState, MotorsState, BusServoState, SetBusServoState, ServosPosition, SetPWMServoState, Sbus, OLEDState
  
-@@ -21,7 +22,12 @@
+@@ -21,7 +23,19 @@
      def __init__(self, name):
          rclpy.init()
          super().__init__(name)
@@ -154,12 +214,19 @@
 +        self.readback_maintenance = self.get_parameter('readback_maintenance').value
 +        if type(self.readback_maintenance) is not bool:
 +            raise ValueError('readback_maintenance must be bool')
++        self.declare_parameter('readback_probe_reference', '')
++        self.readback_probe_reference = self.get_parameter('readback_probe_reference').value
++        ref = self.readback_probe_reference
++        if not isinstance(ref, str) or len(ref) > 512:
++            raise ValueError('invalid probe reference')
++        if ref and (not ref.strip() or not self.readback_maintenance):
++            raise ValueError('probe requires explicit maintenance mode')
 +        self.board = (Board(maintenance_tx_timeout_s=.05)
 +            if self.readback_maintenance else Board())
          self.board.enable_reception()
          self.running = True
  
-@@ -35,19 +41,29 @@
+@@ -35,26 +49,44 @@
          self.sbus_pub = self.create_publisher(Sbus, '~/sbus', 1)
          self.button_pub = self.create_publisher(ButtonState, '~/button', 1)
          self.battery_pub = self.create_publisher(UInt16, '~/battery', 1)
@@ -199,8 +266,24 @@
 +            self.board.set_motor_speed([[1, 0], [2, 0], [3, 0], [4, 0]])
          self.clock = self.get_clock()
          threading.Thread(target=self.pub_callback, daemon=True).start()
++        if self.readback_probe_reference:
++            self.create_service(Trigger, '~/bus_servo/probe_id1_once', self.probe_id1_once)
          self.create_service(Trigger, '~/init_finish', self.get_node_state)
-@@ -79,7 +95,12 @@
+         self.get_logger().info('\033[1;32m%s\033[0m' % 'start')
+ 
++    def probe_id1_once(self, request, response):
++        report = self.board.probe_bus_servo_id1_once(self.readback_probe_reference)
++        response.success = report["outer_frame_validated"]
++        response.message = json.dumps(report, sort_keys=True)
++        return response
++
+     def get_node_state(self, request, response):
+-        response.success = True
++        response.success = not self.readback_maintenance
+         return response
+ 
+     def pub_callback(self):
+@@ -79,7 +111,12 @@
          self.board.set_led(msg.on_time, msg.off_time, msg.repeat, msg.id)
  
      def set_buzzer_state(self, msg):
@@ -214,7 +297,7 @@
  
      def set_motor_state(self, msg):
          data = []
-@@ -162,6 +183,32 @@
+@@ -162,6 +199,38 @@
              self.board.bus_servo_stop(servo_id)
  
      def get_bus_servo_state(self, request, response):
@@ -238,7 +321,13 @@
 +            response.success = False
 +            self.get_logger().error("Readback refused: " + error.code)
 +            return response
-+        if len(result.state) != len(ids) or any(len(item.position) != 1 for item in result.state):
++        except Exception:
++            self.board._bounded_bus_feedback.fail("SERVICE_READ_FAILED")
++            response.state = []
++            response.success = False
++            self.get_logger().error("Readback refused: SERVICE_READ_FAILED")
++            return response
++        if not result.success or len(result.state) != len(ids) or any(len(item.position) != 1 for item in result.state):
 +            result.state = []
 +            result.success = False
 +        return result
@@ -247,7 +336,7 @@
          states = []
          for i in request.cmd:
              data = BusServoState()
-@@ -270,7 +317,8 @@
+@@ -270,7 +339,8 @@
      try:
          rclpy.spin(node)
      except KeyboardInterrupt:
@@ -259,7 +348,7 @@
          print('shutdown')
 --- /dev/null
 +++ b/ros_robot_controller/guarded_readback.py
-@@ -0,0 +1,231 @@
+@@ -0,0 +1,250 @@
 +"""OFFLINE CANDIDATE. No serial driver, ROS client, automatic arming or recovery."""
 +from dataclasses import dataclass
 +import math
@@ -308,6 +397,7 @@
 +        self.used = set()
 +        self.discarded = 0
 +        self.evidence_reference = None
++        self.diagnostic_only = False
 +
 +    def arm(self, reference, *, clean_epoch_verified=False, exclusive_owner_verified=False,
 +            echo_contract_verified=False, write_bound_verified=False,
@@ -323,6 +413,17 @@
 +            self.evidence_reference = reference
 +            self.armed = True
 +
++    def arm_diagnostic_once(self, reference):
++        """Operator-approved ID1 capture, NOT proof of a fresh hardware sample."""
++        with self.condition:
++            if self.armed or self.fault or self.used:
++                raise ReadbackFault("REARM_FORBIDDEN")
++            if not isinstance(reference, str) or not reference.strip() or len(reference) > 512:
++                raise ReadbackFault("DIAGNOSTIC_REFERENCE_REQUIRED")
++            self.evidence_reference = reference
++            self.diagnostic_only = True
++            self.armed = True
++
 +    def fail(self, code):
 +        with self.condition:
 +            self.fault = self.fault or code
@@ -331,10 +432,13 @@
 +    def status(self):
 +        with self.condition:
 +            return {"state": "FAULT" if self.fault else "DISARMED" if not self.armed
-+                    else "PENDING" if self.pending else "READY",
++                    else "PENDING" if self.pending else
++                    "COMPLETE_UNVERIFIED" if self.diagnostic_only and self.used else "READY",
 +                "error": self.fault, "used_keys": sorted(self.used),
 +                "discarded_packets": self.discarded, "evidence_reference": self.evidence_reference,
-+                "continuous_readback_supported": False, "hardware_validated": False}
++                "continuous_readback_supported": False, "hardware_validated": False,
++                "diagnostic_only": self.diagnostic_only,
++                "canonical_observation_eligible": False}
 +
 +    def receive(self, data, *, crc_checked=False):
 +        """Called only by the existing CRC-checked BUS_SERVO parser."""
@@ -370,7 +474,7 @@
 +                self.condition.notify_all()
 +
 +    def read_position(self, servo_id, command, unpack, send, *, timeout_s=0.1,
-+                      write_timeout_s=None, reception_enabled=False, send_with_deadline=False):
++                      write_timeout_s=None, reception_enabled=False, send_with_deadline=False, diagnostic=False):
 +        if type(servo_id) is not int or servo_id not in SERVO_IDS or command != 0x05 or unpack != "<BBbh":
 +            raise ReadbackFault("POSITION_ONLY_SCOPE")
 +        if not math.isfinite(timeout_s) or not 0 < timeout_s <= 5:
@@ -386,6 +490,10 @@
 +                    raise ReadbackFault(self.fault)
 +                if not self.armed:
 +                    raise ReadbackFault("DISARMED")
++                if self.diagnostic_only != diagnostic:
++                    raise ReadbackFault("DIAGNOSTIC_PATH_MISMATCH")
++                if diagnostic and servo_id != 1:
++                    raise ReadbackFault("DIAGNOSTIC_ID1_ONLY")
 +                if not reception_enabled:
 +                    raise ReadbackFault("RECEPTION_DISABLED")
 +                if (write_timeout_s is None or not math.isfinite(write_timeout_s)

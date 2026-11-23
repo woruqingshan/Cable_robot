@@ -1,52 +1,44 @@
-# R1 / R2 验收与交接：2026-11-20
+# R1 / R2 当前验收与交接：2026-11-23
 
-唯一开发分支：`feat/real-operation-pipeline`，本轮起点 `e86d0e6`。
-正式修改只在JetRover仓库进行。未部署AutoDL；原SDK/脚本未改，按键服务新增已批准覆盖配置。
-本轮结论：离线准备完成；实际固件身份UNKNOWN；单舵机实测准入NOT_READY。
+分支feat/real-operation-pipeline，起点4f2ba9b；用户新技术参考原文保留。
+SDK覆盖候选及首次ID1方案已准备，等待单独授权；没有实机RPC、驱动停启或AutoDL部署。
 
-## 验收矩阵
-
-|项目|结果|证据边界|
+|项目|当前结果|证据边界|
 |---|---|---|
-|R1 Known Extra Serial Opener|PASS（限定）|Stage A后只见原驱动；内核独占未验证|
-|R1 Protocol|BLOCKED|参考C缺陷已离线复现，本车固件未对应；不能把测试通过解释为协议安全|
-|R1 Live Single ID|NOT_RUN|0次硬件RPC|
-|R1 Six Servo Snapshot|BLOCKED|仅有Mock六ID批次；实测未执行|
-|R1 Continuous Readback|BLOCKED|KEY_REUSE_UNSAFE保留，默认DISARMED|
-|R1 State Conversion|BLOCKED|厂商软件公式已查阅，真实零位/方向/单位转换证据未验收|
-|R2 Real RGB|PASS（历史实测）|此前RGB/Depth/CameraInfo实测，本轮没有重测相机|
-|R2 Real State|BLOCKED|缓存与未知来源原始Pulse均不允许进入完整Observation|
-|R2 Synchronization|BLOCKED|设备采样时间/相机时钟关联未知，20ms与0.5s规则未放宽|
-|R2 Record Only|BLOCKED（完整Observation）|原始传感器录制历史PASS；本轮完整有效Observation=0|
-|R2 Cloud GPU Inference|BLOCKED（真实完整Observation）|历史Synthetic真实GPU验证不代替本轮真实状态验证|
-|R2 Native Action Return|BLOCKED（真实完整Observation）|历史50×6通信结果保持独立，本轮未发送云端推理请求|
-|Robot Execution|DISABLED|无执行后端接入、无动作映射、无控制请求|
+|SDK候选修复|PASS（离线）|有限锁/TX/响应、整帧写入、外层校验、失败停止、服务清除部分结果|
+|Stage A|PASS（限定）|本轮管理员快照只有原驱动PID4186；不重复开发|
+|原文件/备份|PASS|原SDK/节点SHA不变，53份源文件匹配旧备份|
+|维护覆盖包|PREPARED|版本固定、启动参数和加载路径检查；不代表已部署|
+|ID1诊断准入|READY_FOR_SEPARATE_APPROVAL|只允许一次未知来源诊断；接受串口重开风险并现场监督|
+|首次ID1|NOT_RUN|0次硬件读取RPC|
+|六ID快照/频率/时延/跨度|NOT_RUN|无真实数值，不用Mock代填|
+|同ID连续读取|BLOCKED|KEY_REUSE_UNSAFE保留，不按sleep清队列放行|
+|STM32问题|UNKNOWN|参考缺陷存在，本车是否相同未实测，不刷写|
+|Pulse→rad/零位/方向|AWAITING_PHYSICAL_VERIFICATION|未执行标定动作，软件公式不作实物核验|
+|真实RGB|PASS（历史）|本轮未重测|
+|完整真实Observation/R2|BLOCKED|有效数0；真实来源、单位和20ms/0.5s同步证据未满足|
+|Robot Execution|DISABLED|没有模型动作映射、Torque或运动指令|
 
-## 本轮完成
+## 本轮代码
 
-1. 重新SSH确认主机ubuntu/aarch64，fetch后本地/远程同为e86d0e6，保留并完成暂停前自己的草稿。
-2. 核验用户资料包哈希并复制到小车独立参考目录；未重新下载。
-3. 采集USB/udev、SDK函数和DDS图、串口打开者、限定目录固件文件及日志线索。
-4. 确认参考目标芯片F407VET6，不将其宣称为本车身份。未找到已验证的固件版本查询接口。
-5. 编译并执行纯主机C桩，复现参考代码ID/命令未匹配与迟到完成信号风险。
-6. 加强离线SDK候选的整帧TX检查和内层关联前提，保持一次key限制、默认禁用及失败停止。
-7. 增加RawFeedbackAdapter并通过RobotStateProvider暴露独立诊断；不进行rad转换或时间戳伪装。
+- guarded_readback.py：独立一次诊断模式，仅ID1、source unknown、终态未验证；
+  保留常规arming前提、重复key拒绝和失败锁存。
+- build_candidate_patch.py及补丁：官方位置路径、实际外层帧证据、
+  ROS诊断入口、普通接口隔离、未知服务异常清理、维护就绪返回false。
+- prepare_sdk_stage.py：只生成经源哈希核验的覆盖包、固定维护参数、启动器与清单。
+  不复制GUI、不另建串口驱动，不安装厂商文件或重启服务。
+- test_r1_vendor_patch.py、test_r1_readback_guard.py：本轮新增26项验证。
+- 新技术参考已读取并按原字节纳入版本管理，没有改写用户整理内容。
 
-核心模块仍按已有职责分层：
-Real Camera → RobotStateProvider → RealObservationCore → PolicyClient → VLA Server → Native Action Recorder。
-新增适配器只处理原始反馈质量诊断，没有第二套HTTP、串口驱动或Observation schema。
+## 测试
 
-## 自动化结果
+相关完整选定回归332 passed，1 skipped，15.90秒。
+FastAPI未安装导致唯一skip；没有为测试安装软件。
+这是SDK、协议、Observation及既有边界的回归，不是全仓全部依赖组合验收。
+HTTP全套、原生P2/FCL、GPU forward本轮未运行。
+隔离ROS参数解析及测试子进程SIGTERM通过，不接触实机串口；Mock不作为硬件通过。
 
-- R1四组专项：90 passed in 3.41s（52项既有/扩展SDK测试、1项新增arming测试、
-  30项原始反馈/拥有者测试、7项参考C测试，共90）。
-- 完整选定回归：229 passed, 1 skipped in 8.32s。
-- Skip：vla_server/tests/test_shadow_diagnostics.py:26，缺少FastAPI；没有安装软件。
-- 参考C测试输入为用户资料中的精确SHA文件，UART/GPIO/RTOS完全替换为桩，
-  不链接app.c，不生成STM32可刷写映像。PASS包含成功复现缺陷，不表示硬件通过。
-- 真实硬件读回、静态机械臂状态测量、完整真实Observation录制与云推理均未执行。
-
-完整复现命令（在JetRover仓库根目录）：
+复现：
 
 ```bash
 source /opt/ros/humble/setup.bash
@@ -72,81 +64,20 @@ ROS_DOMAIN_ID=117 RMW_IMPLEMENTATION=rmw_fastrtps_cpp python3 -m pytest -q -rs -
   vla_server/tests/test_shadow_diagnostics.py
 ```
 
-## 修改文件与证据
+## 实机方案与退出维护
 
-|路径|职责|
-|---|---|
-|cable_robot_vla/cable_robot_vla/hardware_feedback.py|原始Pulse批次质量和主机时间诊断；始终拒绝直接作为Observation|
-|cable_robot_vla/cable_robot_vla/robot_state_provider.py|显式诊断入口；保留缓存来源校验|
-|patches/jetrover_readback/guarded_readback.py|增加内层关联审查前提，保留故障锁存|
-|patches/jetrover_readback/build_candidate_patch.py|完整TX计数检查；生成审核补丁|
-|patches/jetrover_readback/sdk_bounded_readback_candidate.patch、baseline.json|候选及源/产物哈希；未安装|
-|patches/jetrover_readback/audit_environment.py|只读文件/proc清单，不打开串口|
-|patches/jetrover_readback/README.md|新增限制和复现方式|
-|cable_robot_vla/test/test_r1_readback_guard.py、test_r1_vendor_patch.py|启用前提与短写/兼容性测试|
-|cable_robot_vla/test/test_r1_raw_feedback.py|原始状态、过期、错误、重放、缓存隔离与进程可见性测试|
-|cable_robot_vla/test/test_r1_reference_protocol.py|精确参考C的纯主机桩行为测试|
-|docs/real_operation/SERVO_READBACK_DESIGN.md|完整审计、方案、风险、回滚和实测准入|
-|docs/real_operation/HARDWARE_INTERFACE_AUDIT.md、CAMERA_AND_JOINT_STATE.md、END_TO_END_INTEGRATION.md|本轮状态更新|
-|docs/real_operation/evidence/r1_*.json|来源哈希及只读元数据，不含凭据或完整固件源码|
+详见[R1_SDK_MAINTENANCE_PLAN.md](R1_SDK_MAINTENANCE_PLAN.md)。
+申请范围为临时禁止整车服务自动重启、只退出原驱动、启动维护覆盖，
+被动检查后单次ID1；不是整车重启、六ID或重复读取授权。
+原文件不变；原驱动恢复可能发送原启动指令，不能作为自动回滚。
+本轮尚未应用任何运行时覆盖配置或重开串口。
 
-## 继续开发前需要补齐
+固件身份未知不再无限阻塞单次诊断准备；连续采集仍需真实证据和另行批准。
+首帧审核后再逐级扩展六ID、重复行为、单位/时钟来源和RobotStateProvider接入。
 
-- 本车控制板PCB丝印/硬件修订，以及厂商确认的运行固件版本、对应完整源码/构建哈希。
-- 将该版本关联到本车的可靠交付/刷写记录，或已知安全的版本查询接口说明；不能猜测命令后试发。
-- 内层回复ID/命令/长度校验、完成信号代际、超时中断收尾、队列及重复/迟到边界。
-- 唯一串口拥有者方案，以及不改变原控制语义的有限完整TX设计。
-- SDK整体部署及回滚审核，处理任何服务管理可能引发的初始化动作风险。
-- 后续另行授权后才依次ID1、六ID快照、重复读取；失败停止，不自动恢复。
-- R1可信后再核验Pulse→rad和时间证据，继续复用现有R2组件；不以模拟值补齐实机数据。
-
-当前不具备申请直接执行单舵机读回的充分技术条件。下一步优先补身份与协议保证，
-不是批准调用已知可能阻塞的原接口。
-
-
-## 历史：Stage A部署前准备（2026-11-20）
-
-- 备份及SHA核验：PASS（53文件/134,200字节；不是整机或凭据备份）。
-- 已知串口竞争来源定位：PASS；移除与实际独占验证：NOT_RUN。
-- 按键维护适配器：33项离线测试通过；实机提示音/按键验证NOT_RUN。
-- 部署包准备：只生成固定SHA副本与单个button_scan drop-in，禁止自动安装。
-- 本轮完整回归：263 passed、1 skipped（FastAPI缺失）；保留原隔离断言。
-- 没有重启驱动、修改原厂文件、发送位置读RPC或调用运动接口。
-- R1读回及R2矩阵维持BLOCKED，历史相机/GPU证据不改记为本轮通过。
-
-待授权的首项实机维护仅为
-[R1_OWNER_STAGE_A_PLAN.md](R1_OWNER_STAGE_A_PLAN.md)中的按键服务单独变更，
-不包含SDK部署、start_app_node重启、首次ID1读取或固件操作。
-
-## 最新进展：Stage A已部署，SDK维护模式仅离线（2026-11-20）
-
-Confirmed：
-- Stage A经用户单独批准后，只重启按键服务；原SDK/节点和整车服务未重启。
-- 已知额外串口打开者移除；时点快照只见ROS驱动PID3756。
-  这不是物理端口内核独占或固件事务关联验证。
-- 53个原始文件SHA与备份一致，0次硬件位置RPC。
-- SDK候选增加显式维护模式：跳过启动和中断运动指令、移除运动订阅、
-  有限且串行化的完整帧TX、既有FD的TIOCEXCL候选。
-  所有这些SDK变化仅在项目补丁及临时测试副本中，未安装到运行厂商目录。
-- 完整选定回归306 passed、1 skipped in12.25s。
-  新增43项相对Stage A提交；唯一skip为FastAPI缺失。
-  PTY与Mock结果不作为真实控制板验证。
-
-Unknown：
-- 用户推测的主机USB口3不证明STM32 UART3/ROS。
-- 实际板型/固件版本及重开串口复位风险、内层关联/迟到边界仍未确认。
-
-R1：首次ID1 NOT_RUN；六路实测/连续采集BLOCKED。
-R2：完整有效真实Observation=0，真实状态云端联调BLOCKED；无新AutoDL部署或请求。
-默认DISARMED、KEY_REUSE_UNSAFE和内层匹配前提未解除；动作执行DISABLED。
-
-详见[R1_OWNER_STAGE_A_PLAN.md](R1_OWNER_STAGE_A_PLAN.md)实测追加、
-[R1_SDK_MAINTENANCE_PLAN.md](R1_SDK_MAINTENANCE_PLAN.md)及验收矩阵。
-
-最终状态：
-- SDK modification required: YES（现有Python读取缺陷需修复；候选未部署）。
-- STM32 firmware modification required: UNDETERMINED。
-- Offline tests: PASS（306 passed，1 skipped）。
-- Live hardware readback: NOT_RUN。
-- R1 status: BLOCKED；仅Stage A已知额外串口打开者移除通过。
-- R2 readiness: BLOCKED；完整真实状态及单位/采样时间证据不足。
+SDK modification required: YES（候选完成，未部署）。
+STM32 firmware modification required: UNDETERMINED。
+Offline tests: PASS。
+Live hardware readback: NOT_RUN。
+R1 status: ID1_DIAGNOSTIC_READY_FOR_APPROVAL / CONTINUOUS_BLOCKED。
+R2 readiness: BLOCKED。
