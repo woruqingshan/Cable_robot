@@ -1,0 +1,109 @@
+{
+  "scope": "M1+D1 explicitly authorized; no expansion",
+  "runtime_source_sha": "b020afb16f8112b479c2104f9af7f52e676ec891",
+  "package_manifest_sha256": "ff4f441efb05d71f8e5f7c91e9747ce3b363b57cc4e472682e5bfc15cfe22cdf",
+  "evidence_directory": "/home/ubuntu/zsy_projects/real_operation_evidence/r1_id1_b020afb_20261123T083017Z",
+  "evidence_manifest_sha256": "b63ec306fdae0c973c0c2a1c6f876cab902030ce2327c74590a5ea19c8057a5c",
+  "m1_status": "PASS_MAINTENANCE_SUBSTITUTION",
+  "d1_status": "PASS_OUTER_FRAME_CAPTURE_UNVERIFIED_INNER",
+  "capture": {
+    "diagnostic_service_requests_sent": 1,
+    "client_status": "RESPONSE_RECEIVED",
+    "automatic_retry": false,
+    "client_request_system_time_ns": 1795422772904109857,
+    "client_request_monotonic_ns": 2785165355175,
+    "client_complete_monotonic_ns": 2785170559956,
+    "client_rtt_ns": 5204781,
+    "response_success": true,
+    "diagnostic": {
+      "canonical_observation_eligible": false,
+      "capture_elapsed_ns": 2975359,
+      "capture_finished_at_ns": 2785169373512,
+      "capture_started_at_ns": 2785166398153,
+      "device_sample_time_ns": null,
+      "error": null,
+      "gate_status": {
+        "canonical_observation_eligible": false,
+        "continuous_readback_supported": false,
+        "diagnostic_only": true,
+        "discarded_packets": 0,
+        "error": null,
+        "evidence_reference": "R1-ID1-20261123",
+        "hardware_validated": false,
+        "state": "COMPLETE_UNVERIFIED",
+        "used_keys": [
+          [
+            1,
+            5
+          ]
+        ]
+      },
+      "host_report_system_time_ns": 1795422772908138979,
+      "inner_association_verified": false,
+      "outer_frame_validated": true,
+      "raw_pulse": 502,
+      "read_latency_ns": 2723470,
+      "read_started_at_ns": 2785166465582,
+      "response_received_at_ns": 2785169189052,
+      "rx_frame_hex": "aa550505010500f60103",
+      "servo_id": 1,
+      "source_type": "unknown",
+      "tx_frame_hex": "aa55050205016f"
+    }
+  },
+  "offline_validation": {
+    "validation": "PASS_OUTER_FRAME_ONLY",
+    "frames": {
+      "tx_frame_hex": {
+        "frame_hex": "aa55050205016f",
+        "crc_valid": true,
+        "length_valid": true
+      },
+      "rx_frame_hex": {
+        "frame_hex": "aa550505010500f60103",
+        "crc_valid": true,
+        "length_valid": true
+      }
+    },
+    "decoded": {
+      "servo_id": 1,
+      "command": 5,
+      "status": 0,
+      "raw_pulse": 502
+    },
+    "inner_association_verified": false,
+    "device_sample_time_known": false,
+    "additional_hardware_requests": 0
+  },
+  "current_serial_ownership": {
+    "device_path": "/dev/rrc",
+    "resolved_path": "/dev/ttyACM0",
+    "visible_openers": [
+      {
+        "pid": 9714,
+        "process_name": "python3",
+        "script_paths": [
+          "/home/ubuntu/zsy_projects/real_operation_deployments/r1_sdk_b020afb16f8112b479c2104f9af7f52e676ec891/run_maintenance.py"
+        ],
+        "fds": [
+          "21"
+        ]
+      }
+    ],
+    "inaccessible_process_fd_directories": 0,
+    "ownership_assessment": "NOT_PROVEN_EXCLUSIVE",
+    "visibility_complete": false,
+    "receive_or_write_activity_proven": false,
+    "safe_to_read": false
+  },
+  "service_status": "Restart=no\nMainPID=9714\nNRestarts=0\nExecMainStatus=0\nId=idc-r1-readback-b020afb.service\nActiveState=active\nSubState=running\n\nRestart=no\nMainPID=799\nNRestarts=0\nExecMainStatus=0\nId=start_app_node.service\nActiveState=active\nSubState=running\n\nRestart=always\nMainPID=784\nNRestarts=0\nExecMainStatus=0\nId=button_scan.service\nActiveState=active\nSubState=running\n",
+  "original_sources_verified": 53,
+  "actuator_commands_sent_by_task": 0,
+  "torque_commands_sent_by_task": 0,
+  "additional_servo_queries": 0,
+  "driver_or_robot_auto_restart": false,
+  "normal_controls_disabled": true,
+  "automatic_restart_temporarily_disabled": true,
+  "r1_continuous": "BLOCKED",
+  "r2": "BLOCKED"
+}

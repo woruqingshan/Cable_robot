@@ -2,19 +2,19 @@
 
 更新：2026-11-23（Asia/Shanghai）。唯一分支 `feat/real-operation-pipeline`。
 本轮起点 `e86d0e6c784847e75b870ccc22f6dfcc272aba86`；此前候选起点为 `2da91cb`。
-本轮只读访问和离线开发，没有应用厂商补丁、硬件 RPC、驱动重启、Torque 操作、固件刷写或运动。
+本轮先离线开发；M1+D1单独授权后已替换为维护进程并捕获一次ID1位置回复。未刷固件、发送Torque或运动指令。
 
 ## 1. 当前结论（2026-11-23；起点4f2ba9b）
 
 - 已按新技术参考收敛到Jetson SDK修复与首次实测准备，不要求先证明固件永远无错。
 - Stage A已生效；本轮管理员FD快照只见PID4186。此前双打开者描述是历史记录。
-- SDK/节点仍是原SHA，53份原文件匹配备份；本轮未修改运行驱动或发送硬件RPC。
+- 原厂SDK/节点仍是原SHA，53份原文件匹配备份；已用独立覆盖替换运行进程，并发出一次ID1诊断RPC。
 - 有界等待、完整TX、外层校验、部分服务失败清理与控制兼容测试通过。
 - 新增仅ID1一次的独立诊断服务：默认不开启，明确维护参数和显式RPC才发送。
   source_type=unknown，不声称内层关联或新鲜采样，不进入Observation。
 - 保留原可信arming和KEY_REUSE_UNSAFE，没有以清队列或sleep解决重复事务关联。
-- 单ID诊断：READY_FOR_SEPARATE_APPROVAL（须接受端口重开复位未知风险并现场监督）。
-  六ID/连续/单位标定/R2仍BLOCKED，实际读回NOT_RUN。
+- 单ID诊断：PASS_OUTER_FRAME_CAPTURE（已单独授权，Pulse502，主机读取2.723470ms）。
+  六ID/连续/单位标定/R2仍BLOCKED，内层关联与设备采样时间未验证。
 - 不因参考STM32缺陷直接修改或刷写本车固件；本车是否需改STM32为UNDETERMINED。
 - 相关回归332 passed、1 skipped；覆盖包及授权步骤见R1_SDK_MAINTENANCE_PLAN.md。
   该计划取代历史首次诊断必须先确认固件全部关联的准入判断。
@@ -330,3 +330,13 @@ COMPLETE_UNVERIFIED不代表hardware_measured；服务success只代表外层校�
 prepare_sdk_stage只生成固定哈希覆盖包，不执行驱动/串口/服务操作。
 本轮首次读回、六路频率/成功率/跨度与Pulse→rad实物核验均NOT_RUN。
 原厂公式可作标定候选，不作为已核验的实物零位与方向。
+
+## M1＋D1授权执行结果（2026-11-23）
+
+M1维护覆盖运行b020afb；父服务PID799未重启，旧驱动4186退出，维护9714唯一持有端口。
+ID1仅查询一次：Raw Pulse502，Status0，CRC/长度/ID/Command校验通过；
+主机读取2.723470ms，客户端RTT5.204781ms。无重试、无其它ID、无运动/Torque指令。
+source_type仍unknown、设备采样时间未知，未接Observation；连续读取及R2仍BLOCKED。
+当前保留维护模式及整车临时Restart=no，正常控制未恢复；后续与恢复须另行授权。
+之前本轮NOT_RUN/待授权文字属于执行前状态，以此段和R1_R2_ACCEPTANCE.md当前矩阵为准。
+原始帧及完整事实边界见R1_ID1_LIVE_RESULT_20261123.md、evidence/r1_m1_d1_20261123.json。

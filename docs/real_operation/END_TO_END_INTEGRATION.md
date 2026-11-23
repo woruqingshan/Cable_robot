@@ -156,3 +156,13 @@ SDK维护覆盖候选已完成相关回归332 passed/1 skipped，固定版本包
 新增ID1一次诊断与实际外层帧证据；unknown来源不接Observation，保留KEY_REUSE_UNSAFE。
 没有新云端部署、GPU请求、真实state或50×6返回记录。
 详情见R1_R2_ACCEPTANCE.md及R1_SDK_MAINTENANCE_PLAN.md；R2保持BLOCKED。
+
+## M1＋D1授权执行结果（2026-11-23）
+
+M1维护覆盖运行b020afb；父服务PID799未重启，旧驱动4186退出，维护9714唯一持有端口。
+ID1仅查询一次：Raw Pulse502，Status0，CRC/长度/ID/Command校验通过；
+主机读取2.723470ms，客户端RTT5.204781ms。无重试、无其它ID、无运动/Torque指令。
+source_type仍unknown、设备采样时间未知，未接Observation；连续读取及R2仍BLOCKED。
+当前保留维护模式及整车临时Restart=no，正常控制未恢复；后续与恢复须另行授权。
+之前本轮NOT_RUN/待授权文字属于执行前状态，以此段和R1_R2_ACCEPTANCE.md当前矩阵为准。
+原始帧及完整事实边界见R1_ID1_LIVE_RESULT_20261123.md、evidence/r1_m1_d1_20261123.json。

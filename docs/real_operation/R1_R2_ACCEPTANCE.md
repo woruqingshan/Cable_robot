@@ -1,16 +1,16 @@
 # R1 / R2 当前验收与交接：2026-11-23
 
 分支feat/real-operation-pipeline，起点4f2ba9b；用户新技术参考原文保留。
-SDK覆盖候选及首次ID1方案已准备，等待单独授权；没有实机RPC、驱动停启或AutoDL部署。
+M1维护替换与D1唯一一次ID1查询已获授权并执行；原厂文件不改，无AutoDL部署。
 
 |项目|当前结果|证据边界|
 |---|---|---|
 |SDK候选修复|PASS（离线）|有限锁/TX/响应、整帧写入、外层校验、失败停止、服务清除部分结果|
-|Stage A|PASS（限定）|本轮管理员快照只有原驱动PID4186；不重复开发|
+|Stage A|PASS（限定）|已无额外打开者；当前唯一维护PID9714，不重复开发|
 |原文件/备份|PASS|原SDK/节点SHA不变，53份源文件匹配旧备份|
-|维护覆盖包|PREPARED|版本固定、启动参数和加载路径检查；不代表已部署|
-|ID1诊断准入|READY_FOR_SEPARATE_APPROVAL|只允许一次未知来源诊断；接受串口重开风险并现场监督|
-|首次ID1|NOT_RUN|0次硬件读取RPC|
+|维护覆盖包|PASS（实机部署）|b020afb固定包、PID9714、Restart=no，原厂文件不改|
+|ID1诊断授权|EXECUTED|用户单独批准M1+D1并确认现场监督；未扩展范围|
+|首次ID1|PASS_OUTER_FRAME_CAPTURE|1次请求，Pulse502，主机2.723470ms/RTT5.204781ms；内层关联未验证|
 |六ID快照/频率/时延/跨度|NOT_RUN|无真实数值，不用Mock代填|
 |同ID连续读取|BLOCKED|KEY_REUSE_UNSAFE保留，不按sleep清队列放行|
 |STM32问题|UNKNOWN|参考缺陷存在，本车是否相同未实测，不刷写|
@@ -66,18 +66,19 @@ ROS_DOMAIN_ID=117 RMW_IMPLEMENTATION=rmw_fastrtps_cpp python3 -m pytest -q -rs -
 
 ## 实机方案与退出维护
 
-详见[R1_SDK_MAINTENANCE_PLAN.md](R1_SDK_MAINTENANCE_PLAN.md)。
+方案见[R1_SDK_MAINTENANCE_PLAN.md](R1_SDK_MAINTENANCE_PLAN.md)，
+实测见[R1_ID1_LIVE_RESULT_20261123.md](R1_ID1_LIVE_RESULT_20261123.md)。
 申请范围为临时禁止整车服务自动重启、只退出原驱动、启动维护覆盖，
 被动检查后单次ID1；不是整车重启、六ID或重复读取授权。
 原文件不变；原驱动恢复可能发送原启动指令，不能作为自动回滚。
-本轮尚未应用任何运行时覆盖配置或重开串口。
+本轮已应用获批临时Restart=no并重新打开一次维护串口；未自动恢复正常控制。
 
 固件身份未知不再无限阻塞单次诊断准备；连续采集仍需真实证据和另行批准。
 首帧审核后再逐级扩展六ID、重复行为、单位/时钟来源和RobotStateProvider接入。
 
-SDK modification required: YES（候选完成，未部署）。
+SDK modification required: YES（覆盖包已部署；原厂文件保持不变）。
 STM32 firmware modification required: UNDETERMINED。
 Offline tests: PASS。
-Live hardware readback: NOT_RUN。
-R1 status: ID1_DIAGNOSTIC_READY_FOR_APPROVAL / CONTINUOUS_BLOCKED。
+Live hardware readback: PASS_SINGLE_ID1_OUTER_CAPTURE（内层/采样时刻未验证）。
+R1 status: SINGLE_CAPTURE_PASS / CONTINUOUS_BLOCKED。
 R2 readiness: BLOCKED。
