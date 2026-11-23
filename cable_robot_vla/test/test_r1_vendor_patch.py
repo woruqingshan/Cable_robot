@@ -347,7 +347,7 @@ def test_maintenance_buzzer_allowed_but_read_remains_disarmed(
     assert error.value.code == "DISARMED" and len(ports[0].frames) == 1
 
 
-def fake_node_class(source, mode, reference=""):
+def fake_node_class(source, mode, reference="", plan_path=""):
     """Execute exact candidate constructor against fake Node/Board, not ROS."""
     calls, subscriptions, services = [], [], []
     class BoardStub:
@@ -362,7 +362,7 @@ def fake_node_class(source, mode, reference=""):
     class Base:
         def __init__(self, name):
             self.name = name
-            self.parameters = {"readback_maintenance": mode, "readback_probe_reference": reference}
+            self.parameters = {"readback_maintenance": mode, "readback_probe_reference": reference, "readback_diagnostic_plan_path":plan_path}
         def declare_parameter(self, name, value):
             self.parameters.setdefault(name, value)
         def get_parameter(self, name):

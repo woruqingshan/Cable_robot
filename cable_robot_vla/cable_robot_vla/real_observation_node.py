@@ -71,6 +71,28 @@ class RealObservationNode(Node):
         depth_topic = param("depth_topic", "")
         depth_info_topic = param("depth_camera_info_topic", "")
         cache_topic = param("controller_cache_topic", "")
+        raw_topic = param("raw_feedback_topic", "")
+        self.candidate_joint_pub = None
+        if raw_topic:
+            if raw_topic != "/idc_vla/real/raw_feedback":
+                raise VLAError("INVALID_SENSOR_TOPIC", "raw diagnostics must use the private physical topic")
+            vendor_config = param("raw_feedback_configuration_path", "")
+            if not vendor_config:
+                raise VLAError("STATE_CONFIGURATION_REQUIRED", "vendor mapping required for candidate conversion")
+            fk = None
+            fk_unavailable_reason = None
+            model_config = param("raw_feedback_fk_model_config", "")
+            if model_config:
+                try:
+                    from workspace_analysis.robot.model import load_model
+                    from workspace_analysis.robot.fk import ForwardKinematics
+                    fk = ForwardKinematics(load_model(model_config))
+                except ImportError as error:
+                    fk_unavailable_reason = "FK_DEPENDENCY_UNAVAILABLE:" + str(error.name)
+                    self.get_logger().warning(fk_unavailable_reason)
+            self.state_provider.configure_raw_conversion(vendor_config, fk=fk,
+                fk_unavailable_reason=fk_unavailable_reason)
+            self.candidate_joint_pub = self.create_publisher(JointState, "diagnostic_joint_states", 10)
         enable = param("enable_inference", False)
         endpoint = param("server_url", "http://127.0.0.1:8000")
         if enable:
@@ -106,6 +128,9 @@ class RealObservationNode(Node):
             from rosidl_runtime_py.utilities import get_message
             self.subscriptions_owned.append(self.create_subscription(get_message("servo_controller_msgs/msg/ServoStateList"),
                 cache_topic, self._controller_cache, qos_profile_sensor_data))
+        if raw_topic:
+            self.subscriptions_owned.append(self.create_subscription(String, raw_topic,
+                self._raw_feedback, 10))
         self.timer = self.create_timer(1/hz, self._tick)
         self.recorder.event("startup", inference_enabled=enable, motion_status="unknown", execution_enabled=False)
         self.get_logger().info("SHADOW observation run: " + str(self.recorder.path))
@@ -139,6 +164,22 @@ class RealObservationNode(Node):
     def _depth(self, message):
         try:
             self.camera.depth(message)
+        except Exception as exc:
+            self._reject(exc)
+
+    def _raw_feedback(self, message):
+        try:
+            report = json.loads(message.data)
+            self.recorder.event("raw_hardware_diagnostic", report=report)
+            converted = self.state_provider.offer_diagnostic_report(report)
+            self.recorder.event("joint_conversion_candidate", report=converted)
+            if self.candidate_joint_pub is not None and "positions" in converted:
+                candidate = JointState()
+                # Zero/unset header: no fabricated device acquisition timestamp.
+                candidate.name = converted["joint_names"]
+                candidate.position = converted["positions"]
+                self.candidate_joint_pub.publish(candidate)
+            # Unknown provenance NEVER goes to self.core.joints/gripper.
         except Exception as exc:
             self._reject(exc)
 

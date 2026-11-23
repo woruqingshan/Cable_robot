@@ -23,3 +23,14 @@ D3 software checkpoint: bounded repeat experiment and metric analysis available;
 host latency, observed cycle cadence and six-channel host span. Device sample
 rate/time and transaction association are explicitly unknown. No claim of
 reliable closed-loop feedback is made without firmware-level evidence.
+
+D4 software checkpoint: RobotStateProvider accepts complete unverified raw
+batches separately from controller cache. Pulse conversion follows runtime
+controller id/init/min/max parameters and 240deg/1000 pulse scale, with SHA
+identity. Physical zero/direction/internal offsets remain unverified.
+RealObservationNode optionally publishes candidate JointState on its private
+physical diagnostics topic with unset header acquisition time; raw unknown
+feedback never enters canonical Observation. Isolated ROS callback test passes.
+Existing URDF/KDL FK interface is wired, but urdf_parser_py and PyKDL are missing
+on this robot. No replacement kinematic engine or package install was performed.
+Selected regression: 364 passed, 2 skipped (PyKDL, FastAPI), 18.25s.

@@ -1,0 +1,46 @@
+{
+  "metadata_source": "/controller_manager/get_parameters",
+  "configuration": {
+    "joint1": {
+      "id": 1,
+      "init": 500,
+      "min": 1000,
+      "max": 0
+    },
+    "joint2": {
+      "id": 2,
+      "init": 500,
+      "min": 1000,
+      "max": 0
+    },
+    "joint3": {
+      "id": 3,
+      "init": 500,
+      "min": 1000,
+      "max": 0
+    },
+    "joint4": {
+      "id": 4,
+      "init": 500,
+      "min": 1000,
+      "max": 0
+    },
+    "joint5": {
+      "id": 5,
+      "init": 500,
+      "min": 1000,
+      "max": 0
+    },
+    "r_joint": {
+      "id": 10,
+      "init": 700,
+      "min": 1000,
+      "max": 0
+    }
+  },
+  "sha256": "92d1b193e6f9b48a5465459a5e724c1bfc1aa7a72ba492ec32ad960019d0e06d",
+  "physical_zero_verified": false,
+  "physical_directions_verified": false,
+  "device_offset_query_performed": false,
+  "hardware_position_queries_sent": 0
+}

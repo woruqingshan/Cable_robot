@@ -1,7 +1,7 @@
 """Passive state quality. Never constructs ArmInterface or an actuator client."""
 from time import monotonic
 
-from .hardware_feedback import RawFeedbackAdapter
+from .hardware_feedback import RawFeedbackAdapter, JointFeedbackConversion, samples_from_diagnostic_report
 
 SDK_BLOCK = "SDK_UNBOUNDED_QUEUE: bus_servo_read_and_unpack uses queue.get(block=True) under servo_read_lock; client timeout cannot release server"
 IDS = (1, 2, 3, 4, 5, 10)
@@ -12,6 +12,7 @@ class RobotStateProvider:
     def __init__(self, clock=monotonic):
         self.clock = clock
         self.raw_feedback = RawFeedbackAdapter(clock_ns=lambda: int(self.clock()*1e9))
+        self.conversion = None
         self.cache = {}
         self.stamp_ns = None
         self.received = None
@@ -56,8 +57,29 @@ class RobotStateProvider:
     def read_raw_feedback(self):
         return self.raw_feedback.snapshot()
 
+    def configure_raw_conversion(self, configuration_path, *, fk=None, fk_unavailable_reason=None):
+        self.conversion = JointFeedbackConversion.from_vendor_file(configuration_path, fk=fk, fk_unavailable_reason=fk_unavailable_reason)
+
+    def offer_diagnostic_report(self, report):
+        self.offer_raw_readback_snapshot(samples_from_diagnostic_report(report), sequence=report["sequence"])
+        return self.read_converted_feedback()
+
+    def read_converted_feedback(self):
+        raw = self.read_raw_feedback()
+        if self.conversion is None or not raw["raw_snapshot_valid"]:
+            return {"validity":"unavailable", "canonical_observation_eligible":False,
+                    "error":raw["error_reason"] or "CONVERSION_NOT_CONFIGURED"}
+        try:
+            return self.conversion.convert(raw)
+        except Exception as error:
+            return {"validity":"unavailable", "canonical_observation_eligible":False,
+                    "error":str(error)}
+
     def get_source_status(self):
-        return {"hardware_readback": "BLOCKED", "reason": SDK_BLOCK,
+        configured = self.conversion is not None
+        return {"hardware_readback": "DIAGNOSTIC_ONLY" if configured else "BLOCKED",
+            "reason": "INNER_ASSOCIATION_AND_CALIBRATION_UNVERIFIED" if configured else SDK_BLOCK,
             "rpc_requests_sent": 0, "controller": self.read_state_snapshot(),
             "raw_feedback": self.read_raw_feedback(),
+            "converted_diagnostics": self.read_converted_feedback(),
             "kinematics_pose": "not_measured_without_input_provenance"}

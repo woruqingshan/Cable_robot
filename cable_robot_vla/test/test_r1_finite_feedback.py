@@ -129,3 +129,39 @@ def test_staged_plan_requires_hashed_d1_history(tmp_path,audited_sources):
     capture.write_text(capture.read_text()+"\n")
     with pytest.raises(ValueError):prepare(tmp_path/"rejected",vendor,"a"*40,"ref",capture)
     assert not (tmp_path/"rejected").exists()
+
+
+def test_finite_node_construction_neither_arms_nor_publishes_controls(patched_sdk,tmp_path):
+    from test_r1_vendor_patch import fake_node_class
+    _,helper,source,_=patched_sdk
+    path=tmp_path/'plan.json';path.write_text(json.dumps(plan()))
+    cls,calls,topics,services=fake_node_class(source,True,plan_path=str(path))
+    cls.__init__.__globals__.update(json=json,Path=Path,
+        BoundedDiagnosticSession=helper.BoundedDiagnosticSession,String=type('String',(),{}))
+    node=cls('offline')
+    assert node._finite_session.phase=='PREPARED'
+    assert topics==['~/set_buzzer']
+    assert '~/bus_servo/diagnostic_d2' in services and '~/bus_servo/diagnostic_d3' in services
+    assert '~/bus_servo/probe_id1_once' not in services
+    assert all(kind not in ('motor','pwm') for kind,_ in calls)
+
+
+def test_reply_after_batch_before_next_stage_faults_and_stops(patched_sdk):
+    instance,board,_,_,_=session(patched_sdk)
+    instance.on_cycle=lambda _:board._bounded_bus_feedback.receive(b'late',crc_checked=True)
+    result=instance.run('D2')
+    assert not result['complete'] and result['error']=='UNSOLICITED_REPLY'
+    assert not instance.run('D3')['complete']
+    assert len(board.port.frames)==5
+
+
+def test_aged_sequential_batch_is_not_accepted_as_fresh(patched_sdk):
+    instance,board,_,_,_=session(patched_sdk)
+    def capture(i):
+        index=[2,3,4,5,10].index(i)
+        return dict(servo_id=i,error=None,read_started_at_ns=index*200_000_000,
+            response_received_at_ns=index*200_000_000+1_000_000)
+    instance._capture=capture
+    result=instance.run('D2')
+    assert not result['complete'] and result['error']=='DIAGNOSTIC_BATCH_HOST_STALE'
+    assert not instance.run('D3')['complete']

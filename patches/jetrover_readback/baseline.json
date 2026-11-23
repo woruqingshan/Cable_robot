@@ -2,7 +2,7 @@
   "schema_version": 1,
   "sdk_sha256": "c4dd48f3176a5dce1e8331846691ce995c0b3c2f79341cfc6c9e89dce1418a89",
   "node_sha256": "4d37d84c6eff0629f5f73ddca2b140cc0af555175fe3f68f8a3359123a716627",
-  "patch_sha256": "9e2c2fdd5961d9a6541b7d320f1b423fda45e0abd78220b47541895284c3ad0c",
+  "patch_sha256": "07173162e9c5af6b8cd078844c6c6af3a450576692733b1c62ddca26ea01e43f",
   "applied_to_vendor": false,
   "default_state": "DISARMED",
   "continuous_readback_supported": false,

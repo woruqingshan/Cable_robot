@@ -333,6 +333,10 @@ class BoundedDiagnosticSession:
         if report["complete"]:
             report["host_transaction_span_ns"] = (
                 rows[-1]["response_received_at_ns"]-rows[0]["read_started_at_ns"])
+            report["host_span_exceeds_20ms"] = report["host_transaction_span_ns"] > 20_000_000
+            if report["host_transaction_span_ns"] > 500_000_000:
+                self.board._bounded_bus_feedback.fail("DIAGNOSTIC_BATCH_HOST_STALE")
+                report["complete"] = False
         else:
             report["host_transaction_span_ns"] = None
         if self.on_cycle:
@@ -341,6 +345,8 @@ class BoundedDiagnosticSession:
             except Exception:
                 self.board._bounded_bus_feedback.fail("DIAGNOSTIC_RECORD_CALLBACK_FAILED")
                 report["complete"] = False
+        if self.board._bounded_bus_feedback.fault:
+            report["complete"] = False
         return report
 
     def run(self, stage):
@@ -379,7 +385,10 @@ class BoundedDiagnosticSession:
                 self.phase = "COMPLETE_UNVERIFIED" if all(b["complete"] for b in batches) else "FAULT"
             else:
                 return {"complete":False,"error":"UNKNOWN_DIAGNOSTIC_STAGE","batches":[]}
-            return dict(stage=stage, complete=all(b["complete"] for b in batches),
+            complete = all(b["complete"] for b in batches) and gate.fault is None
+            if not complete:
+                self.phase = "FAULT"
+            return dict(stage=stage, complete=complete,
                 phase=self.phase, error=gate.fault, batches=batches,
                 source_type="unknown", canonical_observation_eligible=False,
                 association_guarantee="UNPROVEN_REPEATED_RESPONSES",
