@@ -17,3 +17,9 @@ Tests: 109 passed with isolated ROS environment; focused finite-plan tests pass.
 Actual D2/D3 requests: NOT_RUN pending coordinated driver substitution approval.
 Current service is ID1-only with its one opportunity consumed; process restart
 must not be interpreted as a fresh protocol epoch.
+
+D3 software checkpoint: bounded repeat experiment and metric analysis available;
+3 metric tests pass. Metrics report empirical outer-reply success, mean/P95/max
+host latency, observed cycle cadence and six-channel host span. Device sample
+rate/time and transaction association are explicitly unknown. No claim of
+reliable closed-loop feedback is made without firmware-level evidence.

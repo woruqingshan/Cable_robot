@@ -379,7 +379,7 @@ def main():
     metadata = {"schema_version":1, "sdk_sha256":SDK_SHA, "node_sha256":NODE_SHA,
         "patch_sha256":sha256(patch.encode()).hexdigest(), "applied_to_vendor":False,
         "default_state":"DISARMED", "continuous_readback_supported":False,
-        "diagnostic_policy":"ID1_ONCE_UNVERIFIED", "diagnostic_source_type":"unknown",
+        "diagnostic_policy":"ID1_ONCE_OR_FINITE_UNVERIFIED_SESSION", "diagnostic_source_type":"unknown",
         "maintenance_mode_default":False, "maintenance_candidate_hardware_validated":False,
         "review_required":["clean/exclusive epoch evidence","actual response echo contract",
             "finite serial write bound","verified inner servo ID/command/transaction matching",

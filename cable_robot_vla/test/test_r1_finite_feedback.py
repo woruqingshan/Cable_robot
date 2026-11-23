@@ -129,4 +129,3 @@ def test_staged_plan_requires_hashed_d1_history(tmp_path,audited_sources):
     capture.write_text(capture.read_text()+"\n")
     with pytest.raises(ValueError):prepare(tmp_path/"rejected",vendor,"a"*40,"ref",capture)
     assert not (tmp_path/"rejected").exists()
-

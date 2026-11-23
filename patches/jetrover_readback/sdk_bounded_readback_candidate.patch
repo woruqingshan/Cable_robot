@@ -386,7 +386,7 @@
          print('shutdown')
 --- /dev/null
 +++ b/ros_robot_controller/guarded_readback.py
-@@ -0,0 +1,394 @@
+@@ -0,0 +1,393 @@
 +"""OFFLINE CANDIDATE. No serial driver, ROS client, automatic arming or recovery."""
 +from dataclasses import dataclass
 +import math
@@ -780,4 +780,3 @@
 +            return dict(complete=False,error=self.board._bounded_bus_feedback.fault,batches=[])
 +        finally:
 +            self.operation_lock.release()
-+

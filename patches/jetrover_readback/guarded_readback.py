@@ -391,4 +391,3 @@ class BoundedDiagnosticSession:
             return dict(complete=False,error=self.board._bounded_bus_feedback.fault,batches=[])
         finally:
             self.operation_lock.release()
-
