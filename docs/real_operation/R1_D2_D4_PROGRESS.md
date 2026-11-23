@@ -34,3 +34,10 @@ feedback never enters canonical Observation. Isolated ROS callback test passes.
 Existing URDF/KDL FK interface is wired, but urdf_parser_py and PyKDL are missing
 on this robot. No replacement kinematic engine or package install was performed.
 Selected regression: 364 passed, 2 skipped (PyKDL, FastAPI), 18.25s.
+
+## 最新执行终点：USB控制面打开失败
+
+切换已单独获批。旧维护进程退出后，新ede2020驱动在open期间的DTR ioctl Errno110失败。
+未运行D2/D3，未自动重试或恢复。只读观察器已停止，当前无串口驱动/正常控制；
+整车父服务仍运行且Restart=no。D4实机反馈/FK和R2不声称通过。
+代码与证据保留，详见R1_D2_D4_RESULT_20261123.md。

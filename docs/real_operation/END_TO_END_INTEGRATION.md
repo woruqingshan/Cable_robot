@@ -166,3 +166,10 @@ source_type仍unknown、设备采样时间未知，未接Observation；连续读
 当前保留维护模式及整车临时Restart=no，正常控制未恢复；后续与恢复须另行授权。
 之前本轮NOT_RUN/待授权文字属于执行前状态，以此段和R1_R2_ACCEPTANCE.md当前矩阵为准。
 原始帧及完整事实边界见R1_ID1_LIVE_RESULT_20261123.md、evidence/r1_m1_d1_20261123.json。
+
+## 最新执行终点：USB控制面打开失败
+
+切换已单独获批。旧维护进程退出后，新ede2020驱动在open期间的DTR ioctl Errno110失败。
+未运行D2/D3，未自动重试或恢复。只读观察器已停止，当前无串口驱动/正常控制；
+整车父服务仍运行且Restart=no。D4实机反馈/FK和R2不声称通过。
+代码与证据保留，详见R1_D2_D4_RESULT_20261123.md。

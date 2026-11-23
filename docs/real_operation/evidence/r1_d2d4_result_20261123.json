@@ -1,0 +1,108 @@
+{
+  "date": "2026-11-23",
+  "status": "STOPPED_USB_CDC_DTR_OPEN_TIMEOUT",
+  "attempted_source_sha": "ede2020c853020715b0f9a0ac788c0eb318ff3ba",
+  "package_manifest_sha256": "08a42246e1fb5fbb306918a209d59e019d58095817a5842190da9923714f81f7",
+  "failure": {
+    "operation": "serial.Serial.open -> _update_dtr_state -> TIOCMBIC(DTR)",
+    "errno": 110,
+    "exception": "TimeoutError",
+    "tty_driver": "cdc_acm",
+    "old_driver_shutdown": "ExternalShutdownException; exit1 after initial5s wait"
+  },
+  "confirmed_motion_commands": 0,
+  "confirmed_torque_commands": 0,
+  "actual_d2_queries": 0,
+  "actual_d3_queries": 0,
+  "serial_open_attempts": 1,
+  "retry_attempts": 0,
+  "current_serial_openers": [],
+  "normal_control_available": false,
+  "parent_pid": 799,
+  "parent_restarts": 0,
+  "parent_restart": "no",
+  "observer_stopped": true,
+  "original_vendor_files_unchanged": 53,
+  "trusted_continuous_feedback": false,
+  "valid_real_observations": 0,
+  "historical_d1_only": {
+    "servo_id": 1,
+    "raw_pulse": 502,
+    "not_current": true
+  },
+  "live_pulses": {
+    "1": "historical D1 only",
+    "2": null,
+    "3": null,
+    "4": null,
+    "5": null,
+    "10": null
+  },
+  "live_hz": null,
+  "live_latency_mean_ms": null,
+  "live_latency_p95_ms": null,
+  "live_latency_max_ms": null,
+  "live_six_channel_span_ms": null,
+  "tests": {
+    "selected_passed": 364,
+    "selected_skipped": 2,
+    "selected_seconds": 18.25,
+    "extra_client_and_startup_tests_passed": 4
+  },
+  "configuration_metadata": {
+    "metadata_source": "/controller_manager/get_parameters",
+    "configuration": {
+      "joint1": {
+        "id": 1,
+        "init": 500,
+        "min": 1000,
+        "max": 0
+      },
+      "joint2": {
+        "id": 2,
+        "init": 500,
+        "min": 1000,
+        "max": 0
+      },
+      "joint3": {
+        "id": 3,
+        "init": 500,
+        "min": 1000,
+        "max": 0
+      },
+      "joint4": {
+        "id": 4,
+        "init": 500,
+        "min": 1000,
+        "max": 0
+      },
+      "joint5": {
+        "id": 5,
+        "init": 500,
+        "min": 1000,
+        "max": 0
+      },
+      "r_joint": {
+        "id": 10,
+        "init": 700,
+        "min": 1000,
+        "max": 0
+      }
+    },
+    "sha256": "92d1b193e6f9b48a5465459a5e724c1bfc1aa7a72ba492ec32ad960019d0e06d",
+    "physical_zero_verified": false,
+    "physical_directions_verified": false,
+    "device_offset_query_performed": false,
+    "hardware_position_queries_sent": 0
+  },
+  "evidence_directory": "/home/ubuntu/zsy_projects/real_operation_evidence/r1_d2d4_20261123T091336Z",
+  "evidence_manifest_sha256": "521eef28448ce625bb59daabd241f87439df284579f0cb84e5f1a12e7c963021",
+  "source_checkpoints": [
+    "ede2020c853020715b0f9a0ac788c0eb318ff3ba feat(r1): add version-bound finite capture client and integrated execution plan",
+    "b9d890b7659a87e71d31251d7cb07a30c27ba608 feat(r1): integrate uncalibrated joint conversion with read-only ROS diagnostics",
+    "080f324c5ec052a37968f79b3dd3039744f4ed96 feat(r1): add finite repeat experiment metrics without source promotion",
+    "04303d6f43d9c2cbf8478ddce24dffded91073e8 feat(r1): prepare D2 multi-servo reads with finite diagnostic budgets"
+  ],
+  "failure_journal": "Nov 23 17:21:47 ubuntu systemd[1]: Started /bin/bash --noprofile --norc -c source /opt/ros/humble/setup.bash && source /home/ubuntu/ros2_ws/install/setup.bash && exec /usr/bin/python3 /home/ubuntu/zsy_projects/real_operation_deployments/r1_sdk_ede2020c853020715b0f9a0ac788c0eb318ff3ba/run_maintenance.py.\nNov 23 17:22:05 ubuntu bash[12394]: Traceback (most recent call last):\nNov 23 17:22:05 ubuntu bash[12394]:   File \"/home/ubuntu/zsy_projects/real_operation_deployments/r1_sdk_ede2020c853020715b0f9a0ac788c0eb318ff3ba/run_maintenance.py\", line 20, in <module>\nNov 23 17:22:05 ubuntu bash[12394]:     node.main()\nNov 23 17:22:05 ubuntu bash[12394]:   File \"/home/ubuntu/zsy_projects/real_operation_deployments/r1_sdk_ede2020c853020715b0f9a0ac788c0eb318ff3ba/ros_robot_controller/ros_robot_controller_node.py\", line 373, in main\nNov 23 17:22:05 ubuntu bash[12394]:     node = RosRobotController('ros_robot_controller')\nNov 23 17:22:05 ubuntu bash[12394]:   File \"/home/ubuntu/zsy_projects/real_operation_deployments/r1_sdk_ede2020c853020715b0f9a0ac788c0eb318ff3ba/ros_robot_controller/ros_robot_controller_node.py\", line 47, in __init__\nNov 23 17:22:05 ubuntu bash[12394]:     self.board = (Board(maintenance_tx_timeout_s=.05)\nNov 23 17:22:05 ubuntu bash[12394]:   File \"/home/ubuntu/zsy_projects/real_operation_deployments/r1_sdk_ede2020c853020715b0f9a0ac788c0eb318ff3ba/ros_robot_controller/ros_robot_controller_sdk.py\", line 119, in __init__\nNov 23 17:22:05 ubuntu bash[12394]:     self.port.open()\nNov 23 17:22:05 ubuntu bash[12394]:   File \"/home/ubuntu/.local/lib/python3.10/site-packages/serial/serialposix.py\", line 336, in open\nNov 23 17:22:05 ubuntu bash[12394]:     self._update_dtr_state()\nNov 23 17:22:05 ubuntu bash[12394]:   File \"/home/ubuntu/.local/lib/python3.10/site-packages/serial/serialposix.py\", line 715, in _update_dtr_state\nNov 23 17:22:05 ubuntu bash[12394]:     fcntl.ioctl(self.fd, TIOCMBIC, TIOCM_DTR_str)\nNov 23 17:22:05 ubuntu bash[12394]: TimeoutError: [Errno 110] Connection timed out\nNov 23 17:22:05 ubuntu systemd[1]: idc-r1-readback-finite-ede2020.service: Main process exited, code=exited, status=1/FAILURE\nNov 23 17:22:05 ubuntu systemd[1]: idc-r1-readback-finite-ede2020.service: Failed with result 'exit-code'.\nNov 23 17:22:05 ubuntu systemd[1]: idc-r1-readback-finite-ede2020.service: Consumed 3.104s CPU time.\n",
+  "final_services": "Restart=no\nMainPID=0\nResult=exit-code\nNRestarts=0\nExecMainStatus=1\nId=idc-r1-readback-b020afb.service\nActiveState=failed\nSubState=failed\n\nRestart=no\nMainPID=0\nResult=exit-code\nNRestarts=0\nExecMainStatus=1\nId=idc-r1-readback-finite-ede2020.service\nActiveState=failed\nSubState=failed\n\nRestart=no\nMainPID=0\nResult=exit-code\nNRestarts=0\nExecMainStatus=1\nId=idc-r1-observer-d2d4.service\nActiveState=failed\nSubState=failed\n\nRestart=no\nMainPID=799\nResult=success\nNRestarts=0\nExecMainStatus=0\nId=start_app_node.service\nActiveState=active\nSubState=running\n\nRestart=always\nMainPID=784\nResult=success\nNRestarts=0\nExecMainStatus=0\nId=button_scan.service\nActiveState=active\nSubState=running\n"
+}

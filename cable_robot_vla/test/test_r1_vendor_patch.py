@@ -702,3 +702,19 @@ def test_probe_reference_requires_maintenance_before_any_board_open(patched_sdk,
         assert "~/bus_servo/probe_id1_once" in services
         assert topics==["~/set_buzzer"]
         assert all(kind not in ("pwm","motor") for kind,_ in calls)
+
+
+def test_port_open_control_timeout_does_not_retry_or_start_receiver(patched_sdk,monkeypatch):
+    sdk,_,ports,exclusive=constructor_sdk(patched_sdk,monkeypatch)
+    attempts=[]
+    def fail_open(port):
+        attempts.append(port)
+        raise TimeoutError(110,'offline DTR control request timed out')
+    def forbidden_thread(**kwargs):
+        raise AssertionError('receiver must not start after open failure')
+    monkeypatch.setattr(ConstructorPort,'open',fail_open)
+    monkeypatch.setattr(sdk.threading,'Thread',forbidden_thread)
+    with pytest.raises(TimeoutError) as error:sdk.Board(maintenance_tx_timeout_s=.05)
+    assert error.value.errno==110
+    assert len(attempts)==1 and len(ports)==1 and ports[0].frames==[]
+    assert exclusive==[]

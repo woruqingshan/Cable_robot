@@ -1,14 +1,20 @@
 # R1 / R2 当前验收与交接：2026-11-23
 
+最新状态：D2-D4软件已提交；获批切换后，新驱动在USB CDC ACM的DTR控制ioctl上超时。
+D2/D3实际查询0；当前串口无拥有者，正常硬件驱动未运行，父服务仍Restart=no。
+D1=502是历史单次回复，不能作为当前六路状态。R2未执行。
+详情见[R1_D2_D4_RESULT_20261123.md](R1_D2_D4_RESULT_20261123.md)。
+
+
 分支feat/real-operation-pipeline，起点4f2ba9b；用户新技术参考原文保留。
 M1维护替换与D1唯一一次ID1查询已获授权并执行；原厂文件不改，无AutoDL部署。
 
 |项目|当前结果|证据边界|
 |---|---|---|
 |SDK候选修复|PASS（离线）|有限锁/TX/响应、整帧写入、外层校验、失败停止、服务清除部分结果|
-|Stage A|PASS（限定）|已无额外打开者；当前唯一维护PID9714，不重复开发|
+|Stage A|PASS（限定）|已无额外打开者；当前打开者0，不重复开发|
 |原文件/备份|PASS|原SDK/节点SHA不变，53份源文件匹配旧备份|
-|维护覆盖包|PASS（实机部署）|b020afb固定包、PID9714、Restart=no，原厂文件不改|
+|维护覆盖包|新包启动失败|b020afb历史部署成功；ede2020在open/DTR Errno110退出，当前无驱动|
 |ID1诊断授权|EXECUTED|用户单独批准M1+D1并确认现场监督；未扩展范围|
 |首次ID1|PASS_OUTER_FRAME_CAPTURE|1次请求，Pulse502，主机2.723470ms/RTT5.204781ms；内层关联未验证|
 |六ID快照/频率/时延/跨度|NOT_RUN|无真实数值，不用Mock代填|
@@ -80,5 +86,10 @@ SDK modification required: YES（覆盖包已部署；原厂文件保持不变�
 STM32 firmware modification required: UNDETERMINED。
 Offline tests: PASS。
 Live hardware readback: PASS_SINGLE_ID1_OUTER_CAPTURE（内层/采样时刻未验证）。
-R1 status: SINGLE_CAPTURE_PASS / CONTINUOUS_BLOCKED。
+R1 status: STOPPED_USB_CDC_CONTROL_IOCTL_TIMEOUT（历史D1已获有效外层回复）。
 R2 readiness: BLOCKED。
+
+本轮相关回归364 passed/2 skipped；客户端及打开超时专项4 passed。
+D4转换、来源隔离与ROS候选发布实现完成，物理零位/方向仍未标定；
+实机FK缺urdf_parser_py/PyKDL。六路Pulse、重复读取Hz、均值/P95/最大延迟和跨度均未测得。
+切换失败后无重开、无恢复、无刷固件；恢复需另行受控方案。
