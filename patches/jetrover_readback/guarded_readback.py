@@ -47,6 +47,10 @@ class ReadbackGate:
         self.discarded = 0
         self.evidence_reference = None
         self.diagnostic_only = False
+        self.diagnostic_ids = (1,)
+        self.diagnostic_attempt_limit = None
+        self.diagnostic_attempts = 0
+        self.diagnostic_repeat_budget = 0
 
     def arm(self, reference, *, clean_epoch_verified=False, exclusive_owner_verified=False,
             echo_contract_verified=False, write_bound_verified=False,
@@ -141,7 +145,7 @@ class ReadbackGate:
                     raise ReadbackFault("DISARMED")
                 if self.diagnostic_only != diagnostic:
                     raise ReadbackFault("DIAGNOSTIC_PATH_MISMATCH")
-                if diagnostic and servo_id != 1:
+                if diagnostic and servo_id not in self.diagnostic_ids:
                     raise ReadbackFault("DIAGNOSTIC_ID1_ONLY")
                 if not reception_enabled:
                     raise ReadbackFault("RECEPTION_DISABLED")
@@ -149,9 +153,17 @@ class ReadbackGate:
                         or not 0 < write_timeout_s <= (deadline-self.clock_ns())/1e9):
                     raise ReadbackFault("BOUNDED_WRITE_UNVERIFIED")
                 key = (servo_id, command)
-                if key in self.used:
+                if diagnostic and self.diagnostic_attempt_limit is not None:
+                    if self.diagnostic_attempts >= self.diagnostic_attempt_limit:
+                        self.fail("DIAGNOSTIC_BUDGET_EXHAUSTED")
+                        raise ReadbackFault(self.fault)
+                if key in self.used and not (diagnostic and self.diagnostic_repeat_budget > 0):
                     self.fail("KEY_REUSE_UNSAFE")
                     raise ReadbackFault(self.fault)
+                if diagnostic:
+                    self.diagnostic_attempts += 1
+                    if key in self.used:
+                        self.diagnostic_repeat_budget -= 1
                 self.used.add(key)
                 self.pending = (servo_id, command, started, deadline)
                 self.reply = None
@@ -248,3 +260,135 @@ class MaintenanceFrameWriter:
             return written
         finally:
             self.lock.release()
+
+
+class BoundedDiagnosticSession:
+    """Finite unverified captures. No recovery, autonomous polling or new port.
+
+    Repeated diagnostic replies have UNPROVEN transaction identity. They MUST NOT
+    be promoted to trusted feedback, regardless of apparent stability or rate.
+    """
+    def __init__(self, board, plan, *, clock_ns=time.monotonic_ns, sleep=time.sleep, on_cycle=None):
+        self.validate_plan(plan)
+        self.board, self.plan = board, dict(plan)
+        self.clock_ns, self.sleep, self.on_cycle = clock_ns, sleep, on_cycle
+        self.phase = "PREPARED"
+        self.operation_lock = threading.Lock()
+
+    @staticmethod
+    def validate_plan(plan):
+        if (not isinstance(plan, dict) or plan.get("schema_version") != 1
+                or plan.get("prior_used_ids") != [1]
+                or plan.get("d2_ids") != [2, 3, 4, 5, 10]
+                or type(plan.get("d3_cycles")) is not int or not 1 <= plan["d3_cycles"] <= 3
+                or type(plan.get("cycle_interval_s")) not in (int, float)
+                or not 1 <= plan["cycle_interval_s"] <= 5
+                or not isinstance(plan.get("reference"), str) or not plan["reference"].strip()
+                or len(plan["reference"]) > 512
+                or not isinstance(plan.get("prior_evidence_sha256"), str)
+                or len(plan["prior_evidence_sha256"]) != 64
+                or any(c not in "0123456789abcdef" for c in plan["prior_evidence_sha256"])
+                or not isinstance(plan.get("source_sha"), str) or len(plan["source_sha"]) != 40
+                or any(c not in "0123456789abcdef" for c in plan["source_sha"])):
+            raise ValueError("INVALID_FINITE_DIAGNOSTIC_PLAN")
+
+    def _capture(self, servo_id):
+        self.board._last_bus_tx_frame = self.board._last_bus_rx_frame = None
+        row = dict(servo_id=servo_id, raw_pulse=None, source_type="unknown",
+            inner_association_verified=False, canonical_observation_eligible=False,
+            device_sample_time_ns=None, error=None)
+        started = self.clock_ns()
+        try:
+            self.board.bus_servo_read_and_unpack(servo_id, 5, "<BBbh", diagnostic=True)
+            sample = self.board.last_bus_position_sample
+            row.update(raw_pulse=sample.raw_pulse,
+                read_started_at_ns=sample.read_started_at_ns,
+                response_received_at_ns=sample.response_received_at_ns,
+                read_latency_ns=sample.response_received_at_ns-sample.read_started_at_ns,
+                raw_payload_hex=sample.raw_payload.hex(), clock_domain=sample.clock_domain,
+                outer_frame_validated=True)
+        except Exception as error:
+            self.board._bounded_bus_feedback.fail(
+                error.code if isinstance(error, ReadbackFault) else "DIAGNOSTIC_CAPTURE_FAILED")
+            row.update(error=self.board._bounded_bus_feedback.fault, outer_frame_validated=False)
+        row["capture_elapsed_ns"] = self.clock_ns()-started
+        for key, attr in (("tx_frame_hex", "_last_bus_tx_frame"), ("rx_frame_hex", "_last_bus_rx_frame")):
+            value = getattr(self.board, attr, None)
+            row[key] = value.hex() if value is not None else None
+        return row
+
+    def _batch(self, ids, sequence):
+        started = self.clock_ns()
+        rows = []
+        for servo_id in ids:
+            row = self._capture(servo_id)
+            rows.append(row)
+            if row["error"]:
+                break
+        report = dict(sequence=sequence, channels=rows,
+            complete=len(rows)==len(ids) and all(r["error"] is None for r in rows),
+            batch_elapsed_ns=self.clock_ns()-started, source_type="unknown",
+            inner_association_verified=False, canonical_observation_eligible=False,
+            physical_calibrated=False, device_sample_span_ns=None)
+        if report["complete"]:
+            report["host_transaction_span_ns"] = (
+                rows[-1]["response_received_at_ns"]-rows[0]["read_started_at_ns"])
+        else:
+            report["host_transaction_span_ns"] = None
+        if self.on_cycle:
+            try:
+                self.on_cycle(report)
+            except Exception:
+                self.board._bounded_bus_feedback.fail("DIAGNOSTIC_RECORD_CALLBACK_FAILED")
+                report["complete"] = False
+        return report
+
+    def run(self, stage):
+        if not self.operation_lock.acquire(blocking=False):
+            return {"complete":False,"error":"DIAGNOSTIC_OPERATION_BUSY","batches":[]}
+        try:
+            gate = self.board._bounded_bus_feedback
+            if stage == "D2":
+                if self.phase != "PREPARED":
+                    return {"complete":False,"error":"D2_ALREADY_CONSUMED","batches":[]}
+                self.phase = "D2_RUNNING"
+                gate.arm_diagnostic_once(self.plan["reference"])
+                # History is carried forward explicitly; restart is NOT a clean epoch.
+                gate.diagnostic_ids = SERVO_IDS
+                gate.used.update((i,5) for i in self.plan["prior_used_ids"])
+                gate.diagnostic_attempt_limit = 5
+                batches = [self._batch(self.plan["d2_ids"], 0)]
+                self.phase = "D2_COMPLETE" if batches[0]["complete"] else "FAULT"
+            elif stage == "D3":
+                if self.phase != "D2_COMPLETE" or gate.fault:
+                    return {"complete":False,"error":"D2_NOT_CLEANLY_COMPLETE","batches":[]}
+                self.phase = "D3_RUNNING"
+                # Only explicitly untrusted finite experiments may reuse keys.
+                gate.diagnostic_attempt_limit = 5+6*self.plan["d3_cycles"]
+                gate.diagnostic_repeat_budget = 6*self.plan["d3_cycles"]
+                batches = []
+                began = self.clock_ns()
+                for cycle in range(self.plan["d3_cycles"]):
+                    target = began+int(cycle*self.plan["cycle_interval_s"]*1e9)
+                    if target > self.clock_ns():
+                        self.sleep((target-self.clock_ns())/1e9)
+                    batch = self._batch(SERVO_IDS, cycle+1)
+                    batches.append(batch)
+                    if not batch["complete"]:
+                        break
+                self.phase = "COMPLETE_UNVERIFIED" if all(b["complete"] for b in batches) else "FAULT"
+            else:
+                return {"complete":False,"error":"UNKNOWN_DIAGNOSTIC_STAGE","batches":[]}
+            return dict(stage=stage, complete=all(b["complete"] for b in batches),
+                phase=self.phase, error=gate.fault, batches=batches,
+                source_type="unknown", canonical_observation_eligible=False,
+                association_guarantee="UNPROVEN_REPEATED_RESPONSES",
+                prior_used_ids=self.plan["prior_used_ids"], gate_status=gate.status())
+        except Exception as error:
+            self.phase = "FAULT"
+            self.board._bounded_bus_feedback.fail(
+                error.code if isinstance(error, ReadbackFault) else "DIAGNOSTIC_SESSION_FAILED")
+            return dict(complete=False,error=self.board._bounded_bus_feedback.fault,batches=[])
+        finally:
+            self.operation_lock.release()
+

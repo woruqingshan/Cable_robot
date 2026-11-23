@@ -107,6 +107,7 @@ def bus_servo_read_and_unpack(self, servo_id, cmd, unpack):
     node = node.replace(anchor, wrapper+anchor, 1)
     sdk, node = maintenance_sources(sdk, node)
     sdk, node = probe_sources(sdk, node)
+    sdk, node = finite_sources(sdk, node)
     ast.parse(sdk)
     ast.parse(node)
     return sdk, node
@@ -295,6 +296,56 @@ def probe_sources(sdk, node):
     # Do not announce controller readiness to a waiting motion initializer.
     node = node.replace('        response.success = True\n        return response',
                         '        response.success = not self.readback_maintenance\n        return response', 1)
+    return sdk, node
+
+
+
+def finite_sources(sdk, node):
+    """Finite D2/D3 experiment endpoints; do not arm or read at startup."""
+    node = node.replace('import json', 'import json\nfrom pathlib import Path\n'
+        'from ros_robot_controller.guarded_readback import BoundedDiagnosticSession', 1)
+    node = node.replace('from std_msgs.msg import UInt16, Bool',
+                        'from std_msgs.msg import UInt16, Bool, String', 1)
+    anchor = '        self.board = (Board(maintenance_tx_timeout_s=.05)'
+    node = node.replace(anchor,
+        "        self.declare_parameter('readback_diagnostic_plan_path', '')\n"
+        "        plan_path = self.get_parameter('readback_diagnostic_plan_path').value\n"
+        "        self.readback_diagnostic_plan = None\n"
+        "        if plan_path:\n"
+        "            if not self.readback_maintenance or ref:\n"
+        "                raise ValueError('finite diagnostics require exclusive maintenance mode')\n"
+        "            self.readback_diagnostic_plan = json.loads(Path(plan_path).read_text())\n"
+        "            BoundedDiagnosticSession.validate_plan(self.readback_diagnostic_plan)\n"+anchor,1)
+    anchor = '        self.clock = self.get_clock()'
+    node = node.replace(anchor,
+        "        if self.readback_diagnostic_plan:\n"
+        "            self.raw_feedback_pub = self.create_publisher(String, '/idc_vla/real/raw_feedback', 10)\n"
+        "            self._finite_session = BoundedDiagnosticSession(self.board,\n"
+        "                self.readback_diagnostic_plan, on_cycle=self._publish_raw_feedback)\n"
+        "            self.create_service(Trigger, '~/bus_servo/diagnostic_d2', self.diagnostic_d2)\n"
+        "            self.create_service(Trigger, '~/bus_servo/diagnostic_d3', self.diagnostic_d3)\n"+anchor,1)
+    methods = '''    def _publish_raw_feedback(self, report):
+        report["ros_publication_time_ns"] = self.get_clock().now().nanoseconds
+        report["runtime_source_sha"] = self.readback_diagnostic_plan["source_sha"]
+        message = String()
+        message.data = json.dumps(report, sort_keys=True)
+        self.raw_feedback_pub.publish(message)
+
+    def diagnostic_d2(self, request, response):
+        report = self._finite_session.run("D2")
+        response.success = report["complete"]
+        response.message = json.dumps(report, sort_keys=True)
+        return response
+
+    def diagnostic_d3(self, request, response):
+        report = self._finite_session.run("D3")
+        response.success = report["complete"]
+        response.message = json.dumps(report, sort_keys=True)
+        return response
+
+'''
+    node = node.replace('    def probe_id1_once(self, request, response):',
+                        methods+'    def probe_id1_once(self, request, response):',1)
     return sdk, node
 
 
