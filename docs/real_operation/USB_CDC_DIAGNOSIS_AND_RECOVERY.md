@@ -1,7 +1,10 @@
 # USB CDC ACM DTR 超时：诊断、应用层修补与恢复方案
 
+最新实测（2026-11-23 18:10 +08）：获批C2仅打开一次，DTR阶段仍Errno110，初始化15.4136秒，FD已释放；没有位置查询、重试或条件续测。USB重绑定及D2-D4实机为NOT_RUN；串口无打开者，正常硬件驱动未运行。C3提案尚未获批；详见[C2实测结果与C3恢复提案](R1_C2_RESULT_AND_C3_PLAN_20261123.md)。
+
+
 日期：2026-11-23（Asia/Shanghai）。分支feat/real-operation-pipeline。
-本轮基线cb113ce；本轮仅只读现场检查和离线测试，真实串口打开/位置RPC均为0。
+初始审计阶段基线cb113ce，仅只读检查和离线测试，打开/位置RPC均为0；后续C2结果见页首。
 
 ## 1. 结论分级
 
@@ -93,7 +96,7 @@ Errno110只说明期限内传输未完成，不识别坏的是哪一侧。
 - open/close涉及USB控制信号，不能保证不会复位板卡；必须静止并有人监督。
   内核ioctl/close可能超过软件观察窗口，不能据客户端超时直接当作设备已清理。
 
-本轮实际只运行了inspect_only，结果INSPECTED_NO_OPEN，physical_open_attempts=0。
+初始仅运行inspect_only（0次打开）。后续获批C2已执行一次并失败：USB_DTR_CONTROL_TIMEOUT，15.4136秒，FD已清理。条件续测未执行。
 
 ### C2成功后的可选后续授权范围
 
@@ -116,9 +119,9 @@ cdc_acm接口解绑重绑、设备USB reset、物理拔插或电源循环均未�
 - 原厂SDK/节点保持原SHA，53份原始备份继续有效；只改仓库中的审核候选。
 - 当前无运行串口驱动，正常控制不可用；父整车服务仍运行且Restart=no。
 - 不启动原bringup、不恢复自动启动、不擅自恢复原控制驱动。
-- C2与恢复后D2/D3/D4实机验证：NOT_RUN，等待授权。
+- C2：FAIL（DTR Errno110）；恢复后D2/D3/D4：NOT_RUN。
 - D1 Pulse502为历史记录，不能当作当前六路值；R2完整Observation仍未启用。
-- 下一步最小动作是C2，而不是先改固件、改线控策略或跳过ioctl。
+- 下一步是审阅并单独批准C3定向重绑定提案，不自动重复C2或跳过ioctl。
 
 原始证据目录：
 /home/ubuntu/zsy_projects/real_operation_evidence/r1_usb_cdc_20261123T093735Z/

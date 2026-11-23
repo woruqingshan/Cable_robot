@@ -1,5 +1,9 @@
 # JetRover → AutoDL Shadow 联调：2026-11-20
 
+最新实测（2026-11-23 18:10 +08）：获批C2仅打开一次，DTR阶段仍Errno110，初始化15.4136秒，FD已释放；没有位置查询、重试或条件续测。USB重绑定及D2-D4实机为NOT_RUN；串口无打开者，正常硬件驱动未运行。C3提案尚未获批；详见[C2实测结果与C3恢复提案](R1_C2_RESULT_AND_C3_PLAN_20261123.md)。
+
+以下保留此前阶段的记录及各自范围。
+
 ## 版本与原则
 
 继续开发分支为 feat/real-operation-pipeline。原 feat/real-shadow-e2e-integration 已快进合入并删除；代码提交 e6c62779791bfe92ba8a54b496b01c957301d8a4 已推送，双端本次联调检出同一 SHA。正式源码只在 JetRover 改动，AutoDL 仅从 GitHub 检出指定提交，没有修改厂商源码或训练 checkpoint。

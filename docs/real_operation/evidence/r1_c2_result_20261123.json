@@ -1,0 +1,120 @@
+{
+  "date": "2026-11-23",
+  "tested_source_sha": "a04beaf95746ab3f4246beda40bba504057a465e",
+  "authorization": "C2 once; conditional continuation only on complete success",
+  "result": "FAIL_USB_DTR_CONTROL_TIMEOUT",
+  "elapsed_seconds": 15.413597661,
+  "duration_scope": "whole initialization/helper, not isolated USB wire latency",
+  "conditional_continuation_executed": false,
+  "maintenance_started": false,
+  "d2_queries": 0,
+  "d3_queries": 0,
+  "usb_reset_or_rebind_performed": false,
+  "final_serial_owner_count": 0,
+  "inaccessible_process_fd_directories": 0,
+  "normal_hardware_control_available": false,
+  "parent_restart_policy": "no",
+  "evidence_directory": "/home/ubuntu/zsy_projects/real_operation_evidence/r1_c2_20261123T101045Z",
+  "evidence_manifest_sha256": "e40109c11936a2699ab0b1dd703270520817513630bfda308e426c1e6a0d5352",
+  "c2_raw_report": {
+    "source_sha": "a04beaf95746ab3f4246beda40bba504057a465e",
+    "mode": "execute_once",
+    "physical_open_attempts": 1,
+    "serial_writes": 0,
+    "servo_queries": 0,
+    "usb_reset": false,
+    "retry": false,
+    "clean_protocol_epoch_proven": false,
+    "preflight": {
+      "schema_version": 1,
+      "host_reported_time_utc": "2026-11-23T10:10:45.772313+00:00",
+      "vendor_sources": {
+        "ros_robot_controller_sdk.py": {
+          "path": "/home/ubuntu/ros2_ws/src/driver/ros_robot_controller/ros_robot_controller/ros_robot_controller_sdk.py",
+          "sha256": "c4dd48f3176a5dce1e8331846691ce995c0b3c2f79341cfc6c9e89dce1418a89"
+        },
+        "ros_robot_controller_node.py": {
+          "path": "/home/ubuntu/ros2_ws/src/driver/ros_robot_controller/ros_robot_controller/ros_robot_controller_node.py",
+          "sha256": "4d37d84c6eff0629f5f73ddca2b140cc0af555175fe3f68f8a3359123a716627"
+        }
+      },
+      "serial_ownership": {
+        "device_path": "/dev/rrc",
+        "resolved_path": "/dev/ttyACM0",
+        "visible_openers": [],
+        "inaccessible_process_fd_directories": 0,
+        "ownership_assessment": "NOT_PROVEN_EXCLUSIVE",
+        "visibility_complete": false,
+        "receive_or_write_activity_proven": false,
+        "safe_to_read": false
+      },
+      "hardware_rpc_requests_sent": 0,
+      "device_open_calls": 0,
+      "vendor_modified": false,
+      "scope": "filesystem_and_proc_metadata_only"
+    },
+    "usb_identity": {
+      "interface_path": "/sys/devices/platform/bus@0/3610000.usb/usb1/1-2/1-2.1/1-2.1:1.0",
+      "driver": "/sys/bus/usb/drivers/cdc_acm",
+      "vid": "1a86",
+      "pid": "55d4"
+    },
+    "status": "STOP_NO_RETRY",
+    "exception_type": "TimeoutError",
+    "errno": 110,
+    "error": "[Errno 110] Connection timed out",
+    "initialization_report": {
+      "device": "/dev/rrc",
+      "stage": "open",
+      "dtr": false,
+      "rts": false,
+      "open_attempts": 1,
+      "success": false,
+      "error_code": "USB_DTR_CONTROL_TIMEOUT",
+      "errno": 110,
+      "exception_type": "TimeoutError",
+      "traceback_functions": [
+        "initialize_existing_serial",
+        "open",
+        "_update_dtr_state"
+      ],
+      "cleanup": "not_open_no_duplicate_close",
+      "fd_cleared": true,
+      "elapsed_ns": 15413597661
+    },
+    "postflight": {
+      "schema_version": 1,
+      "host_reported_time_utc": "2026-11-23T10:11:01.578359+00:00",
+      "vendor_sources": {
+        "ros_robot_controller_sdk.py": {
+          "path": "/home/ubuntu/ros2_ws/src/driver/ros_robot_controller/ros_robot_controller/ros_robot_controller_sdk.py",
+          "sha256": "c4dd48f3176a5dce1e8331846691ce995c0b3c2f79341cfc6c9e89dce1418a89"
+        },
+        "ros_robot_controller_node.py": {
+          "path": "/home/ubuntu/ros2_ws/src/driver/ros_robot_controller/ros_robot_controller/ros_robot_controller_node.py",
+          "sha256": "4d37d84c6eff0629f5f73ddca2b140cc0af555175fe3f68f8a3359123a716627"
+        }
+      },
+      "serial_ownership": {
+        "device_path": "/dev/rrc",
+        "resolved_path": "/dev/ttyACM0",
+        "visible_openers": [],
+        "inaccessible_process_fd_directories": 0,
+        "ownership_assessment": "NOT_PROVEN_EXCLUSIVE",
+        "visibility_complete": false,
+        "receive_or_write_activity_proven": false,
+        "safe_to_read": false
+      },
+      "hardware_rpc_requests_sent": 0,
+      "device_open_calls": 0,
+      "vendor_modified": false,
+      "scope": "filesystem_and_proc_metadata_only"
+    }
+  },
+  "new_risk": {
+    "ModemManager": "active; version 1.20.0-1~ubuntu22.04.3",
+    "udev": "ignore rule has trailing characters; ID_MM_PORT_IGNORE/DEVICE_IGNORE absent; ID_MM_CANDIDATE=1",
+    "caused_timeout": "UNKNOWN; no evidence of active serial probing"
+  },
+  "next_step": "C3 proposal only; new authorization required"
+}
