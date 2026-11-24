@@ -36,6 +36,8 @@ def main():
             deadline=time.monotonic()+8
             while time.monotonic()<deadline:
                 rclpy.spin_once(n,timeout_sec=.02)
+                if latest.get('source_sha')==a.expected_source_sha and latest.get('gate',{}).get('error'):
+                    raise RuntimeError('DRIVER_FAULT:'+latest['gate']['error'])
                 if latest.get('feedback',{}).get('valid') and latest.get('source_sha')==a.expected_source_sha:break
             else:raise RuntimeError('FRESH_EXPECTED_DRIVER_NOT_DISCOVERED')
             outcome['start_recording']=call('start_recording')

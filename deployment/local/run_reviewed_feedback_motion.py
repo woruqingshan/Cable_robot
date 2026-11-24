@@ -59,6 +59,7 @@ def main():
         def check():
             if abort_requested.is_set():raise RuntimeError('OPERATOR_CANCELLED')
             d=snapshot()
+            if d.get('gate',{}).get('error'):raise RuntimeError('DRIVER_FAULT:'+d['gate']['error'])
             if (d.get('source_sha')!=a.expected_source_sha or not d.get('feedback',{}).get('valid')
                     or time.monotonic_ns()-d.get('_received_ns',0)>500_000_000):
                 raise RuntimeError('FEEDBACK_OR_SOURCE_UNAVAILABLE')
@@ -80,10 +81,13 @@ def main():
             return response
         arm=ArmInterface(node,limits,servo_controller_topic=prefix+'/reviewed_servo_command',
             bus_servo_set_state_topic=prefix+'/reviewed_stop_command')
+        motion_attempted=False
         class GuardedArm:
             def move_joint(self,pulses,seconds):
                 check()
                 if arm.servo_position_pub.get_subscription_count()!=1:raise RuntimeError('EXPECTED_ONE_COMMAND_OWNER')
+                nonlocal motion_attempted
+                motion_attempted=True
                 sent_after=time.monotonic_ns();arm.move_joint(pulses,seconds)
                 deadline=time.monotonic()+1
                 while time.monotonic()<deadline:
@@ -97,7 +101,9 @@ def main():
             end=time.monotonic()+8
             while time.monotonic()<end:
                 try:check();break
-                except RuntimeError:time.sleep(.05)
+                except RuntimeError as error:
+                    if str(error).startswith('DRIVER_FAULT:'):raise
+                    time.sleep(.05)
             else:raise RuntimeError('DRIVER_NOT_READY')
             outcome['initial_feedback']=check()['feedback']
             request=SetParametersAtomically.Request()
@@ -106,6 +112,7 @@ def main():
             response=call('/ros_robot_controller/set_parameters_atomically',request,SetParametersAtomically)
             if not response.result.successful:raise RuntimeError(response.result.reason)
             call(prefix+'/arm_reviewed_motion')
+            outcome['motion_capability_armed']=True
             outcome['start_recording']=json.loads(call(prefix+'/start_recording').message)
             outcome['sequence_started_monotonic_ns']=time.monotonic_ns()
             logger.record(stage='dynamic_start',monotonic_ns=outcome['sequence_started_monotonic_ns'],plan_sha256=a.plan_sha256)
@@ -120,7 +127,7 @@ def main():
             outcome.update(status='FAILED',error=repr(e))
             try:
                 d=snapshot()
-                if not any(c.get('kind')=='stop' for c in d.get('commands',[])):
+                if motion_attempted and not any(c.get('kind')=='stop' for c in d.get('commands',[])):
                     arm.stop_arm();time.sleep(.2)
             except Exception as stop_error:outcome['stop_error']=str(stop_error)
             if 'start_recording' in outcome and 'stop_recording' not in outcome:
@@ -128,7 +135,10 @@ def main():
                 except Exception as stop_error:outcome['recording_stop_error']=str(stop_error)
             outcome['final_status']=snapshot();outcome['driver_statuses']=statuses
         finally:
-            logger.record(stage='dynamic_end',success=outcome['status']=='RECORDED',monotonic_ns=time.monotonic_ns())
+            outcome['motion_command_attempted']=motion_attempted
+            outcome.setdefault('motion_capability_armed',False)
+            try:logger.record(stage='dynamic_end',success=outcome['status']=='RECORDED',monotonic_ns=time.monotonic_ns())
+            except Exception as error:outcome['logger_error']=str(error)
             result.write(json.dumps(outcome,indent=2)+'\n')
             cancelled.set();worker.join(timeout=1);executor.shutdown(timeout_sec=1)
             node.destroy_node();rclpy.shutdown()

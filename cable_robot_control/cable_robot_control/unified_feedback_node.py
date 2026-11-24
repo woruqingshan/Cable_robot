@@ -198,6 +198,14 @@ class UnifiedFeedbackNode(RosRobotController):
                 try:self._send_stop()
                 finally:self.board._bounded_bus_feedback.lock.release()
             except Exception as e:self.motion_error='STOP_NOT_CONFIRMED_OPERATOR_REQUIRED:'+str(e)
+        evidence=dict(report=report,gate=self.board._bounded_bus_feedback.status(),
+            collector=self.collector.stats.copy(),source_sha=self.source_sha,
+            host_system_ns=time.time_ns(),host_monotonic_ns=time.monotonic_ns(),motion_error=self.motion_error)
+        print('FEEDBACK_FAULT_EVIDENCE '+json.dumps(evidence,sort_keys=True),flush=True)
+        try:
+            path=self.root/('fault_'+uuid.uuid4().hex+'.json')
+            with path.open('x') as f:json.dump(evidence,f,indent=2)
+        except Exception as error:self.get_logger().error('FAULT_EVIDENCE_WRITE_FAILED:'+type(error).__name__)
 
     def close_feedback(self):
         self.collector.stop()

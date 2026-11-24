@@ -28,7 +28,8 @@ class ExperimentalReadbackGate(ReadbackGate):
 
     def status(self):
         result = super().status()
-        result.update(experimental_continuous_enabled=self.armed,
+        result.update(experimental_continuous_configured=self.armed,
+            experimental_continuous_enabled=self.armed and not self.fault,
             continuous_readback_supported=True, trusted_continuous_feedback=False,
             inner_association_verified=False)
         return result
@@ -101,6 +102,7 @@ class ContinuousFeedbackCollector(PositionCapture):
                 or now-sample['channels'][0]['read_started_at_ns']>500_000_000
                 or now<sample['channels'][-1]['response_received_at_ns']):
             return dict(valid=False, error=fault or 'STALE_OR_MISSING_FEEDBACK',
+                        last_fault_report=sample if fault else None,
                         source_type='unknown', canonical_observation_eligible=False)
         return dict(valid=True, report=sample, source_type='unknown',
                     canonical_observation_eligible=False)

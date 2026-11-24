@@ -45,7 +45,7 @@ class Port:
    assert list(b[6:-1])==[1,2,3,4];self.stops+=1;return len(b)
   assert b[4]==5 and len(b)==7, b.hex()
   i=b[5];self.requests+=1
-  data=bytes([0xaa,0x55,5,5])+struct.pack('<BBbh',i,5,0,500+i)
+  data=bytes([0xaa,0x55,5,5])+struct.pack('<BBbh',i,5,-1 if getattr(self,'force_error',False) else 0,500+i)
   data+=bytes([checksum_crc8(data[2:])])
   for v in data:self.q.put(bytes([v]))
   return len(b)
@@ -92,6 +92,14 @@ try:
   row=BusServoState();row.present_id=[1,i];row.stop=[1,0];stop.state.append(row)
  node._stop_message(stop);spin(.1);assert ports[0].stops==1
  assert node.board._maintenance_writer.policy.stopped
+ ports[0].force_error=True;spin(.2)
+ assert node.board._bounded_bus_feedback.fault=='DEVICE_ERROR'
+ assert node.collector.stop_event.is_set()
+ stopped_count=ports[0].requests;spin(.1);assert ports[0].requests==stopped_count
+ files=list(Path(node.root).glob('fault_*.json'));assert len(files)==1
+ fault=json.loads(files[0].read_text());assert fault['report']['channels'][-1]['rx_frame_hex']
+ assert fault['gate']['error']=='DEVICE_ERROR'
+ assert node.collector.snapshot()['last_fault_report']['complete'] is False
  assert node.provider.read_state_snapshot()['raw_values']==[None]*6
  assert node.board._bounded_bus_feedback.status()['trusted_continuous_feedback'] is False
 finally:
