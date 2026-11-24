@@ -1,0 +1,19 @@
+{
+  "branch": "feat/real-operation-pipeline",
+  "experiment_client_sha": "95621edcb758e653d42473958374802d8ab326e1",
+  "experiment_cloud_sha": "95621edcb758e653d42473958374802d8ab326e1",
+  "feedback_runtime_sha": "73aafa9ecac071206f17afb095eb938e5a56a670",
+  "robot_raw_directory": "/home/ubuntu/zsy_projects/real_operation_evidence/stage1_20261124T1834",
+  "cloud_raw_directory": "/root/autodl-tmp/idc-vla/runs/stage1_20261124",
+  "robot_camera_unit": "idc-stage1-d405.service",
+  "robot_feedback_unit": "idc-stage1-feedback.service",
+  "feedback_final_state": "PAUSED",
+  "feedback_final_error": "READ_TIMEOUT",
+  "motion_permission": false,
+  "motion_commands": [],
+  "execution_enabled": false,
+  "cloud_host": "127.0.0.1",
+  "cloud_port": 8000,
+  "robot_tunnel_port": 18000,
+  "automatic_recovery_verified": false
+}

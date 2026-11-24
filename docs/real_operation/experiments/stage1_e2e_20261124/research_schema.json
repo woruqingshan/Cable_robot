@@ -1,0 +1,377 @@
+{
+  "$defs": {
+    "GripperState": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "const": "r_joint",
+          "title": "Name",
+          "type": "string"
+        },
+        "position": {
+          "title": "Position",
+          "type": "number"
+        },
+        "unit": {
+          "const": "rad",
+          "title": "Unit",
+          "type": "string"
+        },
+        "stamp": {
+          "$ref": "#/$defs/SourceStamp"
+        },
+        "simulated": {
+          "title": "Simulated",
+          "type": "boolean"
+        },
+        "calibrated": {
+          "title": "Calibrated",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "name",
+        "position",
+        "unit",
+        "stamp",
+        "simulated",
+        "calibrated"
+      ],
+      "title": "GripperState",
+      "type": "object"
+    },
+    "ImagePayload": {
+      "additionalProperties": false,
+      "properties": {
+        "camera_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_./:-]+$",
+          "title": "Camera Id",
+          "type": "string"
+        },
+        "frame_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_./:-]+$",
+          "title": "Frame Id",
+          "type": "string"
+        },
+        "stamp": {
+          "$ref": "#/$defs/SourceStamp"
+        },
+        "width": {
+          "exclusiveMinimum": 0,
+          "maximum": 1024,
+          "title": "Width",
+          "type": "integer"
+        },
+        "height": {
+          "exclusiveMinimum": 0,
+          "maximum": 1024,
+          "title": "Height",
+          "type": "integer"
+        },
+        "codec": {
+          "const": "png",
+          "title": "Codec",
+          "type": "string"
+        },
+        "pixel_encoding": {
+          "const": "rgb8",
+          "title": "Pixel Encoding",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "data_base64": {
+          "maxLength": 1398104,
+          "minLength": 1,
+          "title": "Data Base64",
+          "type": "string"
+        }
+      },
+      "required": [
+        "camera_id",
+        "frame_id",
+        "stamp",
+        "width",
+        "height",
+        "codec",
+        "pixel_encoding",
+        "sha256",
+        "data_base64"
+      ],
+      "title": "ImagePayload",
+      "type": "object"
+    },
+    "JointPositions": {
+      "additionalProperties": false,
+      "properties": {
+        "names": {
+          "items": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_./:-]+$",
+            "type": "string"
+          },
+          "maxItems": 5,
+          "minItems": 5,
+          "title": "Names",
+          "type": "array"
+        },
+        "positions": {
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 5,
+          "minItems": 5,
+          "title": "Positions",
+          "type": "array"
+        },
+        "unit": {
+          "const": "rad",
+          "title": "Unit",
+          "type": "string"
+        },
+        "stamp": {
+          "$ref": "#/$defs/SourceStamp"
+        }
+      },
+      "required": [
+        "names",
+        "positions",
+        "unit",
+        "stamp"
+      ],
+      "title": "JointPositions",
+      "type": "object"
+    },
+    "ResearchSource": {
+      "additionalProperties": false,
+      "properties": {
+        "profile_id": {
+          "const": "real_research_inspection_v1",
+          "default": "real_research_inspection_v1",
+          "title": "Profile Id",
+          "type": "string"
+        }
+      },
+      "title": "ResearchSource",
+      "type": "object"
+    },
+    "SourceStamp": {
+      "additionalProperties": false,
+      "properties": {
+        "nanoseconds": {
+          "minimum": 0,
+          "title": "Nanoseconds",
+          "type": "integer"
+        },
+        "clock_domain": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_./:-]+$",
+          "title": "Clock Domain",
+          "type": "string"
+        }
+      },
+      "required": [
+        "nanoseconds",
+        "clock_domain"
+      ],
+      "title": "SourceStamp",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "request_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_./:-]+$",
+      "title": "Request Id",
+      "type": "string"
+    },
+    "session_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_./:-]+$",
+      "title": "Session Id",
+      "type": "string"
+    },
+    "observation_seq": {
+      "minimum": 0,
+      "title": "Observation Seq",
+      "type": "integer"
+    },
+    "task_revision": {
+      "minimum": 0,
+      "title": "Task Revision",
+      "type": "integer"
+    },
+    "robot_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_./:-]+$",
+      "title": "Robot Id",
+      "type": "string"
+    },
+    "robot_profile_id": {
+      "const": "jetrover_joint_abs_rad_v1",
+      "title": "Robot Profile Id",
+      "type": "string"
+    },
+    "state_revision": {
+      "minimum": 0,
+      "title": "State Revision",
+      "type": "integer"
+    },
+    "scene_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_./:-]+$",
+      "title": "Scene Id",
+      "type": "string"
+    },
+    "scene_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Scene Sha256",
+      "type": "string"
+    },
+    "model_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_./:-]+$",
+      "title": "Model Id",
+      "type": "string"
+    },
+    "source_profile": {
+      "$ref": "#/$defs/ResearchSource"
+    },
+    "capture_mode": {
+      "default": "live",
+      "enum": [
+        "live",
+        "recorded_replay"
+      ],
+      "title": "Capture Mode",
+      "type": "string"
+    },
+    "replay_reference": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Replay Reference"
+    },
+    "simulated": {
+      "const": false,
+      "default": false,
+      "title": "Simulated",
+      "type": "boolean"
+    },
+    "physical_calibrated": {
+      "const": false,
+      "default": false,
+      "title": "Physical Calibrated",
+      "type": "boolean"
+    },
+    "execution_enabled": {
+      "const": false,
+      "default": false,
+      "title": "Execution Enabled",
+      "type": "boolean"
+    },
+    "execution_allowed": {
+      "const": false,
+      "default": false,
+      "title": "Execution Allowed",
+      "type": "boolean"
+    },
+    "canonical_observation_eligible": {
+      "const": false,
+      "default": false,
+      "title": "Canonical Observation Eligible",
+      "type": "boolean"
+    },
+    "instruction": {
+      "maxLength": 2048,
+      "minLength": 1,
+      "title": "Instruction",
+      "type": "string"
+    },
+    "joints": {
+      "$ref": "#/$defs/JointPositions"
+    },
+    "gripper": {
+      "$ref": "#/$defs/GripperState"
+    },
+    "images": {
+      "items": {
+        "$ref": "#/$defs/ImagePayload"
+      },
+      "maxItems": 1,
+      "minItems": 1,
+      "title": "Images",
+      "type": "array"
+    },
+    "feedback_report": {
+      "additionalProperties": true,
+      "title": "Feedback Report",
+      "type": "object"
+    },
+    "conversion_evidence": {
+      "additionalProperties": true,
+      "title": "Conversion Evidence",
+      "type": "object"
+    },
+    "timing_evidence": {
+      "additionalProperties": true,
+      "title": "Timing Evidence",
+      "type": "object"
+    },
+    "capabilities": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Capabilities",
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema_version",
+    "request_id",
+    "session_id",
+    "observation_seq",
+    "task_revision",
+    "robot_id",
+    "robot_profile_id",
+    "state_revision",
+    "scene_id",
+    "scene_sha256",
+    "model_id",
+    "instruction",
+    "joints",
+    "gripper",
+    "images",
+    "feedback_report",
+    "conversion_evidence",
+    "timing_evidence"
+  ],
+  "title": "ResearchObservation",
+  "type": "object"
+}

@@ -14,13 +14,9 @@ class ResearchObservation(Identity):
     simulated: Literal[False] = False
     physical_calibrated: Literal[False] = False
     execution_enabled: Literal[False] = False
+    execution_allowed: Literal[False] = False
     canonical_observation_eligible: Literal[False] = False
     instruction: str = Field(min_length=1,max_length=2048)
-    source_profile: ResearchSource = Field(default_factory=ResearchSource)
-    simulated: Literal[False] = False
-    physical_calibrated: Literal[False] = False
-    canonical_observation_eligible: Literal[False] = False
-    execution_allowed: Literal[False] = False
     joints: JointPositions
     gripper: GripperState
     images: list[ImagePayload] = Field(min_length=1,max_length=1)

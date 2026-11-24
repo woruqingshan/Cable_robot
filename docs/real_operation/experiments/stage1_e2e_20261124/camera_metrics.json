@@ -1,0 +1,135 @@
+{
+  "streams": {
+    "rgb": {
+      "received": 846,
+      "receive_hz": 28.011277393848243,
+      "duplicate_stamps": 0,
+      "backward_stamps": 0,
+      "max_source_gap_ns": 166696045,
+      "large_source_gaps": 2,
+      "exact_driver_drop_count": null,
+      "last_receive_age_s": 0.051358176000007916
+    },
+    "depth": {
+      "received": 851,
+      "receive_hz": 28.37278375885496,
+      "duplicate_stamps": 0,
+      "backward_stamps": 0,
+      "max_source_gap_ns": 100017334,
+      "large_source_gaps": 1,
+      "exact_driver_drop_count": null,
+      "last_receive_age_s": 0.05568844800001216
+    }
+  },
+  "saved_samples": {
+    "rgb": 45,
+    "depth": 54
+  },
+  "intentional_sampling_skips": {
+    "rgb": 801,
+    "depth": 797
+  },
+  "camera_info": {
+    "depth": {
+      "source_stamp_ns": 1795517549497040527,
+      "frame_id": "wrist_depth_optical_frame",
+      "width": 848,
+      "height": 480,
+      "distortion_model": "plumb_bob",
+      "k": [
+        429.34185791015625,
+        0.0,
+        415.9740295410156,
+        0.0,
+        429.34185791015625,
+        242.36831665039062,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "d": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "r": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "p": [
+        429.34185791015625,
+        0.0,
+        415.9740295410156,
+        0.0,
+        0.0,
+        429.34185791015625,
+        242.36831665039062,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0
+      ]
+    },
+    "color": {
+      "source_stamp_ns": 1795517549497344727,
+      "frame_id": "wrist_color_optical_frame",
+      "width": 848,
+      "height": 480,
+      "distortion_model": "plumb_bob",
+      "k": [
+        433.5417785644531,
+        0.0,
+        416.40655517578125,
+        0.0,
+        432.5657958984375,
+        240.75936889648438,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "d": [
+        -0.05307246744632721,
+        0.05723446607589722,
+        -0.00017904680862557143,
+        0.00023547708406113088,
+        -0.018681306391954422
+      ],
+      "r": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "p": [
+        433.5417785644531,
+        0.0,
+        416.40655517578125,
+        0.0,
+        0.0,
+        432.5657958984375,
+        240.75936889648438,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0
+      ]
+    }
+  },
+  "rgb_depth_synchronization": "not_asserted"
+}

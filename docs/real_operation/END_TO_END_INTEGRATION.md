@@ -1,3 +1,5 @@
+最新Stage 1：52次真实实时输入推理返回50×6完整有限动作，未执行；人工恢复后600组/30秒反馈验证通过。实验后ID1 READ_TIMEOUT使当前查询暂停，真实自动恢复未通过。详见[Stage 1总结](STAGE1_DEVELOPMENT_SUMMARY.md)、[使用说明](STAGE1_USER_GUIDE.md)与[实验](experiments/stage1_e2e_20261124/experiment_report.md)。下文保留历史阶段边界。
+
 # JetRover → AutoDL Shadow 联调：2026-11-20
 
 最新R1-F1/F2/F3：同一73aafa9驱动完成静态600组/3600回复、动态403组/2418回复，约20Hz，已完成实际A→B→A及现场确认。R1基础功能PASS_WITH_LIMITATIONS；未知Status保持隔离，录制后ID10/Status=-1自然故障已保全，查询暂停，真实恢复未执行。物理标定、D405与Observation同步转入R2-A。详见[联合报告](experiments/r1_f1_joint_20261124/experiment_report.md)。

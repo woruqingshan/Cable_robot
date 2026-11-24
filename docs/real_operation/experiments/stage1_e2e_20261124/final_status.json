@@ -1,0 +1,107 @@
+{
+  "collector_state": "PAUSED",
+  "motion_permission": false,
+  "source_sha": "73aafa9ecac071206f17afb095eb938e5a56a670",
+  "collector": {
+    "cycles": 8676,
+    "skipped_periods": 6,
+    "observer_drops": 0,
+    "observer_errors": 0,
+    "record_errors": 1,
+    "command_errors": 0
+  },
+  "gate": {
+    "state": "FAULT",
+    "error": "READ_TIMEOUT",
+    "used_keys": [
+      [
+        1,
+        5
+      ],
+      [
+        2,
+        5
+      ],
+      [
+        3,
+        5
+      ],
+      [
+        4,
+        5
+      ],
+      [
+        5,
+        5
+      ],
+      [
+        10,
+        5
+      ]
+    ],
+    "discarded_packets": 0,
+    "evidence_reference": "R1 experimental continuous 73aafa9ecac071206f17afb095eb938e5a56a670",
+    "continuous_readback_supported": true,
+    "hardware_validated": false,
+    "diagnostic_only": true,
+    "canonical_observation_eligible": false,
+    "experimental_continuous_configured": true,
+    "experimental_continuous_enabled": false,
+    "trusted_continuous_feedback": false,
+    "inner_association_verified": false
+  },
+  "feedback": {
+    "valid": false,
+    "error": "READ_TIMEOUT",
+    "last_fault_report": {
+      "sequence": 8675,
+      "channels": [
+        {
+          "servo_id": 1,
+          "raw_pulse": null,
+          "source_type": "unknown",
+          "inner_association_verified": false,
+          "canonical_observation_eligible": false,
+          "device_sample_time_ns": null,
+          "error": "READ_TIMEOUT",
+          "completed_transaction": false,
+          "outer_frame_validated": false,
+          "capture_elapsed_ns": 101062133,
+          "tx_frame_hex": "aa55050205016f",
+          "rx_frame_hex": null
+        }
+      ],
+      "complete": false,
+      "batch_elapsed_ns": 101121752,
+      "source_type": "unknown",
+      "inner_association_verified": false,
+      "canonical_observation_eligible": false,
+      "physical_calibrated": false,
+      "device_sample_span_ns": null,
+      "host_transaction_span_ns": null,
+      "schedule_started_ns": 659683010492,
+      "scheduled_ns": 659682412433,
+      "schedule_lateness_ns": 598059,
+      "requested_hz": 20.0,
+      "skipped_periods": 2
+    },
+    "source_type": "unknown",
+    "canonical_observation_eligible": false
+  },
+  "recording": {
+    "directory": "/home/ubuntu/zsy_projects/real_operation_evidence/r1_f1_20261124T090956Z/recordings/run_b7ef6bb259d24d1ba9823417c074c77b",
+    "active": false,
+    "error": null,
+    "accepted_batches": 600,
+    "written_batches": 600,
+    "rejected_batches": 0,
+    "started_monotonic_ns": 300458364782,
+    "stopped_monotonic_ns": 330472648979,
+    "complete": true
+  },
+  "commands": [],
+  "motion_error": null,
+  "source_type": "unknown",
+  "physical_calibrated": false,
+  "canonical_observation_eligible": false
+}

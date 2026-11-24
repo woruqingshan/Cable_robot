@@ -1,0 +1,2 @@
+PASS default research disabled and canonical retained
+PASS separate research route rejects canonical/malformed payloads

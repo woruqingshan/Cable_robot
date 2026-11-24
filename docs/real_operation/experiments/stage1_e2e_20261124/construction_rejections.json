@@ -1,0 +1,50 @@
+[
+  {
+    "at": 1795517521.334283,
+    "observation_error": "1 validation error for ResearchObservation\n  Value error, STALE_INSPECTION_INPUT [type=value_error, input_value={'schema_version': 1, 're...ation_verified': False}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/value_error"
+  },
+  {
+    "at": 1795517523.415684,
+    "observation_error": "1 validation error for ResearchObservation\n  Value error, STALE_INSPECTION_INPUT [type=value_error, input_value={'schema_version': 1, 're...ation_verified': False}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/value_error"
+  },
+  {
+    "at": 1795517525.4213467,
+    "observation_error": "1 validation error for ResearchObservation\n  Value error, STALE_INSPECTION_INPUT [type=value_error, input_value={'schema_version': 1, 're...ation_verified': False}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/value_error"
+  },
+  {
+    "at": 1795517528.7531767,
+    "observation_error": "1 validation error for ResearchObservation\n  Value error, STALE_INSPECTION_INPUT [type=value_error, input_value={'schema_version': 1, 're...ation_verified': False}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/value_error"
+  },
+  {
+    "at": 1795517530.7703335,
+    "observation_error": "1 validation error for ResearchObservation\n  Value error, STALE_INSPECTION_INPUT [type=value_error, input_value={'schema_version': 1, 're...ation_verified': False}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/value_error"
+  },
+  {
+    "at": 1795517534.8170235,
+    "observation_error": "1 validation error for ResearchObservation\n  Value error, STALE_INSPECTION_INPUT [type=value_error, input_value={'schema_version': 1, 're...ation_verified': False}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/value_error"
+  },
+  {
+    "at": 1795517536.8275335,
+    "observation_error": "1 validation error for ResearchObservation\n  Value error, STALE_INSPECTION_INPUT [type=value_error, input_value={'schema_version': 1, 're...ation_verified': False}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/value_error"
+  },
+  {
+    "at": 1795517538.8453054,
+    "observation_error": "1 validation error for ResearchObservation\n  Value error, STALE_INSPECTION_INPUT [type=value_error, input_value={'schema_version': 1, 're...ation_verified': False}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/value_error"
+  },
+  {
+    "at": 1795517540.8548098,
+    "observation_error": "1 validation error for ResearchObservation\n  Value error, STALE_INSPECTION_INPUT [type=value_error, input_value={'schema_version': 1, 're...ation_verified': False}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/value_error"
+  },
+  {
+    "at": 1795517542.8927913,
+    "observation_error": "1 validation error for ResearchObservation\n  Value error, STALE_INSPECTION_INPUT [type=value_error, input_value={'schema_version': 1, 're...ation_verified': False}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/value_error"
+  },
+  {
+    "at": 1795517544.9445195,
+    "observation_error": "1 validation error for ResearchObservation\n  Value error, STALE_INSPECTION_INPUT [type=value_error, input_value={'schema_version': 1, 're...ation_verified': False}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/value_error"
+  },
+  {
+    "at": 1795517547.6180186,
+    "observation_error": "1 validation error for ResearchObservation\n  Value error, STALE_INSPECTION_INPUT [type=value_error, input_value={'schema_version': 1, 're...ation_verified': False}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/value_error"
+  }
+]

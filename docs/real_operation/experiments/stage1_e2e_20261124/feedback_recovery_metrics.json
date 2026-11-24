@@ -1,0 +1,92 @@
+{
+  "status": "MEASURED",
+  "recording_complete": true,
+  "recording_seconds": 30.014284197,
+  "complete_snapshots": 600,
+  "queries_attempted": 3600,
+  "valid_outer_replies": 3600,
+  "outer_query_success_fraction": 1.0,
+  "actual_update_hz": 19.997900073596178,
+  "complete_snapshots_per_recording_second": 19.99048173402621,
+  "mean_latency_ms": 3.3288297869444445,
+  "p95_latency_ms": 5.548126,
+  "p99_latency_ms": 7.630033,
+  "max_latency_ms": 12.84048,
+  "mean_host_span_ms": 21.109180776666665,
+  "p95_host_span_ms": 26.796068,
+  "max_host_span_ms": 36.98063,
+  "incomplete_snapshots": 0,
+  "skipped_periods": 0,
+  "source_type": "unknown",
+  "device_sample_time_ns": null,
+  "inner_association_verified": false,
+  "physical_calibrated": false,
+  "canonical_observation_eligible": false,
+  "p95_p99_method": "nearest rank",
+  "per_id": {
+    "1": {
+      "valid_outer_replies": 600,
+      "min_pulse": 499,
+      "max_pulse": 500,
+      "pulse_population_stddev": 0.4823524529728121,
+      "mean_latency_ms": 2.9819566416666667,
+      "p95_latency_ms": 5.058069,
+      "p99_latency_ms": 6.016192,
+      "max_latency_ms": 7.630033
+    },
+    "2": {
+      "valid_outer_replies": 600,
+      "min_pulse": 764,
+      "max_pulse": 765,
+      "pulse_population_stddev": 0.16592334240713558,
+      "mean_latency_ms": 3.3111148833333335,
+      "p95_latency_ms": 4.783927,
+      "p99_latency_ms": 7.946828,
+      "max_latency_ms": 12.84048
+    },
+    "3": {
+      "valid_outer_replies": 600,
+      "min_pulse": 5,
+      "max_pulse": 14,
+      "pulse_population_stddev": 1.0659880653907696,
+      "mean_latency_ms": 3.5478957883333333,
+      "p95_latency_ms": 5.900463,
+      "p99_latency_ms": 8.383698,
+      "max_latency_ms": 10.556527
+    },
+    "4": {
+      "valid_outer_replies": 600,
+      "min_pulse": 216,
+      "max_pulse": 220,
+      "pulse_population_stddev": 0.7650689874485539,
+      "mean_latency_ms": 3.3317238166666665,
+      "p95_latency_ms": 5.5578,
+      "p99_latency_ms": 7.834287,
+      "max_latency_ms": 11.460412
+    },
+    "5": {
+      "valid_outer_replies": 600,
+      "min_pulse": 500,
+      "max_pulse": 500,
+      "pulse_population_stddev": 0.0,
+      "mean_latency_ms": 3.4927611366666667,
+      "p95_latency_ms": 6.035408,
+      "p99_latency_ms": 8.797497,
+      "max_latency_ms": 12.095978
+    },
+    "10": {
+      "valid_outer_replies": 600,
+      "min_pulse": 498,
+      "max_pulse": 499,
+      "pulse_population_stddev": 0.40848976595367587,
+      "mean_latency_ms": 3.307526455,
+      "p95_latency_ms": 5.389429,
+      "p99_latency_ms": 6.954577,
+      "max_latency_ms": 9.796873
+    }
+  },
+  "recovery_mode": "operator_power_cycle_then_single_owner_readonly_restart",
+  "automatic_recovery_verified": false,
+  "motion_permission": false,
+  "limitation": "Unknown actual STM32 failure termination semantics; cannot resume ambiguous in-flight session safely"
+}

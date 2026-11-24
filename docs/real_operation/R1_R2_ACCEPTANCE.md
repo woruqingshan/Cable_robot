@@ -1,3 +1,5 @@
+最新Stage 1：52次真实实时输入推理返回50×6完整有限动作，未执行；人工恢复后600组/30秒反馈验证通过。实验后ID1 READ_TIMEOUT使当前查询暂停，真实自动恢复未通过。详见[Stage 1总结](STAGE1_DEVELOPMENT_SUMMARY.md)、[使用说明](STAGE1_USER_GUIDE.md)与[实验](experiments/stage1_e2e_20261124/experiment_report.md)。下文保留历史阶段边界。
+
 # R1功能验收与R2入口：2026-11-24
 
 [本轮联合实验报告与全部数据](experiments/r1_f1_joint_20261124/experiment_report.md)。

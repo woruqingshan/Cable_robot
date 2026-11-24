@@ -1,0 +1,29 @@
+{
+  "requested_seconds": 30.0,
+  "expected_source_sha": "73aafa9ecac071206f17afb095eb938e5a56a670",
+  "status": "RECORDED",
+  "start_recording": {
+    "directory": "/home/ubuntu/zsy_projects/real_operation_evidence/r1_f1_20261124T090956Z/recordings/run_b7ef6bb259d24d1ba9823417c074c77b",
+    "active": true,
+    "error": null,
+    "accepted_batches": 0,
+    "written_batches": 0,
+    "rejected_batches": 0,
+    "started_monotonic_ns": 300458364782,
+    "stopped_monotonic_ns": null,
+    "complete": false
+  },
+  "stop_recording": {
+    "directory": "/home/ubuntu/zsy_projects/real_operation_evidence/r1_f1_20261124T090956Z/recordings/run_b7ef6bb259d24d1ba9823417c074c77b",
+    "active": false,
+    "error": null,
+    "accepted_batches": 600,
+    "written_batches": 600,
+    "rejected_batches": 0,
+    "started_monotonic_ns": 300458364782,
+    "stopped_monotonic_ns": 330472648979,
+    "complete": true
+  },
+  "collector_continued": true,
+  "full_original_path": "/home/ubuntu/zsy_projects/real_operation_evidence/stage1_20261124T1834/post_power_recovery_trial.json"
+}
