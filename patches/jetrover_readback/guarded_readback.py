@@ -126,6 +126,9 @@ class ReadbackGate:
                 self.reply = PositionSample(actual_id, pulse, started, now, bytes(data))
                 self.condition.notify_all()
 
+    def _repeat_diagnostic_allowed(self):
+        return self.diagnostic_repeat_budget > 0
+
     def read_position(self, servo_id, command, unpack, send, *, timeout_s=0.1,
                       write_timeout_s=None, reception_enabled=False, send_with_deadline=False, diagnostic=False):
         if type(servo_id) is not int or servo_id not in SERVO_IDS or command != 0x05 or unpack != "<BBbh":
@@ -157,12 +160,12 @@ class ReadbackGate:
                     if self.diagnostic_attempts >= self.diagnostic_attempt_limit:
                         self.fail("DIAGNOSTIC_BUDGET_EXHAUSTED")
                         raise ReadbackFault(self.fault)
-                if key in self.used and not (diagnostic and self.diagnostic_repeat_budget > 0):
+                if key in self.used and not (diagnostic and self._repeat_diagnostic_allowed()):
                     self.fail("KEY_REUSE_UNSAFE")
                     raise ReadbackFault(self.fault)
                 if diagnostic:
                     self.diagnostic_attempts += 1
-                    if key in self.used:
+                    if key in self.used and self.diagnostic_repeat_budget > 0:
                         self.diagnostic_repeat_budget -= 1
                 self.used.add(key)
                 self.pending = (servo_id, command, started, deadline)
@@ -262,36 +265,8 @@ class MaintenanceFrameWriter:
             self.lock.release()
 
 
-class BoundedDiagnosticSession:
-    """Finite unverified captures. No recovery, autonomous polling or new port.
-
-    Repeated diagnostic replies have UNPROVEN transaction identity. They MUST NOT
-    be promoted to trusted feedback, regardless of apparent stability or rate.
-    """
-    def __init__(self, board, plan, *, clock_ns=time.monotonic_ns, sleep=time.sleep, on_cycle=None):
-        self.validate_plan(plan)
-        self.board, self.plan = board, dict(plan)
-        self.clock_ns, self.sleep, self.on_cycle = clock_ns, sleep, on_cycle
-        self.phase = "PREPARED"
-        self.operation_lock = threading.Lock()
-
-    @staticmethod
-    def validate_plan(plan):
-        if (not isinstance(plan, dict) or plan.get("schema_version") != 1
-                or plan.get("prior_used_ids") != [1]
-                or plan.get("d2_ids") != [2, 3, 4, 5, 10]
-                or type(plan.get("d3_cycles")) is not int or not 1 <= plan["d3_cycles"] <= 3
-                or type(plan.get("cycle_interval_s")) not in (int, float)
-                or not 1 <= plan["cycle_interval_s"] <= 5
-                or not isinstance(plan.get("reference"), str) or not plan["reference"].strip()
-                or len(plan["reference"]) > 512
-                or not isinstance(plan.get("prior_evidence_sha256"), str)
-                or len(plan["prior_evidence_sha256"]) != 64
-                or any(c not in "0123456789abcdef" for c in plan["prior_evidence_sha256"])
-                or not isinstance(plan.get("source_sha"), str) or len(plan["source_sha"]) != 40
-                or any(c not in "0123456789abcdef" for c in plan["source_sha"])):
-            raise ValueError("INVALID_FINITE_DIAGNOSTIC_PLAN")
-
+class PositionCapture:
+    """Shared single-SDK capture; no scheduling or permission policy."""
     def _capture(self, servo_id):
         self.board._last_bus_tx_frame = self.board._last_bus_rx_frame = None
         row = dict(servo_id=servo_id, raw_pulse=None, source_type="unknown",
@@ -348,6 +323,38 @@ class BoundedDiagnosticSession:
         if self.board._bounded_bus_feedback.fault:
             report["complete"] = False
         return report
+
+
+class BoundedDiagnosticSession(PositionCapture):
+    """Finite unverified captures. No recovery, autonomous polling or new port.
+
+    Repeated diagnostic replies have UNPROVEN transaction identity. They MUST NOT
+    be promoted to trusted feedback, regardless of apparent stability or rate.
+    """
+    def __init__(self, board, plan, *, clock_ns=time.monotonic_ns, sleep=time.sleep, on_cycle=None):
+        self.validate_plan(plan)
+        self.board, self.plan = board, dict(plan)
+        self.clock_ns, self.sleep, self.on_cycle = clock_ns, sleep, on_cycle
+        self.phase = "PREPARED"
+        self.operation_lock = threading.Lock()
+
+    @staticmethod
+    def validate_plan(plan):
+        if (not isinstance(plan, dict) or plan.get("schema_version") != 1
+                or plan.get("prior_used_ids") != [1]
+                or plan.get("d2_ids") != [2, 3, 4, 5, 10]
+                or type(plan.get("d3_cycles")) is not int or not 1 <= plan["d3_cycles"] <= 3
+                or type(plan.get("cycle_interval_s")) not in (int, float)
+                or not 1 <= plan["cycle_interval_s"] <= 5
+                or not isinstance(plan.get("reference"), str) or not plan["reference"].strip()
+                or len(plan["reference"]) > 512
+                or not isinstance(plan.get("prior_evidence_sha256"), str)
+                or len(plan["prior_evidence_sha256"]) != 64
+                or any(c not in "0123456789abcdef" for c in plan["prior_evidence_sha256"])
+                or not isinstance(plan.get("source_sha"), str) or len(plan["source_sha"]) != 40
+                or any(c not in "0123456789abcdef" for c in plan["source_sha"])):
+            raise ValueError("INVALID_FINITE_DIAGNOSTIC_PLAN")
+
 
     def run(self, stage):
         if not self.operation_lock.acquire(blocking=False):
