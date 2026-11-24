@@ -1,0 +1,1 @@
+sequence,servo_id,raw_pulse,nominal_rad,source_type,physical_calibrated,read_started_at_ns,response_received_at_ns,read_latency_ns,host_transaction_span_ns,scheduled_ns,schedule_started_ns,schedule_lateness_ns,skipped_periods,outer_frame_validated,error,tx_frame_hex,rx_frame_hex

@@ -1,76 +1,53 @@
-# R1 / R2 当前验收：2026-11-24
+# R1 / R2 当前验收：连续反馈实验
 
-唯一分支：feat/real-operation-pipeline。
-本轮测试源码67b763c；固定维护包a04beaf；原始证据检查点3636f61。
-本轮只更新验收记录，原SDK/D2–D4代码复用且原厂运行文件未修改。
+日期2026-11-24；唯一分支feat/real-operation-pipeline。
 
-**USB通路与有限D2–D4诊断验收已通过，可信连续反馈和R2仍未通过。**
-实测详情：[R1_C3_D2_D4_RESULT_20261124.md](R1_C3_D2_D4_RESULT_20261124.md)。
-完整数据：[r1_c3_d2d4_20261124.json](evidence/r1_c3_d2d4_20261124.json)。
+**R1 Final尚未通过：静态30秒成功，停录后持续采集发生DEVICE_ERROR，动态未执行。**
+[完整实验报告与图表](experiments/r1_continuous_20261124/experiment_report.md)。
+[结构化证据](experiments/r1_continuous_20261124/evidence_summary.json)。
 
-|项目|当前结果|证据与边界|
+|项目|当前状态|证据边界|
 |---|---|---|
-|现场与版本|PASS|有人监督、静止、可安全断电；身份、串口所有者和包哈希先核验|
-|M1前置|PASS|另获授权；Restart=no保护后仅SIGTERM原驱动，未重启bringup|
-|Stage A|保持|按键代理未重启，没有第二个串口拥有者|
-|ModemManager|隔离完成|临时停止和runtime mask；udev忽略规则有异常，未认定为根因|
-|C3重绑定|PASS|仅核验接口1-2.1:1.0一次unbind/bind；无设备reset、Hub操作或刷写|
-|独立打开/关闭|PASS|5.012498ms/4.330509ms；无Errno110，前后FD为0|
-|维护包|PASS|a04beaf启动一次，唯一串口拥有者；无运动/Torque订阅|
-|D2|PASS_OUTER_CAPTURE|ID2/3/4/5/10：764/15/219/500/499，5/5外层回复有效|
-|D3|PASS_FINITE_DIAGNOSTIC|18/18；约0.999484Hz，平均2.750845ms，P95/最大3.558081ms|
-|六路主机跨度|PASS_DIAGNOSTIC_METRIC|16.883573/18.153595/16.651849ms；不是设备采样跨度或RGB同步证明|
-|D4映射与换算|PASS_SOFTWARE_CONVENTION|五个机械臂关节加r_joint；名义rad来自厂商配置，实物未标定|
-|D4 ROS2与Provider|PASS_DIAGNOSTIC_ONLY|实收3组，时间戳unset，过期拒绝，正式状态未被替代|
-|FK|NOT_RUN_DEPENDENCY_MISSING|urdf_parser_py/PyKDL/kdl_parser_py缺失；未安装或升级环境|
-|可信连续反馈|NOT_PROVEN|STM32内层关联、迟到/重复边界和实际固件身份未知；保护不删除|
-|物理标定|AWAITING_PHYSICAL_VERIFICATION|零位、方向、内部偏差和夹爪单位未核验|
-|RGB与云端模型|历史PASS|本轮不重复相机/GPU验收；未用旧结果冒充新真实状态联调|
-|真实Observation/R2|BLOCKED|valid=0，submitted=0；来源、标定、真实采样时间和图像同步仍缺证据|
-|原厂与备份|PASS|53份原文件及备份哈希一致|
-|机器人执行|DISABLED|0运动、Torque和VLA执行指令|
+|连续采集模块|IMPLEMENTED|默认20Hz，可配置；无总查询/时长限制；保持unknown来源|
+|串口/调度|STATIC_PASS|唯一Board/FD，串行有界事务，无调度积压或跳过周期|
+|可信/有限保护|PRESERVED|原KEY_REUSE_UNSAFE不删除，独立实验重复不升级可信来源|
+|异步独立录制|LIVE_PASS|30秒停录后采集继续；600组完整写入，未丢队列|
+|静态窗口|PASS|600组、3600/3600外层回复；19.998218Hz；3600对TX/RX离线核验|
+|静态延迟|MEASURED|Mean/P95/P99/Max=3.509593/5.716457/7.175272/11.837745ms|
+|六路主机跨度|MEASURED|Mean22.118906ms、Max31.687296ms；不满足旧20ms同步条件，未放宽|
+|持续运行可靠性|NOT_PASSED|在周期5995看到DEVICE_ERROR；锁存并停止，无自动重试|
+|具体错误ID/Status|UNKNOWN|旧包停录后未独立保全故障帧，不能猜测补齐|
+|统一读/运动串口|IMPLEMENTED_OFFLINE_TESTED|模拟串口+真实ROS通过；实机运动并发未验收|
+|动态轨迹|AUTHORIZED_NOT_RUN|用户批准ID1–4 A→B→A，但反馈在arm前已失效；运动0|
+|真实状态转换|STATIC_PASS_DIAGNOSTIC|ID1–5与ID10分离，名义rad与缓存隔离，采样stamp unset|
+|物理标定/内层关联|UNKNOWN|零位/方向/夹爪、设备采样时刻、STM32事务关联仍未验证|
+|故障留存修补|OFFLINE_PASS_NOT_DEPLOYED|停录时也保存故障帧/日志；改进具体错误提示和停止清理|
+|FK|NOT_RUN|既有依赖缺失，本轮未安装或重写FK|
+|完整真实Observation/R2|BLOCKED|来源、标定、时间同步和当前有效反馈均未满足；本轮未调用AutoDL|
+|原厂/备份|PASS|53份源文件与备份哈希一致；无运行厂商文件替换或刷写|
+|USB/系统|保持|本轮无DTR失败、USB reset/rebind、bringup重启或依赖升级|
 
-## 测试
+## 测试与版本
 
-选定完整相关回归382 passed/2 skipped（25.52秒）。
-清除测试子进程LD_PRELOAD后的同组回归382 passed/2 skipped（22.60秒）。
-跳过PyKDL与FastAPI，不等于相应功能通过；本轮未跑GPU、全HTTP依赖和原生P2/FCL组合。
-真实实机证据另有23对帧校验、3组ROS数据、过期和正式状态隔离检查。
-实机测试已到23次查询预算终点，以下命令仅运行离线/隔离ROS回归，不重发实机查询。
+最终相关回归416 passed、2 skipped，27.30秒；PyKDL、FastAPI未验收。
+新增真实ROS/模拟串口测试覆盖唯一端口、停录后继续、获准命令协调、故障停读与独立留存。
+Mock不代表实机动态通过；不存在动态性能数值或回位误差。
 
-```bash
-source /opt/ros/humble/setup.bash
-source /home/ubuntu/ros2_ws/install/setup.bash
-export PYTHONDONTWRITEBYTECODE=1
-export PYTHONPATH="$PWD:$PWD/vla_protocol/src:$PWD/vla_server/src:$PWD/cable_robot_vla:$PWD/workspace_analysis/src:$PYTHONPATH"
-env -u LD_PRELOAD ROS_DOMAIN_ID=117 RMW_IMPLEMENTATION=rmw_fastrtps_cpp PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 \
- python3 -B -m pytest -q -rs -p no:cacheprovider \
- cable_robot_vla/test/test_wifi_button_adapter.py cable_robot_vla/test/test_r1_*.py \
- cable_robot_vla/test/test_real_sensor_quality.py cable_robot_vla/test/test_real_observation.py \
- cable_robot_vla/test/test_real_node_ros.py vla_protocol/tests \
- cable_robot_vla/test/test_edge_core.py cable_robot_vla/test/test_isolation.py \
- cable_robot_vla/test/test_p2_adapter.py cable_robot_vla/test/test_stage15_adaptation_preview.py \
- cable_robot_vla/test/test_stage23_boundaries.py vla_server/tests/test_shadow_diagnostics.py
-```
+实际运行包a6c828c3e6d26d41c1e94e401d42455739890e80。
+故障修补94cd090d209e42f1b32d6addcaf06d68ff9ebc69已准备，未部署到现场。
+结果文档最新提交不代表实机已切到新代码。
 
-## 当前状态与后续
+当前PID8413持有唯一串口FD，进程active仅表示仍在报告故障，周期数固定5995。
+父服务PID853 Restart=no，按键代理PID834未重启；ModemManager临时屏蔽。
+正常控制未恢复；不自动重开串口、恢复bringup或强制返回A。
+运行时保护在重启后消失，不能作为永久禁用启动动作的保证。
 
-维护PID9236独占串口的现场快照；D2/D3已结束，后续查询不自动继续。
-父服务PID846 active、Restart=no；按键PID841保持；ModemManager停用且runtime masked。
-正常控制未恢复；运行时保护在重启后消失，不据此宣称永久禁用整车初始化。
-退出维护/恢复正常驱动或ModemManager须审核实际影响，不能用Git回退替代硬件处置。
+下一步最小工作是审阅通信故障恢复边界，再在带独立故障留存的版本下受控复测，
+取得Servo ID/Status/原始帧后针对处理。当前没有证据要求修改或刷写STM32。
 
-下一步补足实际固件关联与失败边界、物理标定、设备采样时刻和RGB同步证据。
-完整Observation通过后才复用原PolicyClient/AutoDL；本轮不执行模型动作。
-
-历史D1与维护方案：[R1_ID1_LIVE_RESULT_20261123.md](R1_ID1_LIVE_RESULT_20261123.md)、
-[R1_SDK_MAINTENANCE_PLAN.md](R1_SDK_MAINTENANCE_PLAN.md)。
-历史USB失败：[R1_C2_RESULT_AND_C3_PLAN_20261123.md](R1_C2_RESULT_AND_C3_PLAN_20261123.md)。
-
-SDK modification required: YES（已有维护覆盖，原厂文件未改）。
-STM32 firmware modification required: UNDETERMINED。
-Offline tests: PASS。
-Live hardware readback: PASS_FINITE_OUTER_CAPTURES（23/23）。
-R1 status: FINITE_DIAGNOSTIC_PASS_TRUSTED_FEEDBACK_NOT_YET_PROVEN。
+R1 status: PARTIAL_STATIC_PASS_DYNAMIC_BLOCKED_BY_DEVICE_ERROR。
 R2 readiness: BLOCKED。
-Robot execution: DISABLED。
+Actual motion commands: 0。
+Live dynamic feedback: NOT_RUN。
+
+历史有限实测：[R1_C3_D2_D4_RESULT_20261124.md](R1_C3_D2_D4_RESULT_20261124.md)。

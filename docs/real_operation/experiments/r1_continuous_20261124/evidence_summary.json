@@ -1,0 +1,325 @@
+{
+  "evidence_directory": "/home/ubuntu/zsy_projects/real_operation_evidence/r1_continuous_20261124T055041Z",
+  "runtime_source_sha": "a6c828c3e6d26d41c1e94e401d42455739890e80",
+  "offline_fix_sha": "94cd090d209e42f1b32d6addcaf06d68ff9ebc69",
+  "static": {
+    "status": "MEASURED",
+    "recording_complete": true,
+    "recording_seconds": 30.017889835,
+    "complete_snapshots": 600,
+    "queries_attempted": 3600,
+    "valid_outer_replies": 3600,
+    "outer_query_success_fraction": 1.0,
+    "actual_update_hz": 19.998217746815442,
+    "complete_snapshots_per_recording_second": 19.988080551232393,
+    "mean_latency_ms": 3.5095934483333333,
+    "p95_latency_ms": 5.716457,
+    "p99_latency_ms": 7.175272,
+    "max_latency_ms": 11.837745,
+    "mean_host_span_ms": 22.118905745,
+    "p95_host_span_ms": 26.88105,
+    "max_host_span_ms": 31.687296,
+    "incomplete_snapshots": 0,
+    "skipped_periods": 0,
+    "source_type": "unknown",
+    "device_sample_time_ns": null,
+    "inner_association_verified": false,
+    "physical_calibrated": false,
+    "canonical_observation_eligible": false,
+    "p95_p99_method": "nearest rank",
+    "per_id": {
+      "1": {
+        "valid_outer_replies": 600,
+        "min_pulse": 502,
+        "max_pulse": 506,
+        "pulse_population_stddev": 0.8144510762197785,
+        "mean_latency_ms": 3.261124758333333,
+        "p95_latency_ms": 5.794123,
+        "p99_latency_ms": 7.38612,
+        "max_latency_ms": 9.202725
+      },
+      "2": {
+        "valid_outer_replies": 600,
+        "min_pulse": 764,
+        "max_pulse": 764,
+        "pulse_population_stddev": 0.0,
+        "mean_latency_ms": 3.4355969633333334,
+        "p95_latency_ms": 5.394828,
+        "p99_latency_ms": 6.311943,
+        "max_latency_ms": 8.881667
+      },
+      "3": {
+        "valid_outer_replies": 600,
+        "min_pulse": 15,
+        "max_pulse": 16,
+        "pulse_population_stddev": 0.3487079325484613,
+        "mean_latency_ms": 3.6353067266666668,
+        "p95_latency_ms": 6.059592,
+        "p99_latency_ms": 7.308136,
+        "max_latency_ms": 11.067198
+      },
+      "4": {
+        "valid_outer_replies": 600,
+        "min_pulse": 219,
+        "max_pulse": 220,
+        "pulse_population_stddev": 0.48095968877050627,
+        "mean_latency_ms": 3.475093836666667,
+        "p95_latency_ms": 5.625647,
+        "p99_latency_ms": 7.122597,
+        "max_latency_ms": 7.824131
+      },
+      "5": {
+        "valid_outer_replies": 600,
+        "min_pulse": 500,
+        "max_pulse": 500,
+        "pulse_population_stddev": 0.0,
+        "mean_latency_ms": 3.69615446,
+        "p95_latency_ms": 5.834377,
+        "p99_latency_ms": 7.175272,
+        "max_latency_ms": 11.837745
+      },
+      "10": {
+        "valid_outer_replies": 600,
+        "min_pulse": 498,
+        "max_pulse": 499,
+        "pulse_population_stddev": 0.4514144437210666,
+        "mean_latency_ms": 3.554283945,
+        "p95_latency_ms": 5.530383,
+        "p99_latency_ms": 6.461001,
+        "max_latency_ms": 8.278148
+      }
+    }
+  },
+  "dynamic": {
+    "recording_seconds": null,
+    "actual_update_hz": null,
+    "complete_snapshots": null,
+    "queries_attempted": null,
+    "outer_query_success_fraction": null,
+    "mean_latency_ms": null,
+    "p95_latency_ms": null,
+    "p99_latency_ms": null,
+    "max_latency_ms": null,
+    "mean_host_span_ms": null,
+    "max_host_span_ms": null,
+    "return_pose_error": null,
+    "status": "NOT_RUN_FEEDBACK_DEVICE_ERROR_BEFORE_MOTION",
+    "recorded_rows": 0,
+    "motion_commands_sent": 0,
+    "inner_association_verified": false,
+    "physical_calibrated": false
+  },
+  "fault": {
+    "status": "NOT_RUN_HARDWARE_FEEDBACK_FAULT",
+    "observed_error": "DEVICE_ERROR",
+    "original_client_error": "RuntimeError('DRIVER_NOT_READY')",
+    "motion_capability_activated": false,
+    "motion_commands_sent": 0,
+    "collector_cycles_at_fault": 5995,
+    "collector_queries_automatically_stopped": true,
+    "cleanup_stop_request": "ROS-only rejected because no motion capability; no wire stop/motion frame",
+    "raw_fault_frame_available": false,
+    "servo_id": null,
+    "raw_status_value": null,
+    "causal_boundary": "Fault existed before motion arming or any A/B command",
+    "root_cause": "UNKNOWN: nonzero outer RRC status; missing fault frame cannot identify servo/code",
+    "original_trial_sha256": "7139e83e519bb51f8eae5f67164a637056e5b2511725d72daba25e40d74d818f",
+    "first_status_motion_error": null,
+    "final_status_motion_error": "NO_MOTION_CAPABILITY"
+  },
+  "timing": {
+    "actual_first_last_start_ns": 29952669162,
+    "ideal_599_periods_ns": 29950000000,
+    "first_last_excess_ns": 2669162,
+    "mean_schedule_lateness_ms": 0.7618886633333334,
+    "max_schedule_lateness_ms": 3.535405,
+    "skipped_periods": 0,
+    "max_host_span_ms": 31.687296,
+    "requested_period_ms": 50,
+    "explanation": "Observed first/last start interval includes scheduling lateness and transaction-start overhead; all cycles fit inside 50ms, no skipped periods. Do not round measured frequency to exactly20.",
+    "cause_not_isolated": "Host/software/USB contributions were not separately profiled"
+  },
+  "final_status": {
+    "first": {
+      "source_sha": "a6c828c3e6d26d41c1e94e401d42455739890e80",
+      "collector": {
+        "cycles": 5995,
+        "skipped_periods": 0,
+        "observer_drops": 0,
+        "observer_errors": 0,
+        "record_errors": 0,
+        "command_errors": 0
+      },
+      "gate": {
+        "state": "FAULT",
+        "error": "DEVICE_ERROR",
+        "used_keys": [
+          [
+            1,
+            5
+          ],
+          [
+            2,
+            5
+          ],
+          [
+            3,
+            5
+          ],
+          [
+            4,
+            5
+          ],
+          [
+            5,
+            5
+          ],
+          [
+            10,
+            5
+          ]
+        ],
+        "discarded_packets": 0,
+        "evidence_reference": "R1 experimental continuous a6c828c3e6d26d41c1e94e401d42455739890e80",
+        "continuous_readback_supported": true,
+        "hardware_validated": false,
+        "diagnostic_only": true,
+        "canonical_observation_eligible": false,
+        "experimental_continuous_enabled": true,
+        "trusted_continuous_feedback": false,
+        "inner_association_verified": false
+      },
+      "feedback": {
+        "valid": false,
+        "error": "DEVICE_ERROR",
+        "source_type": "unknown",
+        "canonical_observation_eligible": false
+      },
+      "recording": {
+        "directory": "/home/ubuntu/zsy_projects/real_operation_evidence/r1_continuous_20261124T055041Z/recordings/run_e6580e207e9642688b142446da9e63a6",
+        "active": false,
+        "error": null,
+        "accepted_batches": 600,
+        "written_batches": 600,
+        "rejected_batches": 0,
+        "started_monotonic_ns": 1694945551439,
+        "stopped_monotonic_ns": 1724963441274,
+        "complete": true
+      },
+      "commands": [],
+      "motion_error": "NO_MOTION_CAPABILITY",
+      "source_type": "unknown",
+      "physical_calibrated": false,
+      "canonical_observation_eligible": false
+    },
+    "last": {
+      "source_sha": "a6c828c3e6d26d41c1e94e401d42455739890e80",
+      "collector": {
+        "cycles": 5995,
+        "skipped_periods": 0,
+        "observer_drops": 0,
+        "observer_errors": 0,
+        "record_errors": 0,
+        "command_errors": 0
+      },
+      "gate": {
+        "state": "FAULT",
+        "error": "DEVICE_ERROR",
+        "used_keys": [
+          [
+            1,
+            5
+          ],
+          [
+            2,
+            5
+          ],
+          [
+            3,
+            5
+          ],
+          [
+            4,
+            5
+          ],
+          [
+            5,
+            5
+          ],
+          [
+            10,
+            5
+          ]
+        ],
+        "discarded_packets": 0,
+        "evidence_reference": "R1 experimental continuous a6c828c3e6d26d41c1e94e401d42455739890e80",
+        "continuous_readback_supported": true,
+        "hardware_validated": false,
+        "diagnostic_only": true,
+        "canonical_observation_eligible": false,
+        "experimental_continuous_enabled": true,
+        "trusted_continuous_feedback": false,
+        "inner_association_verified": false
+      },
+      "feedback": {
+        "valid": false,
+        "error": "DEVICE_ERROR",
+        "source_type": "unknown",
+        "canonical_observation_eligible": false
+      },
+      "recording": {
+        "directory": "/home/ubuntu/zsy_projects/real_operation_evidence/r1_continuous_20261124T055041Z/recordings/run_e6580e207e9642688b142446da9e63a6",
+        "active": false,
+        "error": null,
+        "accepted_batches": 600,
+        "written_batches": 600,
+        "rejected_batches": 0,
+        "started_monotonic_ns": 1694945551439,
+        "stopped_monotonic_ns": 1724963441274,
+        "complete": true
+      },
+      "commands": [],
+      "motion_error": "NO_MOTION_CAPABILITY",
+      "source_type": "unknown",
+      "physical_calibrated": false,
+      "canonical_observation_eligible": false
+    },
+    "messages": 7,
+    "hardware_rpc_sent": 0
+  },
+  "offline_fix_prepared": {
+    "source_sha": "94cd090d209e42f1b32d6addcaf06d68ff9ebc69",
+    "package": "/home/ubuntu/zsy_projects/real_operation_deployments/r1_continuous_94cd090d209e42f1b32d6addcaf06d68ff9ebc69",
+    "manifest_sha256": "18f088343246bb1825e3b3bb44c2b41ed1c787a02a0a5ccd8a49e86966aeff99",
+    "prepared_only": true,
+    "deployed": false,
+    "hardware_open_attempts": 0
+  },
+  "deployment_manifest_sha256": "0ebee2b5af7f7fa44772070e7d2620ac8e97a64736bdfc8d70caf6525eec0c12",
+  "tests": {
+    "passed": 416,
+    "skipped": 2,
+    "seconds": 27.3,
+    "skip_reasons": [
+      "PyKDL",
+      "FastAPI"
+    ]
+  },
+  "original_and_backup_files_verified": 53,
+  "usb_reset_or_rebind_this_round": false,
+  "actual_motion_commands": 0,
+  "raw_evidence_manifest_sha256": "0276a88ec95413d3883bfffa96abb8ae93a88bdd299e8085b61d27386f3160c8",
+  "raw_evidence_files": 36,
+  "repository_csv_representation": {
+    "static": {
+      "transform": "CRLF to LF only; parsed fields identical; sealed original unchanged",
+      "raw_sha256": "d0d6a7d621b27eca4cc1eef92de3eb4377b5f9d9542c765aca7ab1fc64f48273",
+      "repository_sha256": "fab8b22100a0e848d05bdd632fa656ecc533cf62c370b3ffe8c04a33a9f6eaa4"
+    },
+    "dynamic": {
+      "transform": "CRLF to LF only; parsed fields identical; sealed original unchanged",
+      "raw_sha256": "287a6268b6fb8245cc4782810c98cb1bd5c1f20f49762d389ceebc026a1560d6",
+      "repository_sha256": "2abece1c7c7ca2f48e9f3cdb55fb4cfc1ca55979222d9fa9e442e383d5ad5612"
+    }
+  }
+}

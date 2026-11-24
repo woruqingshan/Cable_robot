@@ -1,0 +1,19 @@
+{
+  "recording_seconds": null,
+  "actual_update_hz": null,
+  "complete_snapshots": null,
+  "queries_attempted": null,
+  "outer_query_success_fraction": null,
+  "mean_latency_ms": null,
+  "p95_latency_ms": null,
+  "p99_latency_ms": null,
+  "max_latency_ms": null,
+  "mean_host_span_ms": null,
+  "max_host_span_ms": null,
+  "return_pose_error": null,
+  "status": "NOT_RUN_FEEDBACK_DEVICE_ERROR_BEFORE_MOTION",
+  "recorded_rows": 0,
+  "motion_commands_sent": 0,
+  "inner_association_verified": false,
+  "physical_calibrated": false
+}

@@ -4,7 +4,6 @@ import csv
 import json
 import math
 from pathlib import Path
-import shutil
 import statistics
 
 IDS=(1,2,3,4,5,10)
@@ -92,7 +91,7 @@ def main():
     rows=list(csv.DictReader(source.open()))
     target=a.output/(a.label+'_feedback.csv')
     if target.exists():raise FileExistsError(target)
-    shutil.copyfile(source,target)
+    target.write_bytes(source.read_bytes().replace(b'\r\n',b'\n'))  # Preserve raw archive; portable repository CSV copy.
     result=metrics(rows,manifest)
     (a.output/(a.label+'_metrics.json')).write_text(json.dumps(result,indent=2)+'\n')
     plot(rows,a.output,a.label,manifest);print(json.dumps(result,indent=2))
