@@ -119,8 +119,8 @@ class ContinuousFeedbackCollector(PositionCapture):
         self.next_tick += self.period_ns
         finished = self.clock_ns()
         skipped = 0
-        if finished >= self.next_tick:
-            skipped = (finished-self.next_tick)//self.period_ns+1
+        if finished > self.next_tick:
+            skipped = (finished-self.next_tick+self.period_ns-1)//self.period_ns
             self.next_tick += skipped*self.period_ns
         self.stats['skipped_periods'] += skipped
         report['skipped_periods'] = skipped

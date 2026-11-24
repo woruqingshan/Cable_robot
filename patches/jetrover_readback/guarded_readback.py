@@ -220,15 +220,17 @@ class MaintenanceFrameWriter:
         self.lock = threading.Lock()
         self.fault = None
 
+    def _allowed(self, function, payload):
+        return (function == 2 and len(payload) == 8) or (
+            function == 5 and len(payload) == 2 and payload[0] == 5 and payload[1] in SERVO_IDS)
+
     def write(self, frame, *, deadline_ns=None):
         raw = bytes(frame)
         if (len(raw) < 5 or raw[:2] != b"\xaa\x55"
                 or raw[3] != len(raw)-5 or self.crc_function(raw[2:-1]) != raw[-1]):
             raise ReadbackFault("MAINTENANCE_INVALID_TX_FRAME")
         function, payload = raw[2], raw[4:-1]
-        allowed = (function == 2 and len(payload) == 8) or (
-            function == 5 and len(payload) == 2 and payload[0] == 5 and payload[1] in SERVO_IDS)
-        if not allowed:
+        if not self._allowed(function, payload):
             raise ReadbackFault("MAINTENANCE_COMMAND_FORBIDDEN")
         timeout = self.port.write_timeout
         if (type(timeout) not in (int, float) or not math.isfinite(timeout)
