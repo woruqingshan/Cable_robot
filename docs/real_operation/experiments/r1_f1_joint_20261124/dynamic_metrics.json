@@ -1,0 +1,88 @@
+{
+  "status": "MEASURED",
+  "recording_complete": true,
+  "recording_seconds": 20.156975264,
+  "complete_snapshots": 403,
+  "queries_attempted": 2418,
+  "valid_outer_replies": 2418,
+  "outer_query_success_fraction": 1.0,
+  "actual_update_hz": 19.999646693803562,
+  "complete_snapshots_per_recording_second": 19.993079056843953,
+  "mean_latency_ms": 3.5832915690653433,
+  "p95_latency_ms": 5.724359,
+  "p99_latency_ms": 7.322175,
+  "max_latency_ms": 22.675205,
+  "mean_host_span_ms": 22.630331362282877,
+  "p95_host_span_ms": 28.294615,
+  "max_host_span_ms": 40.790351,
+  "incomplete_snapshots": 0,
+  "skipped_periods": 0,
+  "source_type": "unknown",
+  "device_sample_time_ns": null,
+  "inner_association_verified": false,
+  "physical_calibrated": false,
+  "canonical_observation_eligible": false,
+  "p95_p99_method": "nearest rank",
+  "per_id": {
+    "1": {
+      "valid_outer_replies": 403,
+      "min_pulse": 302,
+      "max_pulse": 504,
+      "pulse_population_stddev": 82.91840679232467,
+      "mean_latency_ms": 3.39993746898263,
+      "p95_latency_ms": 6.440048,
+      "p99_latency_ms": 7.974786,
+      "max_latency_ms": 22.675205
+    },
+    "2": {
+      "valid_outer_replies": 403,
+      "min_pulse": 764,
+      "max_pulse": 850,
+      "pulse_population_stddev": 35.692120345522774,
+      "mean_latency_ms": 3.5294326724565757,
+      "p95_latency_ms": 5.287937,
+      "p99_latency_ms": 6.2147,
+      "max_latency_ms": 12.857569
+    },
+    "3": {
+      "valid_outer_replies": 403,
+      "min_pulse": 14,
+      "max_pulse": 47,
+      "pulse_population_stddev": 12.973403832536587,
+      "mean_latency_ms": 3.728103583126551,
+      "p95_latency_ms": 5.882503,
+      "p99_latency_ms": 6.952308,
+      "max_latency_ms": 9.441587
+    },
+    "4": {
+      "valid_outer_replies": 403,
+      "min_pulse": 218,
+      "max_pulse": 250,
+      "pulse_population_stddev": 11.861482388500558,
+      "mean_latency_ms": 3.6213567717121586,
+      "p95_latency_ms": 5.659687,
+      "p99_latency_ms": 7.322175,
+      "max_latency_ms": 12.826241
+    },
+    "5": {
+      "valid_outer_replies": 403,
+      "min_pulse": 499,
+      "max_pulse": 500,
+      "pulse_population_stddev": 0.08595785645503114,
+      "mean_latency_ms": 3.5763806923076924,
+      "p95_latency_ms": 5.4121,
+      "p99_latency_ms": 7.005688,
+      "max_latency_ms": 10.237823
+    },
+    "10": {
+      "valid_outer_replies": 403,
+      "min_pulse": 498,
+      "max_pulse": 499,
+      "pulse_population_stddev": 0.44673282939822584,
+      "mean_latency_ms": 3.6445382258064516,
+      "p95_latency_ms": 5.593637,
+      "p99_latency_ms": 7.161653,
+      "max_latency_ms": 8.797231
+    }
+  }
+}

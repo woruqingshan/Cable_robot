@@ -1,5 +1,9 @@
 # JetRover → AutoDL Shadow 联调：2026-11-20
 
+最新R1-F1/F2/F3：同一73aafa9驱动完成静态600组/3600回复、动态403组/2418回复，约20Hz，已完成实际A→B→A及现场确认。R1基础功能PASS_WITH_LIMITATIONS；未知Status保持隔离，真实故障恢复未自然复现。物理标定、D405与Observation同步转入R2-A。详见[联合报告](experiments/r1_f1_joint_20261124/experiment_report.md)。
+
+以下旧记录保留其历史范围。
+
 最新连续实验：20Hz目标下30秒静态600组/3600回复通过，实测19.998Hz；停录后持续运行到周期5995出现DEVICE_ERROR并停读。动态运动前被阻止，未发A/B命令。独立连续实验路径已实现，原可信保护保留；故障留存修补94cd090仅离线，现场仍为a6c828c故障包。详见[本轮实验报告](experiments/r1_continuous_20261124/experiment_report.md)。
 
 以下为既有架构/历史阶段说明，旧状态不能覆盖上述当前结果。

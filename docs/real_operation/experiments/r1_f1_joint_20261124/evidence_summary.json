@@ -1,0 +1,267 @@
+{
+  "runtime_sha": "73aafa9ecac071206f17afb095eb938e5a56a670",
+  "tests": {
+    "passed": 424,
+    "skipped": 2,
+    "seconds": 27.92
+  },
+  "operator_observation": "Full roundtrip observed, no unexpected gripper/base action or obstacles",
+  "static": {
+    "directory": "/home/ubuntu/zsy_projects/real_operation_evidence/r1_f1_20261124T090956Z/recordings/run_873ad46333714fd09ffd476ac8c54b16",
+    "active": false,
+    "error": null,
+    "accepted_batches": 600,
+    "written_batches": 600,
+    "rejected_batches": 0,
+    "started_monotonic_ns": 1033042407905,
+    "stopped_monotonic_ns": 1063055710547,
+    "complete": true
+  },
+  "dynamic": {
+    "directory": "/home/ubuntu/zsy_projects/real_operation_evidence/r1_f1_20261124T090956Z/recordings/run_465335b0b3e744f0914bd3a7aa23df52",
+    "active": false,
+    "error": null,
+    "accepted_batches": 403,
+    "written_batches": 403,
+    "rejected_batches": 0,
+    "started_monotonic_ns": 1564113893877,
+    "stopped_monotonic_ns": 1584270869141,
+    "complete": true
+  },
+  "final_status": {
+    "collector_state": "RUNNING",
+    "motion_permission": false,
+    "source_sha": "73aafa9ecac071206f17afb095eb938e5a56a670",
+    "collector": {
+      "cycles": 19196,
+      "skipped_periods": 1,
+      "observer_drops": 0,
+      "observer_errors": 0,
+      "record_errors": 1,
+      "command_errors": 0
+    },
+    "gate": {
+      "state": "COMPLETE_UNVERIFIED",
+      "error": null,
+      "used_keys": [
+        [
+          1,
+          5
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          10,
+          5
+        ]
+      ],
+      "discarded_packets": 0,
+      "evidence_reference": "R1 experimental continuous 73aafa9ecac071206f17afb095eb938e5a56a670",
+      "continuous_readback_supported": true,
+      "hardware_validated": false,
+      "diagnostic_only": true,
+      "canonical_observation_eligible": false,
+      "experimental_continuous_configured": true,
+      "experimental_continuous_enabled": true,
+      "trusted_continuous_feedback": false,
+      "inner_association_verified": false
+    },
+    "feedback": {
+      "valid": true,
+      "report": {
+        "sequence": 19195,
+        "channels": [
+          {
+            "servo_id": 1,
+            "raw_pulse": 499,
+            "source_type": "unknown",
+            "inner_association_verified": false,
+            "canonical_observation_eligible": false,
+            "device_sample_time_ns": null,
+            "error": null,
+            "read_started_at_ns": 1978006287640,
+            "response_received_at_ns": 1978010536283,
+            "read_latency_ns": 4248643,
+            "raw_payload_hex": "010500f301",
+            "clock_domain": "host_monotonic",
+            "outer_frame_validated": true,
+            "capture_elapsed_ns": 4367459,
+            "tx_frame_hex": "aa55050205016f",
+            "rx_frame_hex": "aa550505010500f301fc"
+          },
+          {
+            "servo_id": 2,
+            "raw_pulse": 767,
+            "source_type": "unknown",
+            "inner_association_verified": false,
+            "canonical_observation_eligible": false,
+            "device_sample_time_ns": null,
+            "error": null,
+            "read_started_at_ns": 1978010682235,
+            "response_received_at_ns": 1978013147645,
+            "read_latency_ns": 2465410,
+            "raw_payload_hex": "020500ff02",
+            "clock_domain": "host_monotonic",
+            "outer_frame_validated": true,
+            "capture_elapsed_ns": 2551266,
+            "tx_frame_hex": "aa55050205028d",
+            "rx_frame_hex": "aa550505020500ff021d"
+          },
+          {
+            "servo_id": 3,
+            "raw_pulse": 14,
+            "source_type": "unknown",
+            "inner_association_verified": false,
+            "canonical_observation_eligible": false,
+            "device_sample_time_ns": null,
+            "error": null,
+            "read_started_at_ns": 1978013259645,
+            "response_received_at_ns": 1978016798560,
+            "read_latency_ns": 3538915,
+            "raw_payload_hex": "0305000e00",
+            "clock_domain": "host_monotonic",
+            "outer_frame_validated": true,
+            "capture_elapsed_ns": 3620227,
+            "tx_frame_hex": "aa5505020503d3",
+            "rx_frame_hex": "aa5505050305000e0031"
+          },
+          {
+            "servo_id": 4,
+            "raw_pulse": 220,
+            "source_type": "unknown",
+            "inner_association_verified": false,
+            "canonical_observation_eligible": false,
+            "device_sample_time_ns": null,
+            "error": null,
+            "read_started_at_ns": 1978016906592,
+            "response_received_at_ns": 1978019330338,
+            "read_latency_ns": 2423746,
+            "raw_payload_hex": "040500dc00",
+            "clock_domain": "host_monotonic",
+            "outer_frame_validated": true,
+            "capture_elapsed_ns": 2488962,
+            "tx_frame_hex": "aa550502050450",
+            "rx_frame_hex": "aa550505040500dc00a9"
+          },
+          {
+            "servo_id": 5,
+            "raw_pulse": 500,
+            "source_type": "unknown",
+            "inner_association_verified": false,
+            "canonical_observation_eligible": false,
+            "device_sample_time_ns": null,
+            "error": null,
+            "read_started_at_ns": 1978019411650,
+            "response_received_at_ns": 1978021737540,
+            "read_latency_ns": 2325890,
+            "raw_payload_hex": "050500f401",
+            "clock_domain": "host_monotonic",
+            "outer_frame_validated": true,
+            "capture_elapsed_ns": 2402210,
+            "tx_frame_hex": "aa55050205050e",
+            "rx_frame_hex": "aa550505050500f4018d"
+          },
+          {
+            "servo_id": 10,
+            "raw_pulse": 499,
+            "source_type": "unknown",
+            "inner_association_verified": false,
+            "canonical_observation_eligible": false,
+            "device_sample_time_ns": null,
+            "error": null,
+            "read_started_at_ns": 1978021835812,
+            "response_received_at_ns": 1978024335366,
+            "read_latency_ns": 2499554,
+            "raw_payload_hex": "0a0500f301",
+            "clock_domain": "host_monotonic",
+            "outer_frame_validated": true,
+            "capture_elapsed_ns": 2576930,
+            "tx_frame_hex": "aa550502050a4f",
+            "rx_frame_hex": "aa5505050a0500f3018c"
+          }
+        ],
+        "complete": true,
+        "batch_elapsed_ns": 18182126,
+        "source_type": "unknown",
+        "inner_association_verified": false,
+        "canonical_observation_eligible": false,
+        "physical_calibrated": false,
+        "device_sample_span_ns": null,
+        "host_transaction_span_ns": 18047726,
+        "host_span_exceeds_20ms": false,
+        "schedule_started_ns": 1978006231800,
+        "scheduled_ns": 1978005795278,
+        "schedule_lateness_ns": 436522,
+        "requested_hz": 20.0,
+        "skipped_periods": 0
+      },
+      "source_type": "unknown",
+      "canonical_observation_eligible": false
+    },
+    "recording": {
+      "directory": "/home/ubuntu/zsy_projects/real_operation_evidence/r1_f1_20261124T090956Z/recordings/run_465335b0b3e744f0914bd3a7aa23df52",
+      "active": false,
+      "error": null,
+      "accepted_batches": 403,
+      "written_batches": 403,
+      "rejected_batches": 0,
+      "started_monotonic_ns": 1564113893877,
+      "stopped_monotonic_ns": 1584270869141,
+      "complete": true
+    },
+    "commands": [
+      {
+        "status": "SENT",
+        "target_pulses": {
+          "1": 300,
+          "2": 850,
+          "3": 50,
+          "4": 250
+        },
+        "duration_s": 4.0,
+        "received_monotonic_ns": 1568120469104,
+        "kind": "position",
+        "send_started_monotonic_ns": 1568123695034,
+        "send_finished_monotonic_ns": 1568124094303,
+        "tx_frame_hex": "aa55051001a00f04012c0102520303320004fa00f6"
+      },
+      {
+        "status": "SENT",
+        "target_pulses": {
+          "1": 503,
+          "2": 764,
+          "3": 15,
+          "4": 219
+        },
+        "duration_s": 4.0,
+        "received_monotonic_ns": 1576146890592,
+        "kind": "position",
+        "send_started_monotonic_ns": 1576157075966,
+        "send_finished_monotonic_ns": 1576158134283,
+        "tx_frame_hex": "aa55051001a00f0401f70102fc02030f0004db0080"
+      }
+    ],
+    "motion_error": null,
+    "source_type": "unknown",
+    "physical_calibrated": false,
+    "canonical_observation_eligible": false
+  },
+  "status_recovery_contract": "unknown statuses not enabled; mock terminal status only",
+  "physical_calibrated": false,
+  "inner_association_verified": false,
+  "cloud_inference_run": false
+}

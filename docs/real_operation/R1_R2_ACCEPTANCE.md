@@ -1,53 +1,35 @@
-# R1 / R2 当前验收：连续反馈实验
+# R1功能验收与R2入口：2026-11-24
 
-日期2026-11-24；唯一分支feat/real-operation-pipeline。
+[本轮联合实验报告与全部数据](experiments/r1_f1_joint_20261124/experiment_report.md)。
+R1基础功能：PASS_WITH_LIMITATIONS。本轮结束集中开发，不延伸VLA执行。
 
-**R1 Final尚未通过：静态30秒成功，停录后持续采集发生DEVICE_ERROR，动态未执行。**
-[完整实验报告与图表](experiments/r1_continuous_20261124/experiment_report.md)。
-[结构化证据](experiments/r1_continuous_20261124/evidence_summary.json)。
-
-|项目|当前状态|证据边界|
+|项目|结论|证据边界|
 |---|---|---|
-|连续采集模块|IMPLEMENTED|默认20Hz，可配置；无总查询/时长限制；保持unknown来源|
-|串口/调度|STATIC_PASS|唯一Board/FD，串行有界事务，无调度积压或跳过周期|
-|可信/有限保护|PRESERVED|原KEY_REUSE_UNSAFE不删除，独立实验重复不升级可信来源|
-|异步独立录制|LIVE_PASS|30秒停录后采集继续；600组完整写入，未丢队列|
-|静态窗口|PASS|600组、3600/3600外层回复；19.998218Hz；3600对TX/RX离线核验|
-|静态延迟|MEASURED|Mean/P95/P99/Max=3.509593/5.716457/7.175272/11.837745ms|
-|六路主机跨度|MEASURED|Mean22.118906ms、Max31.687296ms；不满足旧20ms同步条件，未放宽|
-|持续运行可靠性|NOT_PASSED|在周期5995看到DEVICE_ERROR；锁存并停止，无自动重试|
-|具体错误ID/Status|UNKNOWN|旧包停录后未独立保全故障帧，不能猜测补齐|
-|统一读/运动串口|IMPLEMENTED_OFFLINE_TESTED|模拟串口+真实ROS通过；实机运动并发未验收|
-|动态轨迹|AUTHORIZED_NOT_RUN|用户批准ID1–4 A→B→A，但反馈在arm前已失效；运动0|
-|真实状态转换|STATIC_PASS_DIAGNOSTIC|ID1–5与ID10分离，名义rad与缓存隔离，采样stamp unset|
-|物理标定/内层关联|UNKNOWN|零位/方向/夹爪、设备采样时刻、STM32事务关联仍未验证|
-|故障留存修补|OFFLINE_PASS_NOT_DEPLOYED|停录时也保存故障帧/日志；改进具体错误提示和停止清理|
-|FK|NOT_RUN|既有依赖缺失，本轮未安装或重写FK|
-|完整真实Observation/R2|BLOCKED|来源、标定、时间同步和当前有效反馈均未满足；本轮未调用AutoDL|
-|原厂/备份|PASS|53份源文件与备份哈希一致；无运行厂商文件替换或刷写|
-|USB/系统|保持|本轮无DTR失败、USB reset/rebind、bringup重启或依赖升级|
+|20Hz连续反馈|PASS|正常无次数/时长上限；一个Board/串口；读写有界串行|
+|静态30秒|PASS|600组，3600/3600有效外层回复，19.999491Hz|
+|动态约20秒|PASS|403组，2418/2418，19.999647Hz，同一进程无重启|
+|真实往返|PASS_BASELINE|ID1–4完成A→B→A；用户现场确认无意外动作|
+|读写协调|PASS_BASELINE|两条运动报文，六路反馈连续，未观测冲突/丢组/周期跳过|
+|回位相对初始|MEASURED|ID1–4中位Pulse误差[-4,+1,-1,0]；非物理精度标定|
+|未参与ID5/10|PASS_BASELINE|仅只读，约1Pulse波动；无Torque/底盘动作|
+|采集/有效性/权限分离|PASS_SOFTWARE|无效组不必退出线程；恢复数据不恢复运动|
+|已确认终结设备错误|PASS_MOCK|有限预算、下一周期继续；实际Status白名单默认空，需语义证据|
+|未知Status/超时/错配|PROTECTED|暂停关联风险查询但保留诊断/停止通道|
+|独立故障留存|PASS_MOCK|不依赖录制，原始包、Status/ID、时刻、版本和决策|
+|真实DEVICE_ERROR恢复|NOT_RUN|本轮窗口未自然复现，未知根因没有被宣称解决|
+|状态转换/ROS2|PASS_UNCALIBRATED|真实Pulse→名义rad，目标缓存分离，采样时间未知|
+|既有功能回归|PASS|424 passed，2 skipped；PyKDL/FastAPI仍未验收|
+|完整物理标定|DEFERRED_R2_A|零位/方向/安装偏差/夹爪/URDF-FK未验证|
+|完整Observation/AutoDL|NOT_RUN|本轮无需云端；平均六路主机跨度约22ms，旧20ms同步条件未放宽|
 
-## 测试与版本
+运行SHA：73aafa9ecac071206f17afb095eb938e5a56a670。
+客户端修补5b9423e：处理授权发布滞后；只对同SHA计划、空命令历史和健康状态使用未用能力。
+首次无运动的失败前置试次保留；成功试次dynamic_trial_confirmed.json，不能混同。
 
-最终相关回归416 passed、2 skipped，27.30秒；PyKDL、FastAPI未验收。
-新增真实ROS/模拟串口测试覆盖唯一端口、停录后继续、获准命令协调、故障停读与独立留存。
-Mock不代表实机动态通过；不存在动态性能数值或回位误差。
+当前采集器继续运行，运动能力已用完；未恢复正常整车控制。
+临时Restart=no和ModemManager屏蔽仍在当前启动周期生效，重启后消失。
+原厂SDK/节点未改，不刷写STM32、升级依赖或启动第二串口。
 
-实际运行包a6c828c3e6d26d41c1e94e401d42455739890e80。
-故障修补94cd090d209e42f1b32d6addcaf06d68ff9ebc69已准备，未部署到现场。
-结果文档最新提交不代表实机已切到新代码。
-
-当前PID8413持有唯一串口FD，进程active仅表示仍在报告故障，周期数固定5995。
-父服务PID853 Restart=no，按键代理PID834未重启；ModemManager临时屏蔽。
-正常控制未恢复；不自动重开串口、恢复bringup或强制返回A。
-运行时保护在重启后消失，不能作为永久禁用启动动作的保证。
-
-下一步最小工作是审阅通信故障恢复边界，再在带独立故障留存的版本下受控复测，
-取得Servo ID/Status/原始帧后针对处理。当前没有证据要求修改或刷写STM32。
-
-R1 status: PARTIAL_STATIC_PASS_DYNAMIC_BLOCKED_BY_DEVICE_ERROR。
-R2 readiness: BLOCKED。
-Actual motion commands: 0。
-Live dynamic feedback: NOT_RUN。
-
-历史有限实测：[R1_C3_D2_D4_RESULT_20261124.md](R1_C3_D2_D4_RESULT_20261124.md)。
+R2-A入口：各关节零位/方向/Pulse→rad、实际限位与偏差、夹爪距离和方向、
+URDF/FK一致性、D405接入、真实Observation时间匹配。基础R1通过不等于可信闭环。
+后续在R2联调中积累可靠性，不为验收额外进行长时间专项压测。

@@ -1,0 +1,50 @@
+{
+  "1": {
+    "initial": 503,
+    "B": 303.0,
+    "returned": 499.0,
+    "min": 302,
+    "max": 504,
+    "return_error_pulse": -4.0
+  },
+  "2": {
+    "initial": 764,
+    "B": 850,
+    "returned": 765.0,
+    "min": 764,
+    "max": 850,
+    "return_error_pulse": 1.0
+  },
+  "3": {
+    "initial": 15.0,
+    "B": 45.0,
+    "returned": 14.0,
+    "min": 14,
+    "max": 47,
+    "return_error_pulse": -1.0
+  },
+  "4": {
+    "initial": 219.0,
+    "B": 247.0,
+    "returned": 219.0,
+    "min": 218,
+    "max": 250,
+    "return_error_pulse": 0.0
+  },
+  "5": {
+    "initial": 500.0,
+    "B": 500.0,
+    "returned": 500.0,
+    "min": 499,
+    "max": 500,
+    "return_error_pulse": 0.0
+  },
+  "10": {
+    "initial": 499.0,
+    "B": 499.0,
+    "returned": 499.0,
+    "min": 498,
+    "max": 499,
+    "return_error_pulse": 0.0
+  }
+}
