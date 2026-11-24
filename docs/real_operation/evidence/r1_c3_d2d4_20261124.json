@@ -1,0 +1,1342 @@
+{
+  "date": "2026-11-24",
+  "recorded_utc": "2026-11-24T05:04:23.006936+00:00",
+  "source_sha": "67b763c65f537b952bf406a7bb696ccbcfd224b1",
+  "runtime_package_source_sha": "a04beaf95746ab3f4246beda40bba504057a465e",
+  "evidence_directory": "/home/ubuntu/zsy_projects/real_operation_evidence/r1_c3_d2d4_20261124T125001Z",
+  "manifest_sha256": "38bb806f72d7dd02ed66f9db4cb892daa1ad74a2f97e34c2ac22156207562a36",
+  "preflight": {
+    "idVendor": "1a86",
+    "idProduct": "55d4",
+    "serial": "5A25000846",
+    "bcdDevice": "0444",
+    "driver": "/sys/bus/usb/drivers/cdc_acm",
+    "tty": "/dev/ttyACM0",
+    "boot_id": "b41ac062-c378-43d0-b6dc-977ba317c7fb",
+    "routes": "default via 10.29.0.1 dev wlan0 proto dhcp metric 600 \ndefault via 192.168.55.100 dev l4tbr0 metric 32766 linkdown \n",
+    "network_devices": "wlan0:wifi:connected\nl4tbr0:bridge:connected (externally)\ntailscale0:tun:connected (externally)\ndocker0:bridge:connected (externally)\np2p-dev-wlan0:wifi-p2p:disconnected\neth0:ethernet:unavailable\ncan0:can:unmanaged\nusb0:ethernet:unmanaged\nusb1:ethernet:unmanaged\nlo:loopback:unmanaged\n",
+    "usb_tree": "/:  Bus 02.Port 1: Dev 1, Class=root_hub, Driver=tegra-xusb/4p, 10000M\n    |__ Port 3: Dev 2, If 0, Class=Video, Driver=uvcvideo, 5000M\n    |__ Port 3: Dev 2, If 1, Class=Video, Driver=uvcvideo, 5000M\n    |__ Port 3: Dev 2, If 2, Class=Video, Driver=uvcvideo, 5000M\n    |__ Port 3: Dev 2, If 3, Class=Video, Driver=uvcvideo, 5000M\n/:  Bus 01.Port 1: Dev 1, Class=root_hub, Driver=tegra-xusb/4p, 480M\n    |__ Port 2: Dev 2, If 0, Class=Hub, Driver=hub/4p, 480M\n        |__ Port 1: Dev 4, If 1, Class=CDC Data, Driver=cdc_acm, 12M\n        |__ Port 1: Dev 4, If 0, Class=Communications, Driver=cdc_acm, 12M\n        |__ Port 4: Dev 6, If 0, Class=Hub, Driver=hub/4p, 480M\n            |__ Port 4: Dev 7, If 0, Class=Vendor Specific Class, Driver=cp210x, 12M\n    |__ Port 3: Dev 3, If 0, Class=Wireless, Driver=btusb, 12M\n    |__ Port 3: Dev 3, If 1, Class=Wireless, Driver=btusb, 12M\n",
+    "ssh_peer": "100.72.204.90",
+    "peer_route": "100.72.204.90 dev tailscale0 src 100.70.140.51 uid 1000 \n    cache \n",
+    "approved_scope": "C3 + conditional C2/D2-D4; additional M1 confirmed; stationary supervised emergency power available"
+  },
+  "c3_unbind": {
+    "interface": "1-2.1:1.0",
+    "operation": "unbind",
+    "attempts": 1,
+    "status": "RETURNED",
+    "started_ns": 1795495905190571913,
+    "driver_link_exists": false,
+    "tty_exists": false,
+    "finished_ns": 1795495905191701128
+  },
+  "c3_bind": {
+    "interface": "1-2.1:1.0",
+    "operation": "bind",
+    "attempts": 1,
+    "status": "RETURNED",
+    "started_ns": 1795495921321220854,
+    "driver": "/sys/bus/usb/drivers/cdc_acm",
+    "tty_exists": true,
+    "finished_ns": 1795495921323867978
+  },
+  "open_close": {
+    "source_sha": "67b763c65f537b952bf406a7bb696ccbcfd224b1",
+    "mode": "execute_once",
+    "physical_open_attempts": 1,
+    "serial_writes": 0,
+    "servo_queries": 0,
+    "usb_reset": false,
+    "retry": false,
+    "clean_protocol_epoch_proven": false,
+    "preflight": {
+      "schema_version": 1,
+      "host_reported_time_utc": "2026-11-24T04:53:39.365503+00:00",
+      "vendor_sources": {
+        "ros_robot_controller_sdk.py": {
+          "path": "/home/ubuntu/ros2_ws/src/driver/ros_robot_controller/ros_robot_controller/ros_robot_controller_sdk.py",
+          "sha256": "c4dd48f3176a5dce1e8331846691ce995c0b3c2f79341cfc6c9e89dce1418a89"
+        },
+        "ros_robot_controller_node.py": {
+          "path": "/home/ubuntu/ros2_ws/src/driver/ros_robot_controller/ros_robot_controller/ros_robot_controller_node.py",
+          "sha256": "4d37d84c6eff0629f5f73ddca2b140cc0af555175fe3f68f8a3359123a716627"
+        }
+      },
+      "serial_ownership": {
+        "device_path": "/dev/rrc",
+        "resolved_path": "/dev/ttyACM0",
+        "visible_openers": [],
+        "inaccessible_process_fd_directories": 0,
+        "ownership_assessment": "NOT_PROVEN_EXCLUSIVE",
+        "visibility_complete": false,
+        "receive_or_write_activity_proven": false,
+        "safe_to_read": false
+      },
+      "hardware_rpc_requests_sent": 0,
+      "device_open_calls": 0,
+      "vendor_modified": false,
+      "scope": "filesystem_and_proc_metadata_only"
+    },
+    "usb_identity": {
+      "interface_path": "/sys/devices/platform/bus@0/3610000.usb/usb1/1-2/1-2.1/1-2.1:1.0",
+      "driver": "/sys/bus/usb/drivers/cdc_acm",
+      "vid": "1a86",
+      "pid": "55d4"
+    },
+    "open_report": {
+      "device": "/dev/rrc",
+      "stage": "open_complete",
+      "dtr": false,
+      "rts": false,
+      "open_attempts": 1,
+      "success": true,
+      "elapsed_ns": 5012498
+    },
+    "close_report": {
+      "port_closed": true,
+      "close_called": true,
+      "status": "closed"
+    },
+    "close_elapsed_ns": 4330509,
+    "status": "OPEN_CLOSE_PASS_NO_POSITION_QUERIES",
+    "postflight": {
+      "schema_version": 1,
+      "host_reported_time_utc": "2026-11-24T04:53:39.781084+00:00",
+      "vendor_sources": {
+        "ros_robot_controller_sdk.py": {
+          "path": "/home/ubuntu/ros2_ws/src/driver/ros_robot_controller/ros_robot_controller/ros_robot_controller_sdk.py",
+          "sha256": "c4dd48f3176a5dce1e8331846691ce995c0b3c2f79341cfc6c9e89dce1418a89"
+        },
+        "ros_robot_controller_node.py": {
+          "path": "/home/ubuntu/ros2_ws/src/driver/ros_robot_controller/ros_robot_controller/ros_robot_controller_node.py",
+          "sha256": "4d37d84c6eff0629f5f73ddca2b140cc0af555175fe3f68f8a3359123a716627"
+        }
+      },
+      "serial_ownership": {
+        "device_path": "/dev/rrc",
+        "resolved_path": "/dev/ttyACM0",
+        "visible_openers": [],
+        "inaccessible_process_fd_directories": 0,
+        "ownership_assessment": "NOT_PROVEN_EXCLUSIVE",
+        "visibility_complete": false,
+        "receive_or_write_activity_proven": false,
+        "safe_to_read": false
+      },
+      "hardware_rpc_requests_sent": 0,
+      "device_open_calls": 0,
+      "vendor_modified": false,
+      "scope": "filesystem_and_proc_metadata_only"
+    }
+  },
+  "D2": {
+    "stage": "D2",
+    "expected_source_sha": "a04beaf95746ab3f4246beda40bba504057a465e",
+    "diagnostic_service_requests_sent": 1,
+    "automatic_retry": false,
+    "client_status": "RESPONSE_RECEIVED",
+    "client_start_monotonic_ns": 779518034846,
+    "client_start_system_time_ns": 1795496224404260307,
+    "client_rtt_ns": 16952826,
+    "response_success": true,
+    "diagnostic": {
+      "association_guarantee": "UNPROVEN_REPEATED_RESPONSES",
+      "batches": [
+        {
+          "batch_elapsed_ns": 13846641,
+          "canonical_observation_eligible": false,
+          "channels": [
+            {
+              "canonical_observation_eligible": false,
+              "capture_elapsed_ns": 2883132,
+              "clock_domain": "host_monotonic",
+              "device_sample_time_ns": null,
+              "error": null,
+              "inner_association_verified": false,
+              "outer_frame_validated": true,
+              "raw_payload_hex": "020500fc02",
+              "raw_pulse": 764,
+              "read_latency_ns": 2680338,
+              "read_started_at_ns": 779519122553,
+              "response_received_at_ns": 779521802891,
+              "rx_frame_hex": "aa550505020500fc0248",
+              "servo_id": 2,
+              "source_type": "unknown",
+              "tx_frame_hex": "aa55050205028d"
+            },
+            {
+              "canonical_observation_eligible": false,
+              "capture_elapsed_ns": 2741429,
+              "clock_domain": "host_monotonic",
+              "device_sample_time_ns": null,
+              "error": null,
+              "inner_association_verified": false,
+              "outer_frame_validated": true,
+              "raw_payload_hex": "0305000f00",
+              "raw_pulse": 15,
+              "read_latency_ns": 2610702,
+              "read_started_at_ns": 779522025687,
+              "response_received_at_ns": 779524636389,
+              "rx_frame_hex": "aa5505050305000f00f5",
+              "servo_id": 3,
+              "source_type": "unknown",
+              "tx_frame_hex": "aa5505020503d3"
+            },
+            {
+              "canonical_observation_eligible": false,
+              "capture_elapsed_ns": 2721492,
+              "clock_domain": "host_monotonic",
+              "device_sample_time_ns": null,
+              "error": null,
+              "inner_association_verified": false,
+              "outer_frame_validated": true,
+              "raw_payload_hex": "040500db00",
+              "raw_pulse": 219,
+              "read_latency_ns": 2597229,
+              "read_started_at_ns": 779524780813,
+              "response_received_at_ns": 779527378042,
+              "rx_frame_hex": "aa550505040500db00c7",
+              "servo_id": 4,
+              "source_type": "unknown",
+              "tx_frame_hex": "aa550502050450"
+            },
+            {
+              "canonical_observation_eligible": false,
+              "capture_elapsed_ns": 2662928,
+              "clock_domain": "host_monotonic",
+              "device_sample_time_ns": null,
+              "error": null,
+              "inner_association_verified": false,
+              "outer_frame_validated": true,
+              "raw_payload_hex": "050500f401",
+              "raw_pulse": 500,
+              "read_latency_ns": 2529226,
+              "read_started_at_ns": 779527513793,
+              "response_received_at_ns": 779530043019,
+              "rx_frame_hex": "aa550505050500f4018d",
+              "servo_id": 5,
+              "source_type": "unknown",
+              "tx_frame_hex": "aa55050205050e"
+            },
+            {
+              "canonical_observation_eligible": false,
+              "capture_elapsed_ns": 2728724,
+              "clock_domain": "host_monotonic",
+              "device_sample_time_ns": null,
+              "error": null,
+              "inner_association_verified": false,
+              "outer_frame_validated": true,
+              "raw_payload_hex": "0a0500f301",
+              "raw_pulse": 499,
+              "read_latency_ns": 2593773,
+              "read_started_at_ns": 779530204948,
+              "response_received_at_ns": 779532798721,
+              "rx_frame_hex": "aa5505050a0500f3018c",
+              "servo_id": 10,
+              "source_type": "unknown",
+              "tx_frame_hex": "aa550502050a4f"
+            }
+          ],
+          "complete": true,
+          "device_sample_span_ns": null,
+          "host_span_exceeds_20ms": false,
+          "host_transaction_span_ns": 13676168,
+          "inner_association_verified": false,
+          "physical_calibrated": false,
+          "ros_publication_time_ns": 1795496224419186271,
+          "runtime_source_sha": "a04beaf95746ab3f4246beda40bba504057a465e",
+          "sequence": 0,
+          "source_type": "unknown"
+        }
+      ],
+      "canonical_observation_eligible": false,
+      "complete": true,
+      "error": null,
+      "gate_status": {
+        "canonical_observation_eligible": false,
+        "continuous_readback_supported": false,
+        "diagnostic_only": true,
+        "discarded_packets": 0,
+        "error": null,
+        "evidence_reference": "R1-USB-RECOVERY-20261123",
+        "hardware_validated": false,
+        "state": "COMPLETE_UNVERIFIED",
+        "used_keys": [
+          [
+            1,
+            5
+          ],
+          [
+            2,
+            5
+          ],
+          [
+            3,
+            5
+          ],
+          [
+            4,
+            5
+          ],
+          [
+            5,
+            5
+          ],
+          [
+            10,
+            5
+          ]
+        ]
+      },
+      "phase": "D2_COMPLETE",
+      "prior_used_ids": [
+        1
+      ],
+      "source_type": "unknown",
+      "stage": "D2"
+    },
+    "validated_complete": true,
+    "statistics": {
+      "attempts": 5,
+      "valid_outer_replies": 5,
+      "outer_reply_success_fraction": 1.0,
+      "host_latency_mean_ms": 2.6022536,
+      "host_latency_p95_ms": 2.680338,
+      "host_latency_max_ms": 2.680338,
+      "empirical_cycle_hz": null,
+      "host_six_channel_spans_ms": [],
+      "metric_scope": "finite unverified outer replies; NOT validated device sample rate",
+      "p95_method": "nearest rank",
+      "device_sample_span_ns": null,
+      "canonical_observation_eligible": false
+    }
+  },
+  "D3": {
+    "stage": "D3",
+    "expected_source_sha": "a04beaf95746ab3f4246beda40bba504057a465e",
+    "diagnostic_service_requests_sent": 1,
+    "automatic_retry": false,
+    "client_status": "RESPONSE_RECEIVED",
+    "client_start_monotonic_ns": 890667569172,
+    "client_start_system_time_ns": 1795496335553796009,
+    "client_rtt_ns": 2021676857,
+    "response_success": true,
+    "diagnostic": {
+      "association_guarantee": "UNPROVEN_REPEATED_RESPONSES",
+      "batches": [
+        {
+          "batch_elapsed_ns": 17048063,
+          "canonical_observation_eligible": false,
+          "channels": [
+            {
+              "canonical_observation_eligible": false,
+              "capture_elapsed_ns": 3001763,
+              "clock_domain": "host_monotonic",
+              "device_sample_time_ns": null,
+              "error": null,
+              "inner_association_verified": false,
+              "outer_frame_validated": true,
+              "raw_payload_hex": "010500f801",
+              "raw_pulse": 504,
+              "read_latency_ns": 2832666,
+              "read_started_at_ns": 890668728371,
+              "response_received_at_ns": 890671561037,
+              "rx_frame_hex": "aa550505010500f801df",
+              "servo_id": 1,
+              "source_type": "unknown",
+              "tx_frame_hex": "aa55050205016f"
+            },
+            {
+              "canonical_observation_eligible": false,
+              "capture_elapsed_ns": 2771863,
+              "clock_domain": "host_monotonic",
+              "device_sample_time_ns": null,
+              "error": null,
+              "inner_association_verified": false,
+              "outer_frame_validated": true,
+              "raw_payload_hex": "020500fc02",
+              "raw_pulse": 764,
+              "read_latency_ns": 2630159,
+              "read_started_at_ns": 890671733366,
+              "response_received_at_ns": 890674363525,
+              "rx_frame_hex": "aa550505020500fc0248",
+              "servo_id": 2,
+              "source_type": "unknown",
+              "tx_frame_hex": "aa55050205028d"
+            },
+            {
+              "canonical_observation_eligible": false,
+              "capture_elapsed_ns": 2650992,
+              "clock_domain": "host_monotonic",
+              "device_sample_time_ns": null,
+              "error": null,
+              "inner_association_verified": false,
+              "outer_frame_validated": true,
+              "raw_payload_hex": "0305000f00",
+              "raw_pulse": 15,
+              "read_latency_ns": 2535242,
+              "read_started_at_ns": 890674516269,
+              "response_received_at_ns": 890677051511,
+              "rx_frame_hex": "aa5505050305000f00f5",
+              "servo_id": 3,
+              "source_type": "unknown",
+              "tx_frame_hex": "aa5505020503d3"
+            },
+            {
+              "canonical_observation_eligible": false,
+              "capture_elapsed_ns": 3080295,
+              "clock_domain": "host_monotonic",
+              "device_sample_time_ns": null,
+              "error": null,
+              "inner_association_verified": false,
+              "outer_frame_validated": true,
+              "raw_payload_hex": "040500db00",
+              "raw_pulse": 219,
+              "read_latency_ns": 2958528,
+              "read_started_at_ns": 890677192319,
+              "response_received_at_ns": 890680150847,
+              "rx_frame_hex": "aa550505040500db00c7",
+              "servo_id": 4,
+              "source_type": "unknown",
+              "tx_frame_hex": "aa550502050450"
+            },
+            {
+              "canonical_observation_eligible": false,
+              "capture_elapsed_ns": 2807833,
+              "clock_domain": "host_monotonic",
+              "device_sample_time_ns": null,
+              "error": null,
+              "inner_association_verified": false,
+              "outer_frame_validated": true,
+              "raw_payload_hex": "050500f401",
+              "raw_pulse": 500,
+              "read_latency_ns": 2681042,
+              "read_started_at_ns": 890680285223,
+              "response_received_at_ns": 890682966265,
+              "rx_frame_hex": "aa550505050500f4018d",
+              "servo_id": 5,
+              "source_type": "unknown",
+              "tx_frame_hex": "aa55050205050e"
+            },
+            {
+              "canonical_observation_eligible": false,
+              "capture_elapsed_ns": 2619247,
+              "clock_domain": "host_monotonic",
+              "device_sample_time_ns": null,
+              "error": null,
+              "inner_association_verified": false,
+              "outer_frame_validated": true,
+              "raw_payload_hex": "0a0500f301",
+              "raw_pulse": 499,
+              "read_latency_ns": 2504488,
+              "read_started_at_ns": 890683107456,
+              "response_received_at_ns": 890685611944,
+              "rx_frame_hex": "aa5505050a0500f3018c",
+              "servo_id": 10,
+              "source_type": "unknown",
+              "tx_frame_hex": "aa550502050a4f"
+            }
+          ],
+          "complete": true,
+          "device_sample_span_ns": null,
+          "host_span_exceeds_20ms": false,
+          "host_transaction_span_ns": 16883573,
+          "inner_association_verified": false,
+          "physical_calibrated": false,
+          "ros_publication_time_ns": 1795496335571987814,
+          "runtime_source_sha": "a04beaf95746ab3f4246beda40bba504057a465e",
+          "sequence": 1,
+          "source_type": "unknown"
+        },
+        {
+          "batch_elapsed_ns": 18367590,
+          "canonical_observation_eligible": false,
+          "channels": [
+            {
+              "canonical_observation_eligible": false,
+              "capture_elapsed_ns": 3741483,
+              "clock_domain": "host_monotonic",
+              "device_sample_time_ns": null,
+              "error": null,
+              "inner_association_verified": false,
+              "outer_frame_validated": true,
+              "raw_payload_hex": "010500f801",
+              "raw_pulse": 504,
+              "read_latency_ns": 3558081,
+              "read_started_at_ns": 891669757466,
+              "response_received_at_ns": 891673315547,
+              "rx_frame_hex": "aa550505010500f801df",
+              "servo_id": 1,
+              "source_type": "unknown",
+              "tx_frame_hex": "aa55050205016f"
+            },
+            {
+              "canonical_observation_eligible": false,
+              "capture_elapsed_ns": 3501727,
+              "clock_domain": "host_monotonic",
+              "device_sample_time_ns": null,
+              "error": null,
+              "inner_association_verified": false,
+              "outer_frame_validated": true,
+              "raw_payload_hex": "020500fc02",
+              "raw_pulse": 764,
+              "read_latency_ns": 3375992,
+              "read_started_at_ns": 891673495141,
+              "response_received_at_ns": 891676871133,
+              "rx_frame_hex": "aa550505020500fc0248",
+              "servo_id": 2,
+              "source_type": "unknown",
+              "tx_frame_hex": "aa55050205028d"
+            },
+            {
+              "canonical_observation_eligible": false,
+              "capture_elapsed_ns": 2734389,
+              "clock_domain": "host_monotonic",
+              "device_sample_time_ns": null,
+              "error": null,
+              "inner_association_verified": false,
+              "outer_frame_validated": true,
+              "raw_payload_hex": "0305000f00",
+              "raw_pulse": 15,
+              "read_latency_ns": 2607694,
+              "read_started_at_ns": 891677011588,
+              "response_received_at_ns": 891679619282,
+              "rx_frame_hex": "aa5505050305000f00f5",
+              "servo_id": 3,
+              "source_type": "unknown",
+              "tx_frame_hex": "aa5505020503d3"
+            },
+            {
+              "canonical_observation_eligible": false,
+              "capture_elapsed_ns": 2769814,
+              "clock_domain": "host_monotonic",
+              "device_sample_time_ns": null,
+              "error": null,
+              "inner_association_verified": false,
+              "outer_frame_validated": true,
+              "raw_payload_hex": "040500dc00",
+              "raw_pulse": 220,
+              "read_latency_ns": 2647503,
+              "read_started_at_ns": 891679758778,
+              "response_received_at_ns": 891682406281,
+              "rx_frame_hex": "aa550505040500dc00a9",
+              "servo_id": 4,
+              "source_type": "unknown",
+              "tx_frame_hex": "aa550502050450"
+            },
+            {
+              "canonical_observation_eligible": false,
+              "capture_elapsed_ns": 2664305,
+              "clock_domain": "host_monotonic",
+              "device_sample_time_ns": null,
+              "error": null,
+              "inner_association_verified": false,
+              "outer_frame_validated": true,
+              "raw_payload_hex": "050500f401",
+              "raw_pulse": 500,
+              "read_latency_ns": 2547946,
+              "read_started_at_ns": 891682541649,
+              "response_received_at_ns": 891685089595,
+              "rx_frame_hex": "aa550505050500f4018d",
+              "servo_id": 5,
+              "source_type": "unknown",
+              "tx_frame_hex": "aa55050205050e"
+            },
+            {
+              "canonical_observation_eligible": false,
+              "capture_elapsed_ns": 2833114,
+              "clock_domain": "host_monotonic",
+              "device_sample_time_ns": null,
+              "error": null,
+              "inner_association_verified": false,
+              "outer_frame_validated": true,
+              "raw_payload_hex": "0a0500f301",
+              "raw_pulse": 499,
+              "read_latency_ns": 2679730,
+              "read_started_at_ns": 891685231331,
+              "response_received_at_ns": 891687911061,
+              "rx_frame_hex": "aa5505050a0500f3018c",
+              "servo_id": 10,
+              "source_type": "unknown",
+              "tx_frame_hex": "aa550502050a4f"
+            }
+          ],
+          "complete": true,
+          "device_sample_span_ns": null,
+          "host_span_exceeds_20ms": false,
+          "host_transaction_span_ns": 18153595,
+          "inner_association_verified": false,
+          "physical_calibrated": false,
+          "ros_publication_time_ns": 1795496336574324372,
+          "runtime_source_sha": "a04beaf95746ab3f4246beda40bba504057a465e",
+          "sequence": 2,
+          "source_type": "unknown"
+        },
+        {
+          "batch_elapsed_ns": 16825874,
+          "canonical_observation_eligible": false,
+          "channels": [
+            {
+              "canonical_observation_eligible": false,
+              "capture_elapsed_ns": 2788663,
+              "clock_domain": "host_monotonic",
+              "device_sample_time_ns": null,
+              "error": null,
+              "inner_association_verified": false,
+              "outer_frame_validated": true,
+              "raw_payload_hex": "010500f601",
+              "raw_pulse": 502,
+              "read_latency_ns": 2612141,
+              "read_started_at_ns": 892669760202,
+              "response_received_at_ns": 892672372343,
+              "rx_frame_hex": "aa550505010500f60103",
+              "servo_id": 1,
+              "source_type": "unknown",
+              "tx_frame_hex": "aa55050205016f"
+            },
+            {
+              "canonical_observation_eligible": false,
+              "capture_elapsed_ns": 2716852,
+              "clock_domain": "host_monotonic",
+              "device_sample_time_ns": null,
+              "error": null,
+              "inner_association_verified": false,
+              "outer_frame_validated": true,
+              "raw_payload_hex": "020500fc02",
+              "raw_pulse": 764,
+              "read_latency_ns": 2588365,
+              "read_started_at_ns": 892672528576,
+              "response_received_at_ns": 892675116941,
+              "rx_frame_hex": "aa550505020500fc0248",
+              "servo_id": 2,
+              "source_type": "unknown",
+              "tx_frame_hex": "aa55050205028d"
+            },
+            {
+              "canonical_observation_eligible": false,
+              "capture_elapsed_ns": 2616846,
+              "clock_domain": "host_monotonic",
+              "device_sample_time_ns": null,
+              "error": null,
+              "inner_association_verified": false,
+              "outer_frame_validated": true,
+              "raw_payload_hex": "0305000f00",
+              "raw_pulse": 15,
+              "read_latency_ns": 2502504,
+              "read_started_at_ns": 892675261781,
+              "response_received_at_ns": 892677764285,
+              "rx_frame_hex": "aa5505050305000f00f5",
+              "servo_id": 3,
+              "source_type": "unknown",
+              "tx_frame_hex": "aa5505020503d3"
+            },
+            {
+              "canonical_observation_eligible": false,
+              "capture_elapsed_ns": 2790487,
+              "clock_domain": "host_monotonic",
+              "device_sample_time_ns": null,
+              "error": null,
+              "inner_association_verified": false,
+              "outer_frame_validated": true,
+              "raw_payload_hex": "040500db00",
+              "raw_pulse": 219,
+              "read_latency_ns": 2672178,
+              "read_started_at_ns": 892677891811,
+              "response_received_at_ns": 892680563989,
+              "rx_frame_hex": "aa550505040500db00c7",
+              "servo_id": 4,
+              "source_type": "unknown",
+              "tx_frame_hex": "aa550502050450"
+            },
+            {
+              "canonical_observation_eligible": false,
+              "capture_elapsed_ns": 3188237,
+              "clock_domain": "host_monotonic",
+              "device_sample_time_ns": null,
+              "error": null,
+              "inner_association_verified": false,
+              "outer_frame_validated": true,
+              "raw_payload_hex": "050500f401",
+              "raw_pulse": 500,
+              "read_latency_ns": 3068039,
+              "read_started_at_ns": 892680695772,
+              "response_received_at_ns": 892683763811,
+              "rx_frame_hex": "aa550505050500f4018d",
+              "servo_id": 5,
+              "source_type": "unknown",
+              "tx_frame_hex": "aa55050205050e"
+            },
+            {
+              "canonical_observation_eligible": false,
+              "capture_elapsed_ns": 2617838,
+              "clock_domain": "host_monotonic",
+              "device_sample_time_ns": null,
+              "error": null,
+              "inner_association_verified": false,
+              "outer_frame_validated": true,
+              "raw_payload_hex": "0a0500f301",
+              "raw_pulse": 499,
+              "read_latency_ns": 2512905,
+              "read_started_at_ns": 892683899146,
+              "response_received_at_ns": 892686412051,
+              "rx_frame_hex": "aa5505050a0500f3018c",
+              "servo_id": 10,
+              "source_type": "unknown",
+              "tx_frame_hex": "aa550502050a4f"
+            }
+          ],
+          "complete": true,
+          "device_sample_span_ns": null,
+          "host_span_exceeds_20ms": false,
+          "host_transaction_span_ns": 16651849,
+          "inner_association_verified": false,
+          "physical_calibrated": false,
+          "ros_publication_time_ns": 1795496337572770511,
+          "runtime_source_sha": "a04beaf95746ab3f4246beda40bba504057a465e",
+          "sequence": 3,
+          "source_type": "unknown"
+        }
+      ],
+      "canonical_observation_eligible": false,
+      "complete": true,
+      "error": null,
+      "gate_status": {
+        "canonical_observation_eligible": false,
+        "continuous_readback_supported": false,
+        "diagnostic_only": true,
+        "discarded_packets": 0,
+        "error": null,
+        "evidence_reference": "R1-USB-RECOVERY-20261123",
+        "hardware_validated": false,
+        "state": "COMPLETE_UNVERIFIED",
+        "used_keys": [
+          [
+            1,
+            5
+          ],
+          [
+            2,
+            5
+          ],
+          [
+            3,
+            5
+          ],
+          [
+            4,
+            5
+          ],
+          [
+            5,
+            5
+          ],
+          [
+            10,
+            5
+          ]
+        ]
+      },
+      "phase": "COMPLETE_UNVERIFIED",
+      "prior_used_ids": [
+        1
+      ],
+      "source_type": "unknown",
+      "stage": "D3"
+    },
+    "validated_complete": true,
+    "statistics": {
+      "attempts": 18,
+      "valid_outer_replies": 18,
+      "outer_reply_success_fraction": 1.0,
+      "host_latency_mean_ms": 2.750844611111111,
+      "host_latency_p95_ms": 3.558081,
+      "host_latency_max_ms": 3.558081,
+      "empirical_cycle_hz": 0.9994843505315534,
+      "host_six_channel_spans_ms": [
+        16.883573,
+        18.153595,
+        16.651849
+      ],
+      "metric_scope": "finite unverified outer replies; NOT validated device sample rate",
+      "p95_method": "nearest rank",
+      "device_sample_span_ns": null,
+      "canonical_observation_eligible": false
+    }
+  },
+  "D4": {
+    "fresh_candidate": {
+      "joint_names": [
+        "joint1",
+        "joint2",
+        "joint3",
+        "joint4",
+        "joint5",
+        "r_joint"
+      ],
+      "positions": [
+        -0.008377580409572781,
+        -1.105840614063607,
+        2.0315632493213993,
+        1.1770500475449757,
+        0.0,
+        0.8419468311620645
+      ],
+      "units": "rad",
+      "raw_pulses": [
+        502,
+        764,
+        15,
+        219,
+        500,
+        499
+      ],
+      "source_type": "unknown",
+      "physical_calibrated": false,
+      "calibration_basis": "vendor_configuration_only",
+      "configuration_sha256": "d0b7ad3eed5688702988dd0ccacbaea692f67e68cdd37273ab1e277300a26c19",
+      "canonical_observation_eligible": false,
+      "device_sample_time_ns": null,
+      "unknown_physical_properties": [
+        "zero_offsets",
+        "directions",
+        "internal_servo_offsets"
+      ],
+      "timestamp_semantics": "no_device_stamp; retain per-channel host intervals",
+      "source_intervals": [
+        {
+          "servo_id": 1,
+          "read_started_at_ns": 892669760202,
+          "response_received_at_ns": 892672372343
+        },
+        {
+          "servo_id": 2,
+          "read_started_at_ns": 892672528576,
+          "response_received_at_ns": 892675116941
+        },
+        {
+          "servo_id": 3,
+          "read_started_at_ns": 892675261781,
+          "response_received_at_ns": 892677764285
+        },
+        {
+          "servo_id": 4,
+          "read_started_at_ns": 892677891811,
+          "response_received_at_ns": 892680563989
+        },
+        {
+          "servo_id": 5,
+          "read_started_at_ns": 892680695772,
+          "response_received_at_ns": 892683763811
+        },
+        {
+          "servo_id": 10,
+          "read_started_at_ns": 892683899146,
+          "response_received_at_ns": 892686412051
+        }
+      ],
+      "ros_joint_state_stamp_ns": null,
+      "fk_candidate": null,
+      "fk_error": "FK_DEPENDENCY_UNAVAILABLE:urdf_parser_py"
+    },
+    "expired_candidate": {
+      "validity": "unavailable",
+      "canonical_observation_eligible": false,
+      "error": "STALE_OR_INVALID_HOST_CLOCK"
+    },
+    "formal_state_snapshot": {
+      "joint_names": [
+        "joint1",
+        "joint2",
+        "joint3",
+        "joint4",
+        "joint5",
+        "r_joint"
+      ],
+      "servo_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        10
+      ],
+      "raw_values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "units": "pulse",
+      "source_type": "unknown",
+      "timestamp_ns": null,
+      "timestamp_semantics": "controller_publication",
+      "sample_interval_ns": null,
+      "receive_age_s": null,
+      "read_latency_s": null,
+      "validity": "diagnostic_only",
+      "canonical_observation_eligible": false,
+      "missing_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        10
+      ],
+      "error_reason": "WAITING_FOR_CONTROLLER_DIAGNOSTICS"
+    },
+    "source_status": {
+      "hardware_readback": "DIAGNOSTIC_ONLY",
+      "reason": "INNER_ASSOCIATION_AND_CALIBRATION_UNVERIFIED",
+      "rpc_requests_sent": 0,
+      "controller": {
+        "joint_names": [
+          "joint1",
+          "joint2",
+          "joint3",
+          "joint4",
+          "joint5",
+          "r_joint"
+        ],
+        "servo_ids": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          10
+        ],
+        "raw_values": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "units": "pulse",
+        "source_type": "unknown",
+        "timestamp_ns": null,
+        "timestamp_semantics": "controller_publication",
+        "sample_interval_ns": null,
+        "receive_age_s": null,
+        "read_latency_s": null,
+        "validity": "diagnostic_only",
+        "canonical_observation_eligible": false,
+        "missing_ids": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          10
+        ],
+        "error_reason": "WAITING_FOR_CONTROLLER_DIAGNOSTICS"
+      },
+      "raw_feedback": {
+        "raw_snapshot_valid": false,
+        "sequence": 3,
+        "channels": [],
+        "source_type": "unknown",
+        "units": "pulse",
+        "host_transaction_span_ns": null,
+        "host_read_span_exceeds_20ms": null,
+        "device_sample_span_ns": null,
+        "image_state_sync_skew_ns": null,
+        "validity": "diagnostic_only",
+        "canonical_observation_eligible": false,
+        "error_reason": "STALE_OR_INVALID_HOST_CLOCK",
+        "canonical_blockers": [
+          "HARDWARE_SOURCE_NOT_VERIFIED",
+          "PULSE_TO_RAD_NOT_VERIFIED",
+          "DEVICE_ACQUISITION_TIME_UNKNOWN"
+        ]
+      },
+      "converted_diagnostics": {
+        "validity": "unavailable",
+        "canonical_observation_eligible": false,
+        "error": "STALE_OR_INVALID_HOST_CLOCK"
+      },
+      "kinematics_pose": "not_measured_without_input_provenance"
+    },
+    "observation_counts": {
+      "valid": 0,
+      "rejected": 33,
+      "submitted": 0,
+      "responses": 0,
+      "network_errors": 0
+    },
+    "diagnostic_joints": [
+      {
+        "received_monotonic_ns": 890691355072,
+        "name": [
+          "joint1",
+          "joint2",
+          "joint3",
+          "joint4",
+          "joint5",
+          "r_joint"
+        ],
+        "position": [
+          -0.016755160819145562,
+          -1.105840614063607,
+          2.0315632493213993,
+          1.1770500475449757,
+          0.0,
+          0.8419468311620645
+        ],
+        "stamp_sec": 0,
+        "stamp_nanosec": 0
+      },
+      {
+        "received_monotonic_ns": 891693461794,
+        "name": [
+          "joint1",
+          "joint2",
+          "joint3",
+          "joint4",
+          "joint5",
+          "r_joint"
+        ],
+        "position": [
+          -0.016755160819145562,
+          -1.105840614063607,
+          2.0315632493213993,
+          1.1728612573401893,
+          0.0,
+          0.8419468311620645
+        ],
+        "stamp_sec": 0,
+        "stamp_nanosec": 0
+      },
+      {
+        "received_monotonic_ns": 892691985441,
+        "name": [
+          "joint1",
+          "joint2",
+          "joint3",
+          "joint4",
+          "joint5",
+          "r_joint"
+        ],
+        "position": [
+          -0.008377580409572781,
+          -1.105840614063607,
+          2.0315632493213993,
+          1.1770500475449757,
+          0.0,
+          0.8419468311620645
+        ],
+        "stamp_sec": 0,
+        "stamp_nanosec": 0
+      }
+    ],
+    "recording_path": "/home/ubuntu/zsy_projects/real_operation_evidence/r1_c3_d2d4_20261124T125001Z/d4_recording/run_20261124T045840Z_1a663e2e5166420c967ffaf6e84007cb",
+    "owned_publishers": [
+      "/idc_vla/real/diagnostic_joint_states",
+      "/idc_vla/real/diagnostics",
+      "/parameter_events"
+    ],
+    "complete": true
+  },
+  "frame_checks": {
+    "validated_captured_queries": 23,
+    "checks": [
+      {
+        "stage": "d2",
+        "sequence": 0,
+        "servo_id": 2,
+        "tx": "aa55050205028d",
+        "rx": "aa550505020500fc0248",
+        "crc_id_command_length_status_match": true
+      },
+      {
+        "stage": "d2",
+        "sequence": 0,
+        "servo_id": 3,
+        "tx": "aa5505020503d3",
+        "rx": "aa5505050305000f00f5",
+        "crc_id_command_length_status_match": true
+      },
+      {
+        "stage": "d2",
+        "sequence": 0,
+        "servo_id": 4,
+        "tx": "aa550502050450",
+        "rx": "aa550505040500db00c7",
+        "crc_id_command_length_status_match": true
+      },
+      {
+        "stage": "d2",
+        "sequence": 0,
+        "servo_id": 5,
+        "tx": "aa55050205050e",
+        "rx": "aa550505050500f4018d",
+        "crc_id_command_length_status_match": true
+      },
+      {
+        "stage": "d2",
+        "sequence": 0,
+        "servo_id": 10,
+        "tx": "aa550502050a4f",
+        "rx": "aa5505050a0500f3018c",
+        "crc_id_command_length_status_match": true
+      },
+      {
+        "stage": "d3",
+        "sequence": 1,
+        "servo_id": 1,
+        "tx": "aa55050205016f",
+        "rx": "aa550505010500f801df",
+        "crc_id_command_length_status_match": true
+      },
+      {
+        "stage": "d3",
+        "sequence": 1,
+        "servo_id": 2,
+        "tx": "aa55050205028d",
+        "rx": "aa550505020500fc0248",
+        "crc_id_command_length_status_match": true
+      },
+      {
+        "stage": "d3",
+        "sequence": 1,
+        "servo_id": 3,
+        "tx": "aa5505020503d3",
+        "rx": "aa5505050305000f00f5",
+        "crc_id_command_length_status_match": true
+      },
+      {
+        "stage": "d3",
+        "sequence": 1,
+        "servo_id": 4,
+        "tx": "aa550502050450",
+        "rx": "aa550505040500db00c7",
+        "crc_id_command_length_status_match": true
+      },
+      {
+        "stage": "d3",
+        "sequence": 1,
+        "servo_id": 5,
+        "tx": "aa55050205050e",
+        "rx": "aa550505050500f4018d",
+        "crc_id_command_length_status_match": true
+      },
+      {
+        "stage": "d3",
+        "sequence": 1,
+        "servo_id": 10,
+        "tx": "aa550502050a4f",
+        "rx": "aa5505050a0500f3018c",
+        "crc_id_command_length_status_match": true
+      },
+      {
+        "stage": "d3",
+        "sequence": 2,
+        "servo_id": 1,
+        "tx": "aa55050205016f",
+        "rx": "aa550505010500f801df",
+        "crc_id_command_length_status_match": true
+      },
+      {
+        "stage": "d3",
+        "sequence": 2,
+        "servo_id": 2,
+        "tx": "aa55050205028d",
+        "rx": "aa550505020500fc0248",
+        "crc_id_command_length_status_match": true
+      },
+      {
+        "stage": "d3",
+        "sequence": 2,
+        "servo_id": 3,
+        "tx": "aa5505020503d3",
+        "rx": "aa5505050305000f00f5",
+        "crc_id_command_length_status_match": true
+      },
+      {
+        "stage": "d3",
+        "sequence": 2,
+        "servo_id": 4,
+        "tx": "aa550502050450",
+        "rx": "aa550505040500dc00a9",
+        "crc_id_command_length_status_match": true
+      },
+      {
+        "stage": "d3",
+        "sequence": 2,
+        "servo_id": 5,
+        "tx": "aa55050205050e",
+        "rx": "aa550505050500f4018d",
+        "crc_id_command_length_status_match": true
+      },
+      {
+        "stage": "d3",
+        "sequence": 2,
+        "servo_id": 10,
+        "tx": "aa550502050a4f",
+        "rx": "aa5505050a0500f3018c",
+        "crc_id_command_length_status_match": true
+      },
+      {
+        "stage": "d3",
+        "sequence": 3,
+        "servo_id": 1,
+        "tx": "aa55050205016f",
+        "rx": "aa550505010500f60103",
+        "crc_id_command_length_status_match": true
+      },
+      {
+        "stage": "d3",
+        "sequence": 3,
+        "servo_id": 2,
+        "tx": "aa55050205028d",
+        "rx": "aa550505020500fc0248",
+        "crc_id_command_length_status_match": true
+      },
+      {
+        "stage": "d3",
+        "sequence": 3,
+        "servo_id": 3,
+        "tx": "aa5505020503d3",
+        "rx": "aa5505050305000f00f5",
+        "crc_id_command_length_status_match": true
+      },
+      {
+        "stage": "d3",
+        "sequence": 3,
+        "servo_id": 4,
+        "tx": "aa550502050450",
+        "rx": "aa550505040500db00c7",
+        "crc_id_command_length_status_match": true
+      },
+      {
+        "stage": "d3",
+        "sequence": 3,
+        "servo_id": 5,
+        "tx": "aa55050205050e",
+        "rx": "aa550505050500f4018d",
+        "crc_id_command_length_status_match": true
+      },
+      {
+        "stage": "d3",
+        "sequence": 3,
+        "servo_id": 10,
+        "tx": "aa550502050a4f",
+        "rx": "aa5505050a0500f3018c",
+        "crc_id_command_length_status_match": true
+      }
+    ],
+    "per_id": {
+      "2": {
+        "attempts": 4,
+        "outer_valid": 4,
+        "mean_ms": 2.8187135,
+        "p95_ms": 3.375992,
+        "max_ms": 3.375992
+      },
+      "3": {
+        "attempts": 4,
+        "outer_valid": 4,
+        "mean_ms": 2.5640355,
+        "p95_ms": 2.610702,
+        "max_ms": 2.610702
+      },
+      "4": {
+        "attempts": 4,
+        "outer_valid": 4,
+        "mean_ms": 2.7188595,
+        "p95_ms": 2.958528,
+        "max_ms": 2.958528
+      },
+      "5": {
+        "attempts": 4,
+        "outer_valid": 4,
+        "mean_ms": 2.7065632500000003,
+        "p95_ms": 3.068039,
+        "max_ms": 3.068039
+      },
+      "10": {
+        "attempts": 4,
+        "outer_valid": 4,
+        "mean_ms": 2.572724,
+        "p95_ms": 2.67973,
+        "max_ms": 2.67973
+      },
+      "1": {
+        "attempts": 3,
+        "outer_valid": 3,
+        "mean_ms": 3.0009626666666667,
+        "p95_ms": 3.558081,
+        "max_ms": 3.558081
+      }
+    },
+    "inner_association_verified": false
+  },
+  "clock_note": {
+    "python_utc": "2026-11-24T05:02:00.953090+00:00",
+    "directory_label_authoritative": false,
+    "reason": "GNU date -u printed local wall-clock with Z while Python timezone-aware UTC differed by 8h; use recorded epoch ns, monotonic ns and journal +0800",
+    "LD_PRELOAD": "/home/ubuntu/third_party/Open3D/build/lib/Release/libOpen3D.so",
+    "date_u_without_LD_PRELOAD": "correct UTC (05:02 UTC vs 13:02 local)",
+    "mitigation": "Do not change global configuration. Use timezone-aware Python/epoch timestamps for evidence; clean child environment for regression. Maintenance unit already started without LD_PRELOAD."
+  },
+  "backup": {
+    "verified_original_and_backup_files": 53,
+    "manifest_sha256": "69f8948912ad2fa96353e368a995085d8ab233b618e71dde12e73c7578733b80"
+  },
+  "tests": {
+    "inherited_environment": "382 passed, 2 skipped in 25.52s",
+    "without_LD_PRELOAD": "382 passed, 2 skipped in 22.60s",
+    "skip": [
+      "PyKDL",
+      "FastAPI"
+    ]
+  },
+  "hardware_position_queries": 23,
+  "serial_open_attempts_this_round": 2,
+  "inner_association_verified": false,
+  "physical_calibration_verified": false,
+  "canonical_observations": 0,
+  "firmware_flashed": false,
+  "motion_or_torque_commands": 0,
+  "usb_reset_performed": false,
+  "root_cause": "UNKNOWN: changed boot state, ModemManager isolation and rebind are confounded",
+  "final_runtime": {
+    "captured_system_ns": 1795496464698052798,
+    "services": "Restart=no\nMainPID=846\nNRestarts=0\nId=start_app_node.service\nActiveState=active\nSubState=running\nUnitFileState=enabled\n\nRestart=always\nMainPID=841\nNRestarts=0\nId=button_scan.service\nActiveState=active\nSubState=running\nUnitFileState=enabled\n\nRestart=no\nMainPID=9236\nNRestarts=0\nId=idc-r1-readback-c3-a04beaf-20261124.service\nActiveState=active\nSubState=running\nUnitFileState=transient\n\nRestart=no\nMainPID=0\nNRestarts=0\nId=ModemManager.service\nActiveState=inactive\nSubState=dead\nUnitFileState=masked-runtime\n",
+    "kernel": "2026-11-24T12:52:01+0800 ubuntu kernel: cdc_acm 1-2.1:1.0: ttyACM0: USB ACM device\n",
+    "maintenance_log": "2026-11-24T12:54:28+0800 ubuntu systemd[1]: Started /bin/bash --noprofile --norc -c source /opt/ros/humble/setup.bash; source /home/ubuntu/ros2_ws/install/setup.bash; exec /usr/bin/python3 -B \"$1\" -- /home/ubuntu/zsy_projects/real_operation_deployments/r1_sdk_a04beaf95746ab3f4246beda40bba504057a465e/run_maintenance.py.\n2026-11-24T12:54:31+0800 ubuntu bash[9236]: [INFO] [1795496071.617922792] [ros_robot_controller]: start\n",
+    "udev": "DEVPATH=/devices/platform/bus@0/3610000.usb/usb1/1-2/1-2.1/1-2.1:1.0/tty/ttyACM0\nDEVNAME=/dev/ttyACM0\nMAJOR=166\nMINOR=0\nSUBSYSTEM=tty\nUSEC_INITIALIZED=476475878\nID_VENDOR=1a86\nID_VENDOR_ENC=1a86\nID_VENDOR_ID=1a86\nID_MODEL=USB_Single_Serial\nID_MODEL_ENC=USB\\x20Single\\x20Serial\nID_MODEL_ID=55d4\nID_REVISION=0444\nID_SERIAL=1a86_USB_Single_Serial_5A25000846\nID_SERIAL_SHORT=5A25000846\nID_TYPE=generic\nID_BUS=usb\nID_USB_INTERFACES=:020201:0a0000:\nID_USB_INTERFACE_NUM=00\nID_USB_DRIVER=cdc_acm\nID_USB_CLASS_FROM_DATABASE=Communications\nID_VENDOR_FROM_DATABASE=QinHeng Electronics\nID_PATH=platform-3610000.usb-usb-0:2.1:1.0\nID_PATH_TAG=platform-3610000_usb-usb-0_2_1_1_0\nID_MM_CANDIDATE=1\nDEVLINKS=/dev/serial/by-id/usb-1a86_USB_Single_Serial_5A25000846-if00 /dev/serial/by-path/platform-3610000.usb-usb-0:2.1:1.0 /dev/rrc\nTAGS=:snap_cups_ippeveprinter:snap_cups_cupsd:systemd:\nCURRENT_TAGS=:snap_cups_ippeveprinter:snap_cups_cupsd:systemd:\n",
+    "usb_tree": "/:  Bus 02.Port 1: Dev 1, Class=root_hub, Driver=tegra-xusb/4p, 10000M\n    |__ Port 3: Dev 2, If 0, Class=Video, Driver=uvcvideo, 5000M\n    |__ Port 3: Dev 2, If 1, Class=Video, Driver=uvcvideo, 5000M\n    |__ Port 3: Dev 2, If 2, Class=Video, Driver=uvcvideo, 5000M\n    |__ Port 3: Dev 2, If 3, Class=Video, Driver=uvcvideo, 5000M\n/:  Bus 01.Port 1: Dev 1, Class=root_hub, Driver=tegra-xusb/4p, 480M\n    |__ Port 2: Dev 2, If 0, Class=Hub, Driver=hub/4p, 480M\n        |__ Port 1: Dev 4, If 1, Class=CDC Data, Driver=cdc_acm, 12M\n        |__ Port 1: Dev 4, If 0, Class=Communications, Driver=cdc_acm, 12M\n        |__ Port 4: Dev 6, If 0, Class=Hub, Driver=hub/4p, 480M\n            |__ Port 4: Dev 7, If 0, Class=Vendor Specific Class, Driver=cp210x, 12M\n    |__ Port 3: Dev 3, If 0, Class=Wireless, Driver=btusb, 12M\n    |__ Port 3: Dev 3, If 1, Class=Wireless, Driver=btusb, 12M\n",
+    "routes": "default via 10.29.0.1 dev wlan0 proto dhcp metric 600 \ndefault via 192.168.55.100 dev l4tbr0 metric 32766 linkdown \n",
+    "serial_ownership": {
+      "device_path": "/dev/rrc",
+      "resolved_path": "/dev/ttyACM0",
+      "visible_openers": [
+        {
+          "pid": 9236,
+          "process_name": "python3",
+          "script_paths": [
+            "/home/ubuntu/zsy_projects/real_operation_deployments/r1_sdk_a04beaf95746ab3f4246beda40bba504057a465e/run_maintenance.py"
+          ],
+          "fds": [
+            "21"
+          ]
+        }
+      ],
+      "inaccessible_process_fd_directories": 0,
+      "ownership_assessment": "NOT_PROVEN_EXCLUSIVE",
+      "visibility_complete": false,
+      "receive_or_write_activity_proven": false,
+      "safe_to_read": false
+    },
+    "udev_rule": "# Ignore ModemManager for ttyACM0 device\nKERNEL==\"ttyACM*\", SUBSYSTEM==\"tty\", GROUP=\"users\", MODE=\"0777\", SYMLINK+=\"rrc\"\nATTRS{idVendor}==\"1a86\", ATTRS{idProduct}==\"55d4\", ENV{ID_MM_PORT_IGNORE}=\"1\"1\"\n",
+    "runtime_paths": {
+      "/run/systemd/system/start_app_node.service.d/91-idc-r1-no-restart.conf": "[Service]\nRestart=no\n",
+      "/run/systemd/system/ModemManager.service": "/dev/null",
+      "/run/systemd/system/dbus-org.freedesktop.ModemManager1.service": "/dev/null"
+    }
+  }
+}
