@@ -1,7 +1,7 @@
 # R1功能验收与R2入口：2026-11-24
 
 [本轮联合实验报告与全部数据](experiments/r1_f1_joint_20261124/experiment_report.md)。
-R1基础功能：PASS_WITH_LIMITATIONS。本轮结束集中开发，不延伸VLA执行。
+R1静动态基础功能：PASS_WITH_LIMITATIONS；真实故障自动恢复：PARTIAL/NOT_RUN。本轮结束于保留故障现场，不延伸VLA执行。
 
 |项目|结论|证据边界|
 |---|---|---|
@@ -15,8 +15,8 @@ R1基础功能：PASS_WITH_LIMITATIONS。本轮结束集中开发，不延伸VLA
 |采集/有效性/权限分离|PASS_SOFTWARE|无效组不必退出线程；恢复数据不恢复运动|
 |已确认终结设备错误|PASS_MOCK|有限预算、下一周期继续；实际Status白名单默认空，需语义证据|
 |未知Status/超时/错配|PROTECTED|暂停关联风险查询但保留诊断/停止通道|
-|独立故障留存|PASS_MOCK|不依赖录制，原始包、Status/ID、时刻、版本和决策|
-|真实DEVICE_ERROR恢复|NOT_RUN|本轮窗口未自然复现，未知根因没有被宣称解决|
+|独立故障留存|PASS_LIVE_AND_MOCK|录制停止后ID10真实故障的原始包、Status/ID、时刻、版本和决策已保全|
+|真实DEVICE_ERROR恢复|NOT_RUN|录制后ID10/Status=-1自然复现，因终结语义未知暂停；未宣称根因解决|
 |状态转换/ROS2|PASS_UNCALIBRATED|真实Pulse→名义rad，目标缓存分离，采样时间未知|
 |既有功能回归|PASS|424 passed，2 skipped；PyKDL/FastAPI仍未验收|
 |完整物理标定|DEFERRED_R2_A|零位/方向/安装偏差/夹爪/URDF-FK未验证|
@@ -26,10 +26,12 @@ R1基础功能：PASS_WITH_LIMITATIONS。本轮结束集中开发，不延伸VLA
 客户端修补5b9423e：处理授权发布滞后；只对同SHA计划、空命令历史和健康状态使用未用能力。
 首次无运动的失败前置试次保留；成功试次dynamic_trial_confirmed.json，不能混同。
 
-当前采集器继续运行，运动能力已用完；未恢复正常整车控制。
+当前采集线程及进程存活，但查询PAUSED、反馈无效，运动能力已关闭；未恢复正常整车控制。
 临时Restart=no和ModemManager屏蔽仍在当前启动周期生效，重启后消失。
 原厂SDK/节点未改，不刷写STM32、升级依赖或启动第二串口。
 
 R2-A入口：各关节零位/方向/Pulse→rad、实际限位与偏差、夹爪距离和方向、
 URDF/FK一致性、D405接入、真实Observation时间匹配。基础R1通过不等于可信闭环。
 后续在R2联调中积累可靠性，不为验收额外进行长时间专项压测。
+
+最终状态更新：17:38:44（UTC+8），录制窗口外周期32810，ID10/0x05返回CRC有效的Status=-1。独立日志保全成功；因实际固件终结语义未知，查询PAUSED、反馈失效、运动权限关闭，进程仍运行。没有自动重试。静态/动态窗口结果不变，真实故障恢复未通过，长期连续性尚未验收。详见联合报告及post_experiment_fault.json。

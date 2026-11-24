@@ -1,6 +1,8 @@
 # R1连续反馈与受控A/B实验
 
-最新R1-F1/F2/F3：同一73aafa9驱动完成静态600组/3600回复、动态403组/2418回复，约20Hz，已完成实际A→B→A及现场确认。R1基础功能PASS_WITH_LIMITATIONS；未知Status保持隔离，真实故障恢复未自然复现。物理标定、D405与Observation同步转入R2-A。详见[联合报告](experiments/r1_f1_joint_20261124/experiment_report.md)。
+最新R1-F1/F2/F3：同一73aafa9驱动完成静态600组/3600回复、动态403组/2418回复，约20Hz，已完成实际A→B→A及现场确认。R1基础功能PASS_WITH_LIMITATIONS；未知Status保持隔离，录制后ID10/Status=-1自然故障已保全，查询暂停，真实恢复未执行。物理标定、D405与Observation同步转入R2-A。详见[联合报告](experiments/r1_f1_joint_20261124/experiment_report.md)。
+
+最终运行状态：ID10的Status=-1使查询暂停，反馈失效、运动权限关闭；未自动重试，未重启。静动态基础验收通过，真实错误恢复及长期连续性仍待验证。
 
 以下旧记录保留其历史范围。
 

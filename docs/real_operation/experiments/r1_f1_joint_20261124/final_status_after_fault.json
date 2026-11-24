@@ -1,0 +1,228 @@
+{
+  "collector_state": "PAUSED",
+  "motion_permission": false,
+  "source_sha": "73aafa9ecac071206f17afb095eb938e5a56a670",
+  "collector": {
+    "cycles": 32811,
+    "skipped_periods": 1,
+    "observer_drops": 0,
+    "observer_errors": 0,
+    "record_errors": 1,
+    "command_errors": 0
+  },
+  "gate": {
+    "state": "FAULT",
+    "error": "DEVICE_ERROR",
+    "used_keys": [
+      [
+        1,
+        5
+      ],
+      [
+        2,
+        5
+      ],
+      [
+        3,
+        5
+      ],
+      [
+        4,
+        5
+      ],
+      [
+        5,
+        5
+      ],
+      [
+        10,
+        5
+      ]
+    ],
+    "discarded_packets": 0,
+    "evidence_reference": "R1 experimental continuous 73aafa9ecac071206f17afb095eb938e5a56a670",
+    "continuous_readback_supported": true,
+    "hardware_validated": false,
+    "diagnostic_only": true,
+    "canonical_observation_eligible": false,
+    "experimental_continuous_configured": true,
+    "experimental_continuous_enabled": false,
+    "trusted_continuous_feedback": false,
+    "inner_association_verified": false
+  },
+  "feedback": {
+    "valid": false,
+    "error": "DEVICE_ERROR",
+    "last_fault_report": {
+      "sequence": 32810,
+      "channels": [
+        {
+          "servo_id": 1,
+          "raw_pulse": 499,
+          "source_type": "unknown",
+          "inner_association_verified": false,
+          "canonical_observation_eligible": false,
+          "device_sample_time_ns": null,
+          "error": null,
+          "read_started_at_ns": 2658756723024,
+          "response_received_at_ns": 2658759491071,
+          "read_latency_ns": 2768047,
+          "raw_payload_hex": "010500f301",
+          "clock_domain": "host_monotonic",
+          "outer_frame_validated": true,
+          "capture_elapsed_ns": 2897778,
+          "tx_frame_hex": "aa55050205016f",
+          "rx_frame_hex": "aa550505010500f301fc"
+        },
+        {
+          "servo_id": 2,
+          "raw_pulse": 767,
+          "source_type": "unknown",
+          "inner_association_verified": false,
+          "canonical_observation_eligible": false,
+          "device_sample_time_ns": null,
+          "error": null,
+          "read_started_at_ns": 2658759648579,
+          "response_received_at_ns": 2658762742043,
+          "read_latency_ns": 3093464,
+          "raw_payload_hex": "020500ff02",
+          "clock_domain": "host_monotonic",
+          "outer_frame_validated": true,
+          "capture_elapsed_ns": 3233052,
+          "tx_frame_hex": "aa55050205028d",
+          "rx_frame_hex": "aa550505020500ff021d"
+        },
+        {
+          "servo_id": 3,
+          "raw_pulse": 15,
+          "source_type": "unknown",
+          "inner_association_verified": false,
+          "canonical_observation_eligible": false,
+          "device_sample_time_ns": null,
+          "error": null,
+          "read_started_at_ns": 2658762923872,
+          "response_received_at_ns": 2658765501609,
+          "read_latency_ns": 2577737,
+          "raw_payload_hex": "0305000f00",
+          "clock_domain": "host_monotonic",
+          "outer_frame_validated": true,
+          "capture_elapsed_ns": 2732045,
+          "tx_frame_hex": "aa5505020503d3",
+          "rx_frame_hex": "aa5505050305000f00f5"
+        },
+        {
+          "servo_id": 4,
+          "raw_pulse": 219,
+          "source_type": "unknown",
+          "inner_association_verified": false,
+          "canonical_observation_eligible": false,
+          "device_sample_time_ns": null,
+          "error": null,
+          "read_started_at_ns": 2658765690543,
+          "response_received_at_ns": 2658768761606,
+          "read_latency_ns": 3071063,
+          "raw_payload_hex": "040500db00",
+          "clock_domain": "host_monotonic",
+          "outer_frame_validated": true,
+          "capture_elapsed_ns": 3175419,
+          "tx_frame_hex": "aa550502050450",
+          "rx_frame_hex": "aa550505040500db00c7"
+        },
+        {
+          "servo_id": 5,
+          "raw_pulse": 500,
+          "source_type": "unknown",
+          "inner_association_verified": false,
+          "canonical_observation_eligible": false,
+          "device_sample_time_ns": null,
+          "error": null,
+          "read_started_at_ns": 2658768911882,
+          "response_received_at_ns": 2658773846582,
+          "read_latency_ns": 4934700,
+          "raw_payload_hex": "050500f401",
+          "clock_domain": "host_monotonic",
+          "outer_frame_validated": true,
+          "capture_elapsed_ns": 5070927,
+          "tx_frame_hex": "aa55050205050e",
+          "rx_frame_hex": "aa550505050500f4018d"
+        },
+        {
+          "servo_id": 10,
+          "raw_pulse": null,
+          "source_type": "unknown",
+          "inner_association_verified": false,
+          "canonical_observation_eligible": false,
+          "device_sample_time_ns": null,
+          "error": "DEVICE_ERROR",
+          "completed_transaction": false,
+          "outer_frame_validated": false,
+          "capture_elapsed_ns": 8767864,
+          "tx_frame_hex": "aa550502050a4f",
+          "rx_frame_hex": "aa5505050a05ff0000cc"
+        }
+      ],
+      "complete": false,
+      "batch_elapsed_ns": 26130597,
+      "source_type": "unknown",
+      "inner_association_verified": false,
+      "canonical_observation_eligible": false,
+      "physical_calibrated": false,
+      "device_sample_span_ns": null,
+      "host_transaction_span_ns": null,
+      "schedule_started_ns": 2658756656430,
+      "scheduled_ns": 2658755795278,
+      "schedule_lateness_ns": 861152,
+      "requested_hz": 20.0,
+      "skipped_periods": 0
+    },
+    "source_type": "unknown",
+    "canonical_observation_eligible": false
+  },
+  "recording": {
+    "directory": "/home/ubuntu/zsy_projects/real_operation_evidence/r1_f1_20261124T090956Z/recordings/run_465335b0b3e744f0914bd3a7aa23df52",
+    "active": false,
+    "error": null,
+    "accepted_batches": 403,
+    "written_batches": 403,
+    "rejected_batches": 0,
+    "started_monotonic_ns": 1564113893877,
+    "stopped_monotonic_ns": 1584270869141,
+    "complete": true
+  },
+  "commands": [
+    {
+      "status": "SENT",
+      "target_pulses": {
+        "1": 300,
+        "2": 850,
+        "3": 50,
+        "4": 250
+      },
+      "duration_s": 4.0,
+      "received_monotonic_ns": 1568120469104,
+      "kind": "position",
+      "send_started_monotonic_ns": 1568123695034,
+      "send_finished_monotonic_ns": 1568124094303,
+      "tx_frame_hex": "aa55051001a00f04012c0102520303320004fa00f6"
+    },
+    {
+      "status": "SENT",
+      "target_pulses": {
+        "1": 503,
+        "2": 764,
+        "3": 15,
+        "4": 219
+      },
+      "duration_s": 4.0,
+      "received_monotonic_ns": 1576146890592,
+      "kind": "position",
+      "send_started_monotonic_ns": 1576157075966,
+      "send_finished_monotonic_ns": 1576158134283,
+      "tx_frame_hex": "aa55051001a00f0401f70102fc02030f0004db0080"
+    }
+  ],
+  "motion_error": null,
+  "source_type": "unknown",
+  "physical_calibrated": false,
+  "canonical_observation_eligible": false
+}
