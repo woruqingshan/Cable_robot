@@ -43,6 +43,7 @@ class ReadbackGate:
         self.fault = None
         self.pending = None
         self.reply = None
+        self.transaction_error = None
         self.used = set()
         self.discarded = 0
         self.evidence_reference = None
@@ -93,6 +94,9 @@ class ReadbackGate:
                 "diagnostic_only": self.diagnostic_only,
                 "canonical_observation_eligible": False}
 
+    def _reject_completed(self, code, data):
+        self.fail(code)
+
     def receive(self, data, *, crc_checked=False):
         """Called only by the existing CRC-checked BUS_SERVO parser."""
         with self.condition:
@@ -119,9 +123,9 @@ class ReadbackGate:
             elif actual_command != command:
                 self.fail("COMMAND_MISMATCH")
             elif result != 0:
-                self.fail("DEVICE_ERROR")
+                self._reject_completed("DEVICE_ERROR", data)
             elif not 0 <= pulse <= 1000:
-                self.fail("PULSE_OUT_OF_RANGE")
+                self._reject_completed("PULSE_OUT_OF_RANGE", data)
             else:
                 self.reply = PositionSample(actual_id, pulse, started, now, bytes(data))
                 self.condition.notify_all()
@@ -168,8 +172,10 @@ class ReadbackGate:
                     if key in self.used and self.diagnostic_repeat_budget > 0:
                         self.diagnostic_repeat_budget -= 1
                 self.used.add(key)
+                self.last_rejection = None
                 self.pending = (servo_id, command, started, deadline)
                 self.reply = None
+                self.transaction_error = None
             try:
                 # Existing SDK buf_write only. No extra serial port or worker.
                 # A finite, independently verified serial write bound is required.
@@ -184,6 +190,8 @@ class ReadbackGate:
                 while True:
                     if self.fault:
                         raise ReadbackFault(self.fault)
+                    if self.transaction_error is not None:
+                        raise self.transaction_error
                     remaining = (deadline-self.clock_ns())/1e9
                     if remaining <= 0:
                         self.fail("READ_TIMEOUT")
@@ -285,9 +293,11 @@ class PositionCapture:
                 raw_payload_hex=sample.raw_payload.hex(), clock_domain=sample.clock_domain,
                 outer_frame_validated=True)
         except Exception as error:
-            self.board._bounded_bus_feedback.fail(
-                error.code if isinstance(error, ReadbackFault) else "DIAGNOSTIC_CAPTURE_FAILED")
-            row.update(error=self.board._bounded_bus_feedback.fault, outer_frame_validated=False)
+            if not getattr(error, "completed_transaction", False):
+                self.board._bounded_bus_feedback.fail(
+                    error.code if isinstance(error, ReadbackFault) else "DIAGNOSTIC_CAPTURE_FAILED")
+            row.update(error=getattr(error,"code",None) or self.board._bounded_bus_feedback.fault,
+                completed_transaction=getattr(error,"completed_transaction",False), outer_frame_validated=False)
         row["capture_elapsed_ns"] = self.clock_ns()-started
         for key, attr in (("tx_frame_hex", "_last_bus_tx_frame"), ("rx_frame_hex", "_last_bus_rx_frame")):
             value = getattr(self.board, attr, None)

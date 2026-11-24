@@ -46,7 +46,7 @@ def test_experiment_cannot_arm_a_trusted_epoch_or_rearm():
 
 def test_wrong_id_latches_and_no_next_query_is_sent():
     b=Board();c=collector(b);b.bad=True
-    assert not c.tick()['complete'] and c.stop_event.is_set()
+    assert not c.tick()['complete'] and c.paused and not c.stop_event.is_set()
     b.now+=1_000_000_000;assert c.tick() is None and b.sent==[1]
     assert not c.snapshot()['valid']
 

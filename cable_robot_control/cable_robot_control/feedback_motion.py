@@ -54,7 +54,7 @@ class UnifiedFrameWriter(MaintenanceFrameWriter):
         if len(payload)>=2 and payload[0]==3:
             ids=list(payload[2:])
             return (payload[1]==len(ids) and ids==sorted(self.policy.A)
-                    and self.policy.enabled)
+                    and self.policy is not None)
         if len(payload)<7 or payload[0]!=1:return False
         duration=int.from_bytes(payload[1:3],'little')/1000
         count=payload[3]

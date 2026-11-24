@@ -4,11 +4,39 @@ import math
 import queue
 import threading
 import time
+import struct
 from .guarded_readback import ReadbackGate, ReadbackFault, PositionCapture, SERVO_IDS
+
+
+class CompletedReplyError(ReadbackFault):
+    completed_transaction = True
 
 
 class ExperimentalReadbackGate(ReadbackGate):
     """Explicit independent permission path. Any ambiguous communication error latches."""
+    def __init__(self,*args,**kwargs):
+        super().__init__(*args,**kwargs)
+        self.terminal_statuses = set()
+        self.contract_reference = None
+        self.last_rejection = None
+
+    def configure_terminal_statuses(self, statuses, contract_reference):
+        if self.armed or any(type(x) is not int or x==0 or not -128<=x<=127 for x in statuses):
+            raise ValueError('INVALID_TERMINAL_STATUS_POLICY')
+        if statuses and not contract_reference:raise ValueError('TERMINAL_CONTRACT_REQUIRED')
+        self.terminal_statuses=set(statuses);self.contract_reference=contract_reference
+
+    def _reject_completed(self,code,data):
+        i,cmd,status,pulse=struct.unpack('<BBbh',data)
+        recoverable=(code=='PULSE_OUT_OF_RANGE' or status in self.terminal_statuses)
+        self.last_rejection=dict(servo_id=i,command=cmd,status=status,raw_pulse=pulse,
+            payload_hex=bytes(data).hex(),received_monotonic_ns=self.clock_ns(),crc_checked=True,
+            completed_outer_reply=True,terminal_contract=self.contract_reference,
+            decision='INVALID_GROUP_CONTINUE' if recoverable else 'PAUSE_UNKNOWN_TERMINATION')
+        if recoverable:
+            self.transaction_error=CompletedReplyError(code);self.condition.notify_all()
+        else:self.fail(code)
+
     def arm_experiment(self, reference):
         with self.condition:
             if self.armed or self.fault or self.used:
@@ -60,12 +88,31 @@ class ContinuousFeedbackCollector(PositionCapture):
         self.next_tick = None
         self.on_record = None
         self.on_fault = None
+        self.paused = False
+        self.consecutive_errors = 0
+        self.max_consecutive_errors = 3
         self.stats = dict(cycles=0, skipped_periods=0, observer_drops=0,
             observer_errors=0, record_errors=0, command_errors=0)
         self._command_sequence = 0
+        self.last_stop_result = None
 
     def submit(self, callback, *, stop=False):
         """Only the reviewed driver supplies callbacks; bus I/O never runs in ROS callbacks."""
+        if stop:
+            original=callback
+            def callback():
+                try:
+                    result=original()
+                    self.last_stop_result=dict(status='WRITE_COMPLETED_NOT_ACKNOWLEDGED',delivery_guaranteed=False)
+                    return result
+                except Exception as error:
+                    self.last_stop_result=dict(status='FAILED_DELIVERY_NOT_GUARANTEED',error=str(error),delivery_guaranteed=False)
+                    raise
+        if stop and self.stop_event.is_set():
+            lock=self.board._bounded_bus_feedback.lock
+            if not lock.acquire(timeout=.1):raise ReadbackFault('STOP_LOCK_TIMEOUT')
+            try:return callback()
+            finally:lock.release()
         if self.stop_event.is_set() or (self.board._bounded_bus_feedback.fault and not stop):
             raise ReadbackFault('FEEDBACK_UNAVAILABLE')
         with self.lock:
@@ -108,6 +155,9 @@ class ContinuousFeedbackCollector(PositionCapture):
                     canonical_observation_eligible=False)
 
     def tick(self):
+        if self.paused:
+            self._dispatch()
+            return None
         now = self.clock_ns()
         if self.next_tick is None:
             self.next_tick = now
@@ -141,10 +191,16 @@ class ContinuousFeedbackCollector(PositionCapture):
             except Exception:
                 self.stats['record_errors'] += 1
         if not report['complete'] or self.board._bounded_bus_feedback.fault:
-            self.stop_event.set()
+            self.consecutive_errors += 1
+            if self.consecutive_errors >= self.max_consecutive_errors:
+                self.board._bounded_bus_feedback.fail('REPEATED_COMPLETED_ERRORS')
+            self.paused = bool(self.board._bounded_bus_feedback.fault)
+            report['recovery_decision'] = 'PAUSED_NO_QUERY' if self.paused else 'NEXT_SCHEDULED_CYCLE'
+            report['consecutive_errors'] = self.consecutive_errors
             if self.on_fault:
                 try:self.on_fault(report)
                 except Exception:self.stats['command_errors'] += 1
+        else:self.consecutive_errors = 0
         return report
 
     def start(self):
@@ -157,7 +213,7 @@ class ContinuousFeedbackCollector(PositionCapture):
         try:
             while not self.stop_event.is_set():
                 self.tick()
-                delay = max(0, (self.next_tick-self.clock_ns())/1e9)
+                delay = .05 if self.paused else max(0, (self.next_tick-self.clock_ns())/1e9)
                 self.stop_event.wait(delay)
         except Exception:
             self.board._bounded_bus_feedback.fail('COLLECTOR_WORKER_FAILED')

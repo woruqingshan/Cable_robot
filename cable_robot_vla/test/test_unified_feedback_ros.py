@@ -94,7 +94,7 @@ try:
  assert node.board._maintenance_writer.policy.stopped
  ports[0].force_error=True;spin(.2)
  assert node.board._bounded_bus_feedback.fault=='DEVICE_ERROR'
- assert node.collector.stop_event.is_set()
+ assert node.collector.paused and not node.collector.stop_event.is_set()
  stopped_count=ports[0].requests;spin(.1);assert ports[0].requests==stopped_count
  files=list(Path(node.root).glob('fault_*.json'));assert len(files)==1
  fault=json.loads(files[0].read_text());assert fault['report']['channels'][-1]['rx_frame_hex']

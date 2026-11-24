@@ -46,11 +46,14 @@ class UnifiedFeedbackNode(RosRobotController):
         cfg=param('feedback_configuration_path','')
         self.provider=RobotStateProvider();self.provider.configure_raw_conversion(cfg)
         self.archive_provider=RobotStateProvider();self.archive_provider.configure_raw_conversion(cfg)
+        terminal=json.loads(param('feedback_terminal_status_policy','{"statuses":[],"contract_reference":""}'))
+        self.board._bounded_bus_feedback.configure_terminal_statuses(terminal['statuses'],terminal['contract_reference'])
         self.board._bounded_bus_feedback.arm_experiment('R1 experimental continuous '+self.source_sha)
         self.raw_pub=self.create_publisher(String,'/idc_vla/real/raw_feedback',10)
         self.joint_pub=self.create_publisher(JointState,'/idc_vla/real/feedback_joint_states',10)
         self.status_pub=self.create_publisher(String,PREFIX+'/status',10)
         self.collector=ContinuousFeedbackCollector(self.board,hz=param('feedback_hz',20.))
+        self.collector.max_consecutive_errors=param('feedback_max_consecutive_errors',3)
         self.collector.on_record=self._archive
         self.collector.on_fault=self._fault_stop
         self.create_service(Trigger,PREFIX+'/start_recording',self._record_start)
@@ -98,6 +101,7 @@ class UnifiedFeedbackNode(RosRobotController):
         if report is not None:
             report.update(runtime_source_sha=self.source_sha,ros_publication_time_ns=self.get_clock().now().nanoseconds)
             self.raw_pub.publish(String(data=json.dumps(report)))
+            if not report['complete']:self.provider.raw_feedback.reject('CURRENT_GROUP_INVALID')
             if report['complete'] and self.collector.snapshot()['valid']:
                 converted=self.provider.offer_diagnostic_report(report)
                 if 'positions' in converted:
@@ -110,7 +114,9 @@ class UnifiedFeedbackNode(RosRobotController):
             if writer.policy.index>=2:writer.policy.enabled=False
         if now-self.last_status>=.1:
             self.last_status=now
-            status=dict(source_sha=self.source_sha,collector=self.collector.stats.copy(),
+            status=dict(collector_state='PAUSED' if self.collector.paused else 'STOPPED' if self.collector.stop_event.is_set() else 'RUNNING',
+                motion_permission=bool(self.board._maintenance_writer.policy and self.board._maintenance_writer.policy.enabled),
+                source_sha=self.source_sha,collector=self.collector.stats.copy(),
                 gate=self.board._bounded_bus_feedback.status(),feedback=self.collector.snapshot(),
                 recording=self.recorder.status() if self.recorder else self.last_recording,
                 commands=list(self.commands),motion_error=self.motion_error,
@@ -163,7 +169,7 @@ class UnifiedFeedbackNode(RosRobotController):
 
     def _send_stop(self):
         writer=self.board._maintenance_writer
-        if not writer.policy or not writer.policy.enabled:return
+        if not writer.policy:raise RuntimeError('NO_REVIEWED_STOP_IDS')
         self.board.bus_servo_stop(sorted(writer.policy.A))
         self.commands.append(dict(kind='stop',status='SENT',monotonic_ns=time.monotonic_ns(),
                                   tx_frame_hex=writer.last_motion_frame))
@@ -198,13 +204,16 @@ class UnifiedFeedbackNode(RosRobotController):
                 try:self._send_stop()
                 finally:self.board._bounded_bus_feedback.lock.release()
             except Exception as e:self.motion_error='STOP_NOT_CONFIRMED_OPERATOR_REQUIRED:'+str(e)
-        evidence=dict(report=report,gate=self.board._bounded_bus_feedback.status(),
+        if writer.policy:writer.policy.enabled=False;writer.policy.stopped=True
+        evidence=dict(report=report,rejection=self.board._bounded_bus_feedback.last_rejection,
+            collection_state='PAUSED' if self.collector.paused else 'RUNNING_INVALID_GROUP',motion_permitted=False,gate=self.board._bounded_bus_feedback.status(),
             collector=self.collector.stats.copy(),source_sha=self.source_sha,
             host_system_ns=time.time_ns(),host_monotonic_ns=time.monotonic_ns(),motion_error=self.motion_error)
         print('FEEDBACK_FAULT_EVIDENCE '+json.dumps(evidence,sort_keys=True),flush=True)
         try:
             path=self.root/('fault_'+uuid.uuid4().hex+'.json')
             with path.open('x') as f:json.dump(evidence,f,indent=2)
+            with (self.root/'fault_events.jsonl').open('a') as f:f.write(json.dumps(evidence)+'\n')
         except Exception as error:self.get_logger().error('FAULT_EVIDENCE_WRITE_FAILED:'+type(error).__name__)
 
     def close_feedback(self):
