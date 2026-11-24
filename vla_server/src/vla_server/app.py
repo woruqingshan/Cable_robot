@@ -116,13 +116,23 @@ def create_app(policy=None, limits: RuntimeLimits | None = None, config=None) ->
 
     @app.post("/v1/infer")
     async def infer(request: Request):
+        return await handle_infer(request, False)
+
+    @app.post("/v1/inspect")
+    async def inspect(request: Request):
+        if not getattr(config, "research_inspection_enabled", False):
+            raise VLAError("INSPECTION_DISABLED", "research inspection is disabled")
+        return await handle_infer(request, True)
+
+    async def handle_infer(request, research):
         http_begin = perf_counter()
         started_utc = datetime.now(timezone.utc).isoformat()
         try:
             data = await asyncio.wait_for(read_body(request), limits.request_timeout_s)
         except asyncio.TimeoutError as exc:
             raise VLAError("TIMEOUT", "request body deadline exceeded") from exc
-        observation = codec.loads(data, Observation, limits)
+        from vla_protocol.research import ResearchObservation
+        observation = codec.loads(data, ResearchObservation if research else Observation, limits)
         request_id = observation.request_id
         if not app.state.started:
             if diagnostics:

@@ -22,11 +22,13 @@ class InferenceResult:
 
 
 class PolicyClient:
-    def __init__(self, endpoint="http://127.0.0.1:8000", *, limits=None, transport=None, clock=monotonic):
+    def __init__(self, endpoint="http://127.0.0.1:8000", *, limits=None, transport=None, clock=monotonic, research_inspection=False):
         url = urlparse(endpoint)
         if url.scheme not in ("http", "https") or not url.hostname or url.username or url.password or url.query or url.fragment:
             raise VLAError("INVALID_ENDPOINT", "require an HTTP(S) server URL without credentials/query")
         self.endpoint = endpoint.rstrip("/")
+        self.research_inspection = research_inspection
+        self.route = "/v1/inspect" if research_inspection else "/v1/infer"
         self.limits = limits or RuntimeLimits()
         self.clock = clock
         self.http = httpx.Client(timeout=self.limits.request_timeout_s, transport=transport,
@@ -57,7 +59,7 @@ class PolicyClient:
         request_id = observation.request_id
         try:
             begin = perf_counter()
-            with self.http.stream("POST", self.endpoint + "/v1/infer", content=body,
+            with self.http.stream("POST", self.endpoint + self.route, content=body,
                                   headers={"Content-Type": "application/json", "Accept-Encoding": "identity"}) as response:
                 if response.headers.get("content-encoding", "identity") != "identity":
                     raise VLAError("MALFORMED_RESPONSE", "compressed HTTP responses are unsupported; PNG already compresses images", request_id=request_id)
@@ -96,7 +98,9 @@ class PolicyClient:
     def submit(self, observation: Observation):
         if self.closed or self.busy:
             raise VLAError("CLIENT_BUSY", "client closed or a request is still outstanding")
-        observation = codec.validate(observation.model_dump(), Observation, self.limits)
+        from vla_protocol.research import ResearchObservation
+        model = ResearchObservation if self.research_inspection else Observation
+        observation = codec.validate(observation.model_dump(), model, self.limits)
         if observation.request_id in self.seen:
             raise VLAError("DUPLICATE_REQUEST", "request ID was already consumed")
         self.pending = observation

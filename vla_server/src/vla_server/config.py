@@ -62,6 +62,7 @@ class ServiceTiming(StrictModel):
 
 
 class ServerConfig(StrictModel):
+    research_inspection_enabled: bool = False
     schema_version: Literal[1] = 1
     host: Literal["127.0.0.1", "::1"] = "127.0.0.1"
     port: int = Field(default=8000, ge=1, le=65535)
