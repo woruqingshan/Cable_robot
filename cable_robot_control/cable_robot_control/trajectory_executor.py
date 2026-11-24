@@ -17,7 +17,11 @@ class FixedTrajectoryExecutor:
         logger=None,
         ros_logger=None,
         frozen_cartesian_servo_ids=None,
+        wait=None,
+        include_gripper=True,
     ):
+        self.include_gripper = include_gripper
+        self.wait = wait or time.sleep
         self.arm = arm
         self.limits = limits
         self.waypoints = trajectory.get('waypoints', {}) or {}
@@ -106,7 +110,7 @@ class FixedTrajectoryExecutor:
                     duration=duration,
                     success=True,
                 )
-                time.sleep(duration)
+                self.wait(duration)
                 previous = pulses
                 current_pulse = dict(pulses)
                 current_pose_xyz = self._waypoint_xyz(waypoint)
@@ -144,7 +148,7 @@ class FixedTrajectoryExecutor:
                     duration=duration,
                     success=True,
                 )
-                time.sleep(duration)
+                self.wait(duration)
                 previous = target_pulses
                 current_pulse = target_pulses
                 current_pose_xyz = [float(value) for value in plan.target_xyz]
@@ -161,7 +165,7 @@ class FixedTrajectoryExecutor:
                     duration=duration,
                     success=True,
                 )
-                time.sleep(duration)
+                self.wait(duration)
             elif op == 'SET_GRIPPER':
                 pulse, duration = self._gripper_command(command)
                 self._log_info(f'{index}. SET_GRIPPER duration={duration:.2f}s pulse={pulse}')
@@ -172,13 +176,13 @@ class FixedTrajectoryExecutor:
                     duration=duration,
                     success=True,
                 )
-                time.sleep(duration)
+                self.wait(duration)
             elif op == 'WAIT':
                 duration = float(command['duration'])
                 validate_duration(duration, self.limits)
                 self._log_info(f'{index}. WAIT duration={duration:.2f}s')
                 self._record(stage='wait', duration=duration, success=True)
-                time.sleep(duration)
+                self.wait(duration)
             else:
                 raise ValueError(f'unknown trajectory command: {op}')
 
@@ -194,13 +198,15 @@ class FixedTrajectoryExecutor:
         waypoint = self._waypoint(name)
         joint_pulse = waypoint.get('joint_pulse') or {}
         gripper_pulse = waypoint.get('gripper_pulse') or {}
+        if not self.include_gripper and (gripper_pulse or self.limits.gripper_servo_id in joint_pulse):
+            raise ValueError('ARM_ONLY_TRAJECTORY_FORBIDS_GRIPPER')
         pulses = {int(servo_id): int(pulse) for servo_id, pulse in joint_pulse.items()}
         pulses.update({int(servo_id): int(pulse) for servo_id, pulse in gripper_pulse.items()})
-        required = set(self.limits.arm_servo_ids + [self.limits.gripper_servo_id])
+        required = set(self.limits.arm_servo_ids + ([self.limits.gripper_servo_id] if self.include_gripper else []))
         missing = sorted(required - set(pulses))
         if missing:
             raise ValueError(f'waypoint {name} missing pulse for servo id(s): {missing}')
-        validate_pulses(pulses, self.limits, include_gripper=True)
+        validate_pulses(pulses, self.limits, include_gripper=self.include_gripper)
         duration = float(waypoint.get('duration', 2.0))
         validate_duration(duration, self.limits)
         return pulses, duration
@@ -230,6 +236,7 @@ class FixedTrajectoryExecutor:
         return dx, dy, dz, pitch, duration
 
     def _gripper_command(self, command):
+        if not self.include_gripper:raise ValueError('ARM_ONLY_TRAJECTORY_FORBIDS_GRIPPER')
         duration = float(command.get('duration', self.gripper.get('default_duration', 0.5)))
         validate_duration(duration, self.limits)
         if command['command'] == 'SET_GRIPPER':

@@ -104,3 +104,29 @@ def test_motion_monitor_accepts_changes_and_detects_frozen_or_uncommanded_feedba
     m=MotionFeedbackMonitor();m.check(report(1_000_000_000),w)
     with pytest.raises(ReadbackFault,match='MOTION_FEEDBACK_FROZEN'):
         m.check(report(4_000_000_000),w)
+
+def test_existing_trajectory_executor_supports_interruptible_wait_without_return_motion():
+    from cable_robot_control.trajectory_executor import FixedTrajectoryExecutor
+    from cable_robot_control.safety import ArmLimits
+    commands=[];waits=[]
+    arm=S(move_joint=lambda p,d:commands.append((p,d)))
+    trajectory={'waypoints':{'B':{'joint_pulse':{1:300,2:850,3:50,4:250},'duration':4},
+        'A':{'joint_pulse':{1:503,2:764,3:15,4:219},'duration':4}},
+        'sequence':['WAIT 4','MOVE B','WAIT 4','MOVE A','WAIT 4']}
+    def wait(d):
+        waits.append(d)
+        if len(waits)==2:raise RuntimeError('operator stop')
+    e=FixedTrajectoryExecutor(arm,ArmLimits([1,2,3,4],10),trajectory,wait=wait,frozen_cartesian_servo_ids=[],include_gripper=False)
+    with pytest.raises(RuntimeError,match='operator stop'):e.execute()
+    assert len(commands)==1 and commands[0][0]=={1:300,2:850,3:50,4:250}
+
+def test_default_trajectory_still_requires_gripper_and_arm_only_refuses_it():
+    from cable_robot_control.trajectory_executor import FixedTrajectoryExecutor
+    from cable_robot_control.safety import ArmLimits
+    limits=ArmLimits([1,2,3,4],10)
+    t={'waypoints':{'P':{'joint_pulse':{1:500,2:765,3:15,4:220}}},'sequence':['MOVE P']}
+    with pytest.raises(ValueError,match='missing pulse'):
+        FixedTrajectoryExecutor(None,limits,t,frozen_cartesian_servo_ids=[]).dry_run()
+    t['waypoints']['P']['gripper_pulse']={10:499}
+    with pytest.raises(ValueError,match='FORBIDS_GRIPPER'):
+        FixedTrajectoryExecutor(None,limits,t,frozen_cartesian_servo_ids=[],include_gripper=False).dry_run()
