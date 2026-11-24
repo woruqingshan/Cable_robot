@@ -54,3 +54,14 @@ def test_stop_write_failure_is_reported_after_communication_pause():
  assert c.last_stop_result['status']=='FAILED_DELIVERY_NOT_GUARANTEED'
  assert c.last_stop_result['delivery_guaranteed'] is False
  assert c.paused and not c.stop_event.is_set()
+
+def test_permission_publication_lag_is_not_revocation_before_confirmation():
+ from deployment.local.run_reviewed_feedback_motion import motion_permission_revoked
+ assert not motion_permission_revoked(dict(motion_permission=False,commands=[]),False)
+ assert motion_permission_revoked(dict(motion_permission=False,commands=[]),True)
+
+def test_completed_roundtrip_and_fault_stop_are_distinct_permissions():
+ from deployment.local.run_reviewed_feedback_motion import motion_permission_revoked
+ commands=[dict(kind='position',status='SENT')]*2
+ assert not motion_permission_revoked(dict(motion_permission=False,commands=commands),True)
+ assert motion_permission_revoked(dict(motion_permission=False,commands=commands+[dict(kind='stop')]),True)

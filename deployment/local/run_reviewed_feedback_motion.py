@@ -10,11 +10,18 @@ import signal
 import time
 
 
+def motion_permission_revoked(status, confirmed):
+    if not confirmed or status.get('motion_permission') is not False:return False
+    sent=[c for c in status.get('commands',[]) if c.get('kind')=='position' and c.get('status')=='SENT']
+    return len(sent)<2 or any(c.get('kind')=='stop' for c in status.get('commands',[]))
+
+
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--plan',type=Path,required=True);p.add_argument('--plan-sha256',required=True)
     p.add_argument('--expected-source-sha',required=True);p.add_argument('--output',type=Path,required=True)
     p.add_argument('--execute-reviewed-motion',action='store_true')
+    p.add_argument('--use-existing-reviewed-capability',action='store_true')
     a=p.parse_args();raw=a.plan.read_bytes()
     if hashlib.sha256(raw).hexdigest()!=a.plan_sha256:raise ValueError('PLAN_HASH_MISMATCH')
     plan=json.loads(raw)
@@ -64,6 +71,8 @@ def main():
                     or time.monotonic_ns()-d.get('_received_ns',0)>500_000_000):
                 raise RuntimeError('FEEDBACK_OR_SOURCE_UNAVAILABLE')
             if d.get('motion_error'):raise RuntimeError(d['motion_error'])
+            if motion_permission_revoked(d,permission_confirmed):
+                raise RuntimeError('MOTION_PERMISSION_REVOKED_NO_AUTOMATIC_RESUME')
             return d
         def wait(seconds):
             logger.record(stage='phase_start',duration=seconds,monotonic_ns=time.monotonic_ns())
@@ -82,6 +91,7 @@ def main():
         arm=ArmInterface(node,limits,servo_controller_topic=prefix+'/reviewed_servo_command',
             bus_servo_set_state_topic=prefix+'/reviewed_stop_command')
         motion_attempted=False
+        permission_confirmed=False
         class GuardedArm:
             def move_joint(self,pulses,seconds):
                 check()
@@ -111,8 +121,21 @@ def main():
                 Parameter('motion_plan_sha256',value=a.plan_sha256).to_parameter_msg()]
             response=call('/ros_robot_controller/set_parameters_atomically',request,SetParametersAtomically)
             if not response.result.successful:raise RuntimeError(response.result.reason)
-            call(prefix+'/arm_reviewed_motion')
+            if a.use_existing_reviewed_capability:
+                from rcl_interfaces.srv import GetParameters
+                q=GetParameters.Request();q.names=['motion_plan_sha256']
+                value=call('/ros_robot_controller/get_parameters',q,GetParameters).values[0].string_value
+                d=check()
+                if value!=a.plan_sha256 or d.get('commands') or d.get('motion_permission') is not True:
+                    raise RuntimeError('EXISTING_CAPABILITY_NOT_UNUSED_EXACT_PLAN')
+            else:call(prefix+'/arm_reviewed_motion')
             outcome['motion_capability_armed']=True
+            deadline=time.monotonic()+2
+            while time.monotonic()<deadline:
+                d=check()
+                if d.get('motion_permission') is True:permission_confirmed=True;break
+                time.sleep(.01)
+            else:raise RuntimeError('MOTION_PERMISSION_NOT_CONFIRMED')
             outcome['start_recording']=json.loads(call(prefix+'/start_recording').message)
             outcome['sequence_started_monotonic_ns']=time.monotonic_ns()
             logger.record(stage='dynamic_start',monotonic_ns=outcome['sequence_started_monotonic_ns'],plan_sha256=a.plan_sha256)
