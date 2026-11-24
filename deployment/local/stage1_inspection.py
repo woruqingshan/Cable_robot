@@ -51,7 +51,9 @@ def main():
    if now>=next_sample and now-start<a.seconds and not (client and client.busy):
     next_sample=now+.5
     try:
-     d=latest['feedback'];report=d['feedback']['report']
+     d=latest['feedback']
+     if not d.get('feedback',{}).get('valid'):raise ValueError('FEEDBACK_INVALID_NO_QUERY_OR_INFERENCE')
+     report=d['feedback']['report']
      if not d['feedback']['valid'] or d.get('motion_permission'):raise ValueError('FEEDBACK_INVALID_OR_MOTION_ENABLED')
      conv=state.offer_diagnostic_report(report)
      if 'positions' not in conv:raise ValueError('INVALID_NOMINAL_CONVERSION')

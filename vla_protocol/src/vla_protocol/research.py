@@ -8,6 +8,9 @@ class ResearchSource(StrictModel):
     profile_id: Literal["real_research_inspection_v1"] = "real_research_inspection_v1"
 
 class ResearchObservation(Identity):
+    source_profile: ResearchSource = Field(default_factory=ResearchSource)
+    capture_mode: Literal["live", "recorded_replay"] = "live"
+    replay_reference: str | None = None
     simulated: Literal[False] = False
     physical_calibrated: Literal[False] = False
     execution_enabled: Literal[False] = False
@@ -28,6 +31,7 @@ class ResearchObservation(Identity):
 
     @model_validator(mode="after")
     def inspection_only(self):
+        if self.capture_mode=="recorded_replay" and not self.replay_reference:raise ValueError("REPLAY_REFERENCE_REQUIRED")
         r=self.feedback_report;c=r.get("channels",[])
         if (not r.get("complete") or r.get("source_type")!="unknown" or r.get("canonical_observation_eligible") is not False
             or [x.get("servo_id") for x in c]!=[1,2,3,4,5,10]
