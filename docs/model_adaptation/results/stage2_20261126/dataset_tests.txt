@@ -1,0 +1,11 @@
+test_empty_training_rejected (test_adaptation_dataset.DatasetTests.test_empty_training_rejected) ... ok
+test_independent_stats (test_adaptation_dataset.DatasetTests.test_independent_stats) ... ok
+test_real_gate (test_adaptation_dataset.DatasetTests.test_real_gate) ... ok
+test_rejections (test_adaptation_dataset.DatasetTests.test_rejections) ... ok
+test_scene_leakage (test_adaptation_dataset.DatasetTests.test_scene_leakage) ... ok
+test_validation_excluded (test_adaptation_dataset.DatasetTests.test_validation_excluded) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.004s
+
+OK

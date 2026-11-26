@@ -244,3 +244,43 @@ SO-100 是明确相关来源，但“三组存在”仅证明导出保存了多�
 |C 自身数据后训练|需要可信示教、独立 state/action 统计和 GPU；可消除对未知 SO-100 统计组的依赖|能覆盖自身夹爪、腕部视角及 RJ45 子任务，工程适配与论文规划模块分离；主推荐|
 
 选择 C 的依据同时包括：S1/S6 的 base 定位、当前实际转换不生效、源物理契约不足、机器人几何与视角不同，以及没有 JetRover RJ45 能力证据。不是断言只有后训练才可能成功。未来若获得完整源契约和实测映射，可重新评估 A；当前不构造 sign=1/offset=0 的伪标定，也不注册真实执行映射。
+
+## 10. JetRover Dataset 与后训练契约 v1（离线准备）
+
+当前实现 `deployment/local/validate_adaptation_dataset.py` 是标准库离线 staging 校验器，不是第二套机器人协议，不是已完成的 LeRobot 转换器，不连接任何驱动。单元测试使用显式 synthetic_test 数据；图像仅做路径/哈希验证，未声称完成解码、尺寸或视频完整性检查。
+
+### 10.1 State / Action 独立契约
+
+两者顺序均为 `[joint1,joint2,joint3,joint4,joint5,r_joint]`，单位均为 rad，六维 float32（训练导出时转换）。state=实际 bus feedback 的名义位置；action=控制器实际发送的绝对位置目标，不是当前反馈，不是未经验证 native action，也不是示教器未经本体转换的手柄坐标。夹爪作为独立驱动关节角，不能写成开口百分比。物理标定后冻结 calibration_id 与安全范围，不在 episode 内变更；重标定生成新版本。
+
+Manifest JSON 必需字段：schema_version=1、channels、units、state_semantics=nominal_joint_position、action_semantics=absolute_commanded_target、data_kind（synthetic_test/real_demonstration）、calibration_id、clock_domain、camera_id、sample_period_ns、max_alignment_ns、joint_bounds_rad（6组明确上下界）。当前无实测安全范围，不提供可直接用于硬件的默认上下界。source SHA、相机序列/固件/分辨率/编码/标定文件哈希、采集程序及安全检查记录应随 manifest 外部证据保存。
+
+每帧 JSONL 必需：episode_id、scene_group、split、frame_index、data_kind、calibration_id、instruction、subtask（insert/unlock/pullout）、state、action、state_source=bus_feedback、action_source=controller_sent_target、clock_domain、timestamp_ns、state_timestamp_ns、image_timestamp_ns、command_timestamp_ns、target_timestamp_ns、camera_id、image_path、image_sha256。real_demonstration 还要求 feedback_valid、physical_calibrated、timing_verified 全真；这些标记不是硬件证明，采集准入仍须核验其原始证据。每路 Pulse、TX/RX 区间、反馈异常、实际发送的逐通道目标及命令ID、原始设备时钟独立留存，以文件引用关联帧。
+
+一个 episode 是一个连续示教尝试，保留成功/失败/中止、任务标签、场景及操作者/采集 session；不把失败重写成成功。建议逐子任务示教，再记录完整组合任务；失败试次可保留用于诊断，训练是否纳入需人工明确标注。
+
+### 10.2 采集、相机与时间
+
+D405 使用现有 RGB8 848×480 配置与腕部相机身份；depth/CameraInfo 在旁路保存，不默认为 SmolVLA 特征。训练与推理固定同一 wrist→camera feature 映射（候选 camera1），不声称匹配旧 base 视角；缺少 top 相机则不伪造。未来如果加外部视角，另定数据版本。
+
+使用经审核的遥操作/示教或受监督位置目标接口，复用统一驱动记录 actual sent target；当前不实施示教。必须先恢复可靠反馈、完成关节/夹爪方向/范围及所需时间标定。优先保留相机原始header与host接收时间、每路反馈区间和command时刻；确认时钟关联后才能生成统一样本时间，不能把host到达改写为设备采样。
+
+pilot 候选采样10Hz（不是已验证的执行频率），从实测完整反馈与图像可用率决定是否接受；manifest 必须显式设置周期与对齐容差，冻结前需测量验证。每个 t_k 样本关联 t_k 前已可用的反馈/图像和在 t_k 发出的目标，记录计划到达 t_target；目标与反馈分别保存。插值/最近邻只允许在明确有效区间内，保留残差和方法；超龄、缺帧、跨故障、未知事务关联则拒绝或切分 episode，不静默填补。训练 chunk 的 k..k+49 对应冻结后的50个时间步，不复用历史20ms offsets。校验器检查同域、对齐、连续帧与周期；不替代采样时钟审计。
+
+### 10.3 LeRobot 转换与统计
+
+下一步使用固定 LeRobot v3 的 `LeRobotDataset.create`、`add_frame`、`save_episode` 导出，而不是手写 Parquet/video。features 显式定义 `observation.state:[6]`、`action:[6]` 与 RGB video feature；task 保存指令，帧按 episode 时间顺序插入；raw manifest 保留绝对时刻，LeRobot timestamp 为 episode 相对秒。camera rename_map 显式固定；确认 reader 的 delta_timestamps 与50步时序，episode 末端 padding mask 不作为额外训练样本。当前未实现/运行转换与视频 round-trip，标为 NOT_RUN。
+
+校验器流式计算**仅 train**帧的 state/action 独立均值与总体标准差，使用 Welford；验证/测试帧不参与统计。输出分别绑定 `observation.state` 与 `action`，不使用 SO-100 组、不双重归一化。零方差通道报告出来，训练前人工决定冻结或处理，不自动替换标准差。真实数据训练前再与 LeRobot 官方导出统计对照；图像统计由官方流程处理。
+
+按完整 episode 且按 scene_group 隔离 train/validation/test；同一接口、布线布局及重复尝试成组，避免近重复泄漏。训练脚本独立读取 manifest split 清单，不能依赖数据集默认全train。校验器拒绝跨split场景和episode、NaN/Inf、错误维数/顺序、越界、时间跳跃、state/action来源混用、图像缺失或哈希不符；不裁剪后冒充合格数据。
+
+### 10.4 Pilot 与正式训练
+
+先在自由空间分别覆盖接近后插入、解锁、拔出，保留接口位置、初始姿态、线缆与夹持变化。pilot 的目的先是验证示教质量、时间对齐、六维标签、图像映射、统计实际生效、batch/损失和checkpoint导出；不预设固定数据量。取得GPU后从固定 base 初始化，优先复用记录的冻结视觉骨干/训练expert与state projection配置，实际 trainable 参数需审计；不预先改变网络结构。
+
+正式训练数量依据 pilot 学习曲线和未覆盖任务变化扩展；比较未训练/后训练与确定性基线，固定独立测试场景。记录验证损失、各通道误差、越界比例、实际processor正控制、离线轨迹连续性；这些不代替任务成功率。受控实机阶段报告插入/解锁/拔出成功率、执行时间、中止和故障率，以及对准误差/力等实际可测指标。pilot 成功判据应在采集前冻结；没有达到可信反馈和执行准入不得仅凭离线损失启用闭环。
+
+### 当前完成边界
+
+Dataset contract/校验与独立统计工具 IMPLEMENTED；6项单元测试（含多种错误输入子例）PASS。采集、LeRobot格式转换、视频检查、训练、GPU回放与真实闭环均 NOT_RUN。后训练路线是当前工程推荐，不是已证明的策略能力。
