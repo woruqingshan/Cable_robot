@@ -176,3 +176,71 @@ a_SO = z_action * std_action + mean_action
 - [官方 SmolVLA checkpoint](https://huggingface.co/lerobot/smolvla_base)；[模型论文](https://arxiv.org/abs/2506.01844)；[官方微调说明](https://huggingface.co/docs/lerobot/main/smolvla)。
 - [项目 Observation Adapter](https://github.com/woruqingshan/Cable_robot/blob/e77fa3d/vla_server/src/vla_server/observation_adapter.py)；[SmolVLA policy](https://github.com/woruqingshan/Cable_robot/blob/e77fa3d/vla_server/src/vla_server/policies/smolvla.py)；[Action Adapter](https://github.com/woruqingshan/Cable_robot/blob/e77fa3d/cable_robot_vla/cable_robot_vla/action_adapter.py)；[Stage 1 实验总结](https://github.com/woruqingshan/Cable_robot/blob/e77fa3d/docs/real_operation/STAGE1_DEVELOPMENT_SUMMARY.md)。
 - [固定版本归一化源码](https://github.com/huggingface/lerobot/blob/ff0acf5ee6434369eeeb9d26e76d1e2ddc20c0d2/src/lerobot/processor/normalize_processor.py)；[固定版本 SO follower](https://github.com/huggingface/lerobot/blob/ff0acf5ee6434369eeeb9d26e76d1e2ddc20c0d2/src/lerobot/robots/so_follower/so_follower.py)；[SO-100 示例数据集](https://huggingface.co/datasets/lerobot/svla_so100_pickplace/blob/main/meta/info.json)。
+
+## 9. Stage 2 实测与路线决定（2026-11-26，取代第7节的待执行状态）
+
+### M1：实际官方 processor 已验证，不加载模型
+
+结果：[processor_probe.json](results/stage2_20261126/processor_probe.json)、[身份与历史日志审计](results/stage2_20261126/runtime_audit.json)。当前 checkpoint 全部受管文件哈希匹配历史 receipt；排除 `.cache` 后 inventory 为 `340a52a2b92f41fc9b8410bed0cd93743543bdb276e36125a74b73e0446add28`，与 Stage 1 配置一致。receipt 是历史操作记录，不是独立 Hub 权重证明。
+
+`deployment/cloud/scripts/probe_processors.py` 使用固定 LeRobot，直接实例化官方 normalization steps，并通过 config-only `make_pre_post_processors` 加载完整官方 pipeline。仅将 device override 为 CPU，复用离线 tokenizer cache；未实例化 SmolVLAPolicy、未 forward。峰值 RSS 761844 KiB（约744 MiB）。
+
+|证据层级|结果|
+|---|---|
+|官方单独 normalization step|零/非零/历史六维 state 原样通过；零/0.5 的 `[1,50,6]` action 原样通过|
+|完整官方 pipeline|历史 state 与零/非零 action 原样通过；合成 RGB/task 仅为触发 processor，非实机回放或模型实验|
+|隔离正控制|state 的构造 mean=[1..6], std=2 将零转为 -mean/2；action 将零转为 mean，断言通过|
+|静态调用链|Observation 按 joint1..5,r_joint 绑定名义 rad；服务只覆盖 device，不传 dataset_stats；空 rename_map 不会改统计键；robot_type 不参与 normalizer 分组|
+
+三组统计实际被加载，但键为 `so100*.buffer.action`，没有匹配 `observation.state` / `action`，因此未被这些转换使用。文件声明 MEAN_STD 不等于执行了变换。没有修改任何 checkpoint 文件或统计，也没有采用 issue 中“选择首个匹配组”的建议。
+
+历史 diagnostics 有52条完整记录，包含原生动作、观测摘要与运行时计时，没有 pre/post 中间 state/action Tensor。当前重建支持历史跳过的强推断，但无法逐请求直接核对；历史52次链路成功结论保持，动作继续 unknown。禁止重标为物理角度。
+
+复现（从仓库根目录，输出必须是新路径）：
+
+```bash
+HF_HOME=/root/autodl-tmp/idc-vla/cache/huggingface \
+../venvs/vla-model/bin/python deployment/cloud/scripts/probe_processors.py \
+ --checkpoint ../models/smolvla_base --lerobot ../third_party/lerobot \
+ --observation docs/real_operation/experiments/stage1_e2e_20261124/observation_samples/real_observation.json \
+ --output /tmp/processor-probe-NEW.json
+```
+
+本次成功不保证其他2GiB会话一定可运行；先核对剩余内存，在独立有超时进程运行。数值变换不生效是审计结论，不是模型适配 PASS。
+
+### M2：训练契约表与证据边界
+
+以下来源均于2026-11-26检查：
+
+- S1：[固定 checkpoint 模型卡](https://huggingface.co/lerobot/smolvla_base/blob/5e8d12a6e2975b0e5e5fce7c8caf47c371d257b6/README.md)，仅明确连续动作和面向特定用途微调，未定义完整物理契约。
+- S2：[论文 v1](https://arxiv.org/html/2506.01844v1)，§3.2/附录：多社区数据，不能把实验平台或当前配置当作全部训练历史；相机标准化顺序 top/wrist/side。未据此恢复每个训练组。
+- S3：[参考数据 metadata](https://huggingface.co/datasets/lerobot/svla_so100_pickplace/blob/a440cbb2b4403dd16f1d47eb84a09abbb97717a4/meta/info.json)，v2.1；当前 v3.0 revision `728583b5eaf9e739a7f119e2def466fa1d552402`。小文件快照及哈希见 [source_metadata.json](results/stage2_20261126/source_metadata.json)。它是官方参考数据集，不是已确认的 base 全部预训练清单。
+- S4：[固定 SO follower](https://github.com/huggingface/lerobot/blob/ff0acf5ee6434369eeeb9d26e76d1e2ddc20c0d2/src/lerobot/robots/so_follower/so_follower.py)：Present_Position/Goal_Position，use_degrees 决定 DEGREES 或 RANGE_M100_100，夹爪 RANGE_0_100。这不是已绑定到 S3 采集的代码版本。
+- S5：[官方迁移 PR](https://huggingface.co/lerobot/smolvla_base/discussions/11)，说明内置统计迁移到外部 pipeline；[#4415](https://github.com/huggingface/lerobot/issues/4415) 报告多组键错配和旧 revision `3326b100334f` 的状态统计；[#2374](https://github.com/huggingface/lerobot/issues/2374) 提供另一复现。issue 作者打印值是线索，未独立核验原权重，不作为可直接部署的统计来源。
+- S6：[官方微调说明](https://huggingface.co/docs/lerobot/smolvla)，当前文档，不能用于证明历史训练定义。
+
+|属性|参考数据/源码已知|当前 base checkpoint 的可用契约|
+|---|---|---|
+|State channels|S3: main_shoulder_pan/lift, main_elbow_flex, main_wrist_flex/roll, main_gripper，六维顺序一致|候选对应，全部训练组同序 UNKNOWN|
+|Action channels|S3 同 state 名称与顺序|候选，不等于已证明物理语义|
+|State units|S3 无单位；S4 可选 degree 或归一化范围|UNKNOWN，不能依据统计幅值判定|
+|Action semantics/units|S4 为位置目标，S3 未绑定采集实现|绝对/增量与单位完整绑定 UNKNOWN|
+|Zero/direction/range|S4 依赖每台机器人 calibration；S3 无实体校准文件|UNKNOWN，阻止可靠 sign/offset/范围映射|
+|Gripper|S4 为0–100归一化，非 JetRover rad|历史组定义 UNKNOWN|
+|State statistics|issue 提供旧文件线索；当前文件缺失|独立可追溯统计 UNKNOWN|
+|Action statistics|三组 SO-100 mean/std 已读|分组来源、选组规则与采集单位 UNKNOWN|
+|Dataset FPS|S3 两版本均30 FPS|不能外推全部训练组；不能用历史20ms检查时序代替|
+|Action timing|S3 元数据30Hz并非硬件下发/达到目标时间|UNKNOWN|
+|Camera binding|S3 top+wrist；S2 top/wrist/side；本项目 D405 wrist→camera1|具体训练视角匹配未证实，存在位置分布差异|
+
+SO-100 是明确相关来源，但“三组存在”仅证明导出保存了多个命名统计组，不能证明三个数据集、三种单位或只含一种机器人。迁移可能遗失状态统计的解释有上游支持；没有恢复完整训练记录、原 calibration 与选组逻辑。完成这一轮定向调查后停止扩大溯源，不下载旧完整权重或大数据集。
+
+### M3/M4：主推荐自身数据后训练，直接映射保留待证实基线
+
+|方案|证据与成本|RJ45与论文影响|
+|---|---|---|
+|A 直接关节映射|功能对应成立；源单位/零位/方向、独立统计与夹爪映射未闭合。代码成本低，验证与标定成本仍高|即使数学可逆也不保证精细任务迁移；条件不足，本轮不实现真实 Adapter|
+|B 运动学重定向|需双方可信 FK/TCP、任务空间动作语义、五自由度可行性及 IK；成本高，仍绕不过未知 native 语义|不能用 IK 修补语义缺失，可能偏离论文重点；本轮仅评估|
+|C 自身数据后训练|需要可信示教、独立 state/action 统计和 GPU；可消除对未知 SO-100 统计组的依赖|能覆盖自身夹爪、腕部视角及 RJ45 子任务，工程适配与论文规划模块分离；主推荐|
+
+选择 C 的依据同时包括：S1/S6 的 base 定位、当前实际转换不生效、源物理契约不足、机器人几何与视角不同，以及没有 JetRover RJ45 能力证据。不是断言只有后训练才可能成功。未来若获得完整源契约和实测映射，可重新评估 A；当前不构造 sign=1/offset=0 的伪标定，也不注册真实执行映射。
