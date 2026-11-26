@@ -1,0 +1,263 @@
+{
+  "server_source_revision": "95621edcb758e653d42473958374802d8ab326e1",
+  "policy": {
+    "checkpoint_repo": "lerobot/smolvla_base",
+    "checkpoint_revision": "5e8d12a6e2975b0e5e5fce7c8caf47c371d257b6",
+    "checkpoint_inventory_sha256": "340a52a2b92f41fc9b8410bed0cd93743543bdb276e36125a74b73e0446add28",
+    "lerobot_revision": "ff0acf5ee6434369eeeb9d26e76d1e2ddc20c0d2",
+    "feature_spec": {
+      "cameras": [
+        {
+          "camera_id": "real_rgb",
+          "feature_name": "observation.images.camera1",
+          "required": true,
+          "shape_chw": [
+            3,
+            256,
+            256
+          ],
+          "shape_policy": "official_processor"
+        }
+      ],
+      "model_id": "smolvla_base_research_inspection_v1",
+      "processor_id": "smolvla_official_processors_v1",
+      "source_profiles": [
+        "real_research_inspection_v1"
+      ],
+      "state_channels": [
+        "joint1",
+        "joint2",
+        "joint3",
+        "joint4",
+        "joint5",
+        "r_joint"
+      ],
+      "state_dimension": 6,
+      "state_feature": "observation.state",
+      "state_units": [
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad"
+      ]
+    },
+    "native_spec": {
+      "channels": [
+        "native_0",
+        "native_1",
+        "native_2",
+        "native_3",
+        "native_4",
+        "native_5"
+      ],
+      "normalization_id": "smolvla_checkpoint_mean_std_v1",
+      "processor_id": "smolvla_official_processors_v1",
+      "semantics": "unknown",
+      "semantics_source": "Inspection only: native continuous output; channel units/semantics and JetRover mapping unknown. 0.02 s offsets are a declared synthetic inspection schedule, not calibrated robot timing.",
+      "space_id": "smolvla_base_native_6d_unmapped_v1",
+      "step_s": 0.02,
+      "units": [
+        "model_native_unknown",
+        "model_native_unknown",
+        "model_native_unknown",
+        "model_native_unknown",
+        "model_native_unknown",
+        "model_native_unknown"
+      ]
+    }
+  },
+  "receipt": {
+    "repository": "lerobot/smolvla_base",
+    "revision": "5e8d12a6e2975b0e5e5fce7c8caf47c371d257b6",
+    "files": {
+      ".gitattributes": "32949ddb126c25a78e757b890078c46d0c8f8e899e56510a1efef817233149f9",
+      "Finetune_SmolVLA_notebook.ipynb": "7f445c913c508142b632245ae52494c23ac8b96109fe1f9144e34b8b9c60f92d",
+      "README.md": "1c4eab155e159a5fd3fd6c4d5f770c43f056665d73e11c0584e47f8b824d3c98",
+      "collage_small.gif": "c43f022bf1fdfbac82841ef95c7a99a7ead13ea67f2a7202f2fe57148f352c83",
+      "config.json": "650584b56c104720f7a3c91d1ec6bec9e8de8ac11e60c92ba2fa82d93eda147d",
+      "model.safetensors": "7cd549ac2351fb069c0ddb3c34ad2d09cfc92b56a15dccdfc2e41467aaca01eb",
+      "policy_postprocessor.json": "2b78bb742065288df2ec63b0ee35f97a1f6950171cf2272f7e34b1fe3873b17b",
+      "policy_postprocessor_step_0_unnormalizer_processor.safetensors": "490ab239d96e263687c0b2e386a0afbc235a2eceb9857c36ed32f2f162a3e7c8",
+      "policy_preprocessor.json": "7683d648280a72f0d51e869fb8dd1596beed90b7f84849330cf1bc26634a4bd6",
+      "policy_preprocessor_step_5_normalizer_processor.safetensors": "490ab239d96e263687c0b2e386a0afbc235a2eceb9857c36ed32f2f162a3e7c8"
+    },
+    "revision_evidence": "/root/autodl-tmp/idc-vla/models/smolvla_base_revision.txt"
+  },
+  "current_files": {
+    ".gitattributes": {
+      "sha256": "32949ddb126c25a78e757b890078c46d0c8f8e899e56510a1efef817233149f9",
+      "size": 1573
+    },
+    "Finetune_SmolVLA_notebook.ipynb": {
+      "sha256": "7f445c913c508142b632245ae52494c23ac8b96109fe1f9144e34b8b9c60f92d",
+      "size": 6757
+    },
+    "README.md": {
+      "sha256": "1c4eab155e159a5fd3fd6c4d5f770c43f056665d73e11c0584e47f8b824d3c98",
+      "size": 4680
+    },
+    "collage_small.gif": {
+      "sha256": "c43f022bf1fdfbac82841ef95c7a99a7ead13ea67f2a7202f2fe57148f352c83",
+      "size": 8009386
+    },
+    "config.json": {
+      "sha256": "650584b56c104720f7a3c91d1ec6bec9e8de8ac11e60c92ba2fa82d93eda147d",
+      "size": 2299
+    },
+    "model.safetensors": {
+      "sha256": "7cd549ac2351fb069c0ddb3c34ad2d09cfc92b56a15dccdfc2e41467aaca01eb",
+      "size": 906712520
+    },
+    "policy_postprocessor.json": {
+      "sha256": "2b78bb742065288df2ec63b0ee35f97a1f6950171cf2272f7e34b1fe3873b17b",
+      "size": 660
+    },
+    "policy_postprocessor_step_0_unnormalizer_processor.safetensors": {
+      "sha256": "490ab239d96e263687c0b2e386a0afbc235a2eceb9857c36ed32f2f162a3e7c8",
+      "size": 640
+    },
+    "policy_preprocessor.json": {
+      "sha256": "7683d648280a72f0d51e869fb8dd1596beed90b7f84849330cf1bc26634a4bd6",
+      "size": 1872
+    },
+    "policy_preprocessor_step_5_normalizer_processor.safetensors": {
+      "sha256": "490ab239d96e263687c0b2e386a0afbc235a2eceb9857c36ed32f2f162a3e7c8",
+      "size": 640
+    },
+    ".cache/huggingface/.gitignore": {
+      "sha256": "684888c0ebb17f374298b65ee2807526c066094c701bcc7ebbe1c1095f494fc1",
+      "size": 1
+    },
+    ".cache/huggingface/CACHEDIR.TAG": {
+      "sha256": "f6572428f6d5e1575e73a1502895a8731f10757dfbb634909c6e154b849af91d",
+      "size": 191
+    },
+    ".cache/huggingface/download/.gitattributes.lock": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    ".cache/huggingface/download/.gitattributes.metadata": {
+      "sha256": "4816dcec733132dd9f9f734708df92815ff087dcb0bd84961e5030269b28537f",
+      "size": 100
+    },
+    ".cache/huggingface/download/Finetune_SmolVLA_notebook.ipynb.lock": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    ".cache/huggingface/download/Finetune_SmolVLA_notebook.ipynb.metadata": {
+      "sha256": "f7d75bae51f02e19e29965ece41c563afa1c54127dcf692185a6dde692384e49",
+      "size": 100
+    },
+    ".cache/huggingface/download/README.md.lock": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    ".cache/huggingface/download/README.md.metadata": {
+      "sha256": "cc495c4595de7c254c98db5cf227f5c84c8b394f9fbb5fa07729f6984c202345",
+      "size": 100
+    },
+    ".cache/huggingface/download/collage_small.gif.lock": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    ".cache/huggingface/download/collage_small.gif.metadata": {
+      "sha256": "6045255924daf64ec0cedaf249f8a2e878b2d4bc1b547f56d201f280dc685c50",
+      "size": 124
+    },
+    ".cache/huggingface/download/config.json.lock": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    ".cache/huggingface/download/config.json.metadata": {
+      "sha256": "14d589680f6a94c23c9eea909e560b62aed7664549f2693c839d6744c8feacc0",
+      "size": 101
+    },
+    ".cache/huggingface/download/model.safetensors.lock": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    ".cache/huggingface/download/model.safetensors.metadata": {
+      "sha256": "5f7c5dd592d6148ba5589f8827f2604e4878733ea67e90c6fb2f5c3d543bdde7",
+      "size": 122
+    },
+    ".cache/huggingface/download/policy_postprocessor.json.lock": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    ".cache/huggingface/download/policy_postprocessor.json.metadata": {
+      "sha256": "9608a7cdc09a0aa23dc3e78b697bc73ddf4263317df0cee908efe429bf2298b8",
+      "size": 101
+    },
+    ".cache/huggingface/download/policy_postprocessor_step_0_unnormalizer_processor.safetensors.lock": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    ".cache/huggingface/download/policy_postprocessor_step_0_unnormalizer_processor.safetensors.metadata": {
+      "sha256": "e459197861cb45d4bd4d133974b93f66a1fc8ee437b8a0b82a98f69fd542b94d",
+      "size": 125
+    },
+    ".cache/huggingface/download/policy_preprocessor.json.lock": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    ".cache/huggingface/download/policy_preprocessor.json.metadata": {
+      "sha256": "8ed4a402be11f67c4429f0e432aaa27d4b489d62193257526761f9807d2e86b3",
+      "size": 100
+    },
+    ".cache/huggingface/download/policy_preprocessor_step_5_normalizer_processor.safetensors.lock": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    ".cache/huggingface/download/policy_preprocessor_step_5_normalizer_processor.safetensors.metadata": {
+      "sha256": "bc7d5fea9183668776786fcd49689948af18f378f24e3fbf14b7dd22fe20d574",
+      "size": 124
+    },
+    ".cache/huggingface/trees/5e8d12a6e2975b0e5e5fce7c8caf47c371d257b6.json": {
+      "sha256": "0493476a216c957352c9f0737f34d9a2c833e48ef2111e8c9a3607030d0a5ae3",
+      "size": 1945
+    }
+  },
+  "diagnostics": [
+    {
+      "file": "inference_4d78a9c14cbb4b33b832540ab41571a4.jsonl",
+      "records": 0,
+      "keys": []
+    },
+    {
+      "file": "inference_d4dd4b66eccb41819c9df61c02a375d9.jsonl",
+      "records": 52,
+      "keys": [
+        "action",
+        "completed_utc",
+        "device",
+        "diagnostic_schema",
+        "execution_enabled",
+        "finite",
+        "gripper",
+        "http_duration_s",
+        "images",
+        "joints",
+        "kind",
+        "model_id",
+        "observation_seq",
+        "observation_timestamps",
+        "output_stage",
+        "policy_duration_s",
+        "request_id",
+        "robot_id",
+        "runtime",
+        "session_id",
+        "source_profile",
+        "started_utc",
+        "transport_shape"
+      ]
+    }
+  ],
+  "inventory_verification": {
+    "exclusion_rule": "vla_server.artifacts.inventory excludes .cache and checkpoint_receipt.json",
+    "receipt_matches": true,
+    "computed_inventory_sha256": "340a52a2b92f41fc9b8410bed0cd93743543bdb276e36125a74b73e0446add28"
+  }
+}
