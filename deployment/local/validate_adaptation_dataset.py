@@ -48,7 +48,7 @@ def audit(records, manifest, base):
         if splits.setdefault(group,split)!=split: raise ValueError('scene leakage across splits')
         if eid in last and (last[eid]['split']!=split or last[eid]['scene_group']!=group): raise ValueError('episode split changed')
         if r['data_kind']!=manifest['data_kind'] or r['calibration_id']!=manifest['calibration_id']: raise ValueError('provenance mismatch')
-        if manifest['data_kind']=='real_demonstration' and not (r['feedback_valid'] and r['physical_calibrated'] and r['timing_verified']):
+        if manifest['data_kind']=='real_demonstration' and not all(r.get(k) is True for k in ('feedback_valid','physical_calibrated','timing_verified')):
             raise ValueError('real demonstration not eligible for training')
         if r['state_source']!='bus_feedback' or r['action_source']!='controller_sent_target': raise ValueError('state/action source confusion')
         if not r['instruction'].strip() or r['subtask'] not in ('insert','unlock','pullout'): raise ValueError('invalid task')
@@ -60,7 +60,7 @@ def audit(records, manifest, base):
             if abs(r[key]-r['timestamp_ns'])>tolerance: raise ValueError('alignment outside declared tolerance')
         expected_index=last[eid]['frame_index']+1 if eid in last else 0
         if r['frame_index']!=expected_index: raise ValueError('frame discontinuity')
-        if eid in last and abs(r['timestamp_ns']-last[eid]['timestamp_ns']-period)>tolerance: raise ValueError('cadence gap')
+        if eid in last and (r['timestamp_ns']<=last[eid]['timestamp_ns'] or abs(r['timestamp_ns']-last[eid]['timestamp_ns']-period)>tolerance): raise ValueError('cadence gap')
         for key in ('state','action'):
             values=vector(r[key])
             if any(not lo<=x<=hi for x,(lo,hi) in zip(values,limits)): raise ValueError('out of configured bounds; never clip')

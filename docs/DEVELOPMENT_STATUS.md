@@ -5,7 +5,7 @@
 
 ## 1. 当前结论
 
-**Stage 1：PASS_WITH_LIMITATIONS。** 已经通过真实观测→云端 GPU 推理→动作返回并记录的端到端实验，尚未通过 VLA 实际执行和反馈控制闭环。当前模型研究进入 SmolVLA–JetRover 状态与动作空间对齐。
+**Stage 2：M1 已实测，M2/M3 已形成有边界的决策，M4 进入自身数据后训练准备。Stage 1：PASS_WITH_LIMITATIONS。** 已经通过真实观测→云端 GPU 推理→动作返回并记录的端到端实验，尚未通过 VLA 实际执行和反馈控制闭环。当前模型研究进入 SmolVLA–JetRover 状态与动作空间对齐。
 
 ```text
 D405 真实 RGB + 六路舵机位置反馈 + Language
@@ -176,3 +176,21 @@ deployment/local/
 当前阻塞仍为反馈故障恢复、物理标定/时间关联、模型训练契约及归一化有效性。运行 processor 探针、源数据研究和映射开发均等待正式 Instruction。
 
 核验补充：以标准库只读解析服务器两个 processor safetensors 文件头，均仅有三组 SO-100 action mean/std，确认缺 observation.state 与无前缀 action 键；没有运行 processor，实际转换行为仍 NOT_RUN。新增五份文档33个本地链接目标均存在；两份归档快照无旧完整路径引用。git diff --check 用于提交前格式检查；本次未运行代码测试。
+
+## 9. Stage 2 本轮结果（2026-11-26）
+
+工作基线 `abf447e8198f1ae2576049a177027f4e94f43604`，沿用原分支。本节是最新进展，第4节与专项分析第7节的待执行清单作为历史候选保留，后续优先按本节推进。
+
+- M1 COMPLETE：固定官方 normalization step 和完整 pre/postprocessor（CPU device override）运行成功，未加载模型。state零/非零/历史输入、action零/非零及完整链路检查均原样返回；两个隔离正控制变换断言通过。10项结构化检查。三组统计被加载但不匹配标准特征键，实际未使用。峰值RSS约744MiB。
+- 受管checkpoint哈希与原receipt完全相同，inventory `340a52a2b92f41fc9b8410bed0cd93743543bdb276e36125a74b73e0446add28`；原server配置只override device，无dataset_stats。52条历史diagnostics缺中间Tensor，不能逐次实证旧变换。Stage 1链路结论不变，动作物理语义仍unknown。
+- M2 COMPLETE_WITH_UNKNOWNS：固定模型卡、论文、参考数据v2.1/v3.0 metadata、固定SO驱动与迁移issue完成一轮定向调查。六维参考顺序与30FPS确认；source训练单位、零位、方向、完整state统计、三组选组与精确动作时序未恢复。停止扩大溯源，不下载旧权重或大数据集。
+- M3 COMPLETE：功能对应可行；sign/offset、夹爪映射需实测，运动学与腕部视角差异不由单位转换解决。直接映射未达到开发条件，复杂IK重定向本轮不开发。
+- M4 ROUTE_B_OFFLINE_READY：主推荐JetRover数据后训练，保留直接映射为有条件的研究基线。已实现独立六维state/action staging契约、流式训练集统计与校验器；6项单元测试含多种拒绝子例通过。严格区分真实反馈与实际下发目标；合成数据不计作真实示教。LeRobot转换器/视频解码检查、真实数据采集、训练与闭环NOT_RUN。
+
+实现：[processor探针](../deployment/cloud/scripts/probe_processors.py)、[Dataset校验器](../deployment/local/validate_adaptation_dataset.py)、[测试](../deployment/local/tests/test_adaptation_dataset.py)。证据：[数值](model_adaptation/results/stage2_20261126/processor_probe.json)、[运行配置/receipt](model_adaptation/results/stage2_20261126/runtime_audit.json)、[数据metadata](model_adaptation/results/stage2_20261126/source_metadata.json)、[离线测试](model_adaptation/results/stage2_20261126/dataset_tests.txt)。
+
+路线论证、训练契约表、数据格式及采集/转换/pilot/正式训练方案统一维护于[专项分析第9–10节](model_adaptation/02_SmolVLA_JetRover_Adaptation_Analysis.md)。没有修改推理部署、官方统计、驱动、协议、工作空间算法或执行保护。
+
+### 下一轮
+
+先复用本轮结果，不重做Stage 1。实机可用后先验证人工恢复边界与反馈稳定性、逐关节/夹爪标定、原始时间关联；冻结数据契约、采样周期和容差，再受监督示教。GPU可用后先完成LeRobot转换与视频round-trip、独立split/统计核对、实际processor归一化正控制，然后小规模pilot训练与冻结测试。依学习曲线扩展数据；真实执行另经受控验证。不得用旧native action充当正确目标标签。
